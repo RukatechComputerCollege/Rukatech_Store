@@ -1,0 +1,300 @@
+@import "tailwindcss";
+
+.fill {
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+:root {
+  --primary-fixed: #ffdcc3;
+  --surface-container-lowest: #ffffff;
+  --secondary-container: #e4e2e1;
+  --inverse-on-surface: #f1f1f2;
+  --inverse-surface: #2f3132;
+  --on-error: #ffffff;
+  --on-surface: #1a1c1d;
+  --outline-variant: #dcc2af;
+  --inverse-primary: #ffb77e;
+  --on-primary: #ffffff;
+  --surface-variant: #e2e2e3;
+  --surface-container-high: #e8e8e9;
+  --on-secondary: #ffffff;
+  --secondary-fixed: #e4e2e1;
+  --on-secondary-container: #656464;
+  --surface-container-highest: #e2e2e3;
+  --on-tertiary-fixed: #00210c;
+  --surface-tint: #914d00;
+  --error-container: #ffdad6;
+  --on-tertiary-container: #004620;
+  --error: #ba1a1a;
+  --on-tertiary: #ffffff;
+  --outline: #897363;
+  --on-secondary-fixed: #1b1c1c;
+  --tertiary: #006d36;
+  --tertiary-fixed-dim: #60de88;
+  --tertiary-container: #3abd6b;
+  --on-secondary-fixed-variant: #474746;
+  --surface-container: #eeeeef;
+  --on-surface-variant: #554335;
+  --primary-fixed-dim: #ffb77e;
+  --on-tertiary-fixed-variant: #005227;
+  --surface-bright: #f9f9fa;
+  --on-error-container: #93000a;
+  --on-primary-container: #5e3000;
+  --tertiary-fixed: #7dfca2;
+  --on-primary-fixed: #2f1500;
+  --secondary-fixed-dim: #c8c6c5;
+  --on-background: #1a1c1d;
+  --secondary: #5f5e5e;
+  --primary: #1b6392; /* #914d00; */
+  --on-primary-fixed-variant: #6e3900;
+  --background: #f9f9fa;
+  --primary-light: #2ea4f2; /* #f68b1e; */
+  --surface-container-low: #f3f3f4;
+  --surface-dim: #dadadb;
+  --surface: #f9f9fa;
+}
+
+@theme inline {
+  --color-primary-fixed: var(--primary-fixed);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-secondary-container: var(--secondary-container);
+  --color-inverse-on-surface: var(--inverse-on-surface);
+  --color-inverse-surface: var(--inverse-surface);
+  --color-on-error: var(--on-error);
+  --color-on-surface: var(--on-surface);
+  --color-outline-variant: var(--outline-variant);
+  --color-inverse-primary: var(--inverse-primary);
+  --color-on-primary: var(--on-primary);
+  --color-surface-variant: var(--surface-variant);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-fixed: var(--secondary-fixed);
+  --color-on-secondary-container: var(--on-secondary-container);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-on-tertiary-fixed: var(--on-tertiary-fixed);
+  --color-surface-tint: var(--surface-tint);
+  --color-error-container: var(--error-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+  --color-error: var(--error);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-outline: var(--outline);
+  --color-on-secondary-fixed: var(--on-secondary-fixed);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-fixed-dim: var(--tertiary-fixed-dim);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-on-secondary-fixed-variant: var(--on-secondary-fixed-variant);
+  --color-surface-container: var(--surface-container);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-primary-fixed-dim: var(--primary-fixed-dim);
+  --color-on-tertiary-fixed-variant: var(--on-tertiary-fixed-variant);
+  --color-surface-bright: var(--surface-bright);
+  --color-on-error-container: var(--on-error-container);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-tertiary-fixed: var(--tertiary-fixed);
+  --color-on-primary-fixed: var(--on-primary-fixed);
+  --color-secondary-fixed-dim: var(--secondary-fixed-dim);
+  --color-on-background: var(--on-background);
+  --color-secondary: var(--secondary);
+  --color-primary: var(--primary);
+  --color-on-primary-fixed-variant: var(--on-primary-fixed-variant);
+  --color-background: var(--background);
+  --color-primary-light: var(--primary-light);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface: var(--surface);
+}
+
+* {
+  /* margin: 0; */
+  /* padding: 0; */
+  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  background-color: #1e2753;
+  border-radius: 50px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #f5f6fa;
+}
+body {
+  font-family: "Inter", sans-serif;
+}
+.coloredTxt {
+  color: #2da5f3;
+  font-weight: bold;
+}
+.registerPage,
+.loginPage {
+  input:focus {
+    outline: none;
+  }
+}
+.logoTxt {
+  font-family: "Rubik Glitch", system-ui !important;
+}
+.customer-table th,
+td {
+  padding: 15px 0;
+}
+.customer-table tr {
+  border-bottom: 1px solid #e6e9f4;
+}
+.productTbody:hover .dAndE {
+  opacity: 1;
+  transition: 0.3s ease-in-out;
+}
+.categoryText:hover .categoryCaret {
+  opacity: 1;
+}
+.rotateCaret {
+  transform: rotate(180deg);
+  transition: transform 0.2s linear;
+}
+
+.skeleton-loader > div {
+  background: linear-gradient(90deg, #232323 25%, #464646 50%, #232323 75%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.image {
+  height: 250px;
+}
+
+.title {
+  height: 18px;
+  width: 75%;
+}
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #c9cfd2;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  background-color: #fff;
+}
+
+input[type="radio"]:checked {
+  border-color: #fa8232;
+}
+
+input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 51%;
+  left: 51%;
+  width: 10px;
+  height: 10px;
+  background-color: #fa8232;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+input[type="radio"] + label {
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+input[type="radio"]:hover::after {
+  width: 30px;
+  height: 30px;
+  content: "";
+  position: absolute;
+  top: 51%;
+  left: 51%;
+  background-color: #fa823271;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+}
+
+.swiper {
+  width: 100%;
+  height: auto;
+}
+
+.autoplay-progress {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 10;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: var(--swiper-theme-color);
+}
+
+.autoplay-progress svg {
+  --progress: 0;
+  position: absolute;
+  left: 0;
+  top: 0px;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  stroke-width: 4px;
+  stroke: var(--swiper-theme-color);
+  fill: none;
+  stroke-dashoffset: calc(125.6px * (1 - var(--progress)));
+  stroke-dasharray: 125.6;
+  transform: rotate(-90deg);
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+option {
+  color: #ccc;
+}
+
+option[value="1"] {
+  color: #f90;
+}
+option[value="2"] {
+  color: #f90;
+}
+option[value="3"] {
+  color: #f90;
+}
+option[value="4"] {
+  color: #f90;
+}
+option[value="5"] {
+  color: #f90;
+}
