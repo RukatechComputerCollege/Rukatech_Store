@@ -14,9 +14,8 @@ export default function Gallery({ images }) {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
 
   return (
-    <div className="max-[400px]:w-[300px] max-[450px]:w-[400px] sm:w-[500px] md:w-full relative">
-      {/* Main Gallery */}
-      <div className=" relative">
+    <div className="lg:col-span-4 space-y-4">
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-surface-container-high overflow-hidden group">
         <Swiper
           style={{
             "--swiper-navigation-color": "#FA8232",
@@ -27,7 +26,7 @@ export default function Gallery({ images }) {
           navigation={true}
           thumbs={{ swiper: thumbsSwiper }}
           modules={[FreeMode, Navigation, Thumbs]}
-          className="w-[100%] min-w-0 rounded-[4px] border border-[#E4E7E9]"
+          className="w-[100%] min-w-0 rounded-[4px]"
         >
           {images &&
             images.map((img, index) => (
@@ -36,49 +35,43 @@ export default function Gallery({ images }) {
                 className="!flex items-center justify-center min-w-0"
               >
                 <img
-                  src={img}
                   alt={`Gallery image ${index + 1}`}
-                  className="w-[80%] h-[250px] xs:h-[180px]  md:h-[320px] lg:h-[350px] object-contain rounded-xl"
-                  style={{
-                    maxHeight: "350px",
-                  }}
+                  className="max-w-[90%] h-auto mx-auto object-contain transition-transform duration-500 group-hover:scale-105"
+                  src={img}
                 />
               </SwiperSlide>
             ))}
         </Swiper>
       </div>
-
-      {/* Thumbnails - hidden on small screens */}
-      <div className="hidden md:block">
-        <Swiper
-          onSwiper={setThumbsSwiper}
-          spaceBetween={10}
-          freeMode={true}
-          watchSlidesProgress={true}
-          modules={[FreeMode, Navigation, Thumbs]}
-          breakpoints={{
-            640: { slidesPerView: 4 },
-            1024: { slidesPerView: 5 },
-          }}
-          className="rounded-lg"
-        >
-          {images &&
-            images.map((img, index) => (
-              <SwiperSlide
-                key={index}
-                className="!flex items-center justify-center min-w-0"
-              >
-                <img
-                  src={img}
-                  alt={`Thumbnail ${index + 1}`}
-                  className="w-full h-16 sm:h-20 md:h-24 object-cover rounded-lg cursor-pointer border border-gray-200 hover:border-blue-500 transition"
-                  style={{
-                    maxWidth: "100%",
-                  }}
-                />
-              </SwiperSlide>
-            ))}
-        </Swiper>
+      <div className="grid grid-cols-1 gap-2">
+        <div className="p-1 bg-white cursor-pointer w-full">
+          <Swiper
+            onSwiper={setThumbsSwiper}
+            spaceBetween={10}
+            freeMode={true}
+            watchSlidesProgress={true}
+            modules={[FreeMode, Navigation, Thumbs]}
+            breakpoints={{
+              640: { slidesPerView: 4 },
+              1024: { slidesPerView: 5 },
+            }}
+            className="w-full"
+          >
+            {images &&
+              images.map((img, index) => (
+                <SwiperSlide
+                  key={index}
+                  className="!flex items-center rounded justify-center min-w-0 border border-surface-container-high hover:border-primary-light transition-colors"
+                >
+                  <img
+                    className="w-full h-auto"
+                    alt={`Thumbnail ${index + 1}`}
+                    src={img}
+                  />
+                </SwiperSlide>
+              ))}
+          </Swiper>
+        </div>
       </div>
     </div>
   );

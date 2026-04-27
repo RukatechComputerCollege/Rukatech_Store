@@ -98,7 +98,16 @@ const Landingpage = () => {
       <div className="grid grid-cols-12 gap-4">
         {/* Sidebar Categories */}
         <aside className="hidden lg:block col-span-3 bg-white rounded-4xl shadow-sm border border-gray-100 flex-col py-2 max-h-[50dvh] overflow-y-scroll">
-          <h2 className="px-4 uppercase">Categories</h2>
+          <h2 className="px-4 uppercase font-bold text-primary">Categories</h2>
+          <a
+            href={`/store/`}
+            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 hover:text-primary-light transition-all text-xs text-gray-600"
+          >
+            <span className="material-symbols-outlined text-lg">
+              shopping_basket
+            </span>
+            All Products
+          </a>
           {allCategory &&
             allCategory.map((category, index) => (
               <div key={index}>
