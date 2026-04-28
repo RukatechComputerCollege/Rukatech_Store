@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, NavLink } from 'react-router-dom';
+import { useLocation, Link, NavLink } from 'react-router-dom';
 import { RxCaretRight } from "react-icons/rx";
 
 const BreadCrumb = () => {

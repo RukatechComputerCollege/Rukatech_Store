@@ -28,7 +28,7 @@ const ProductCard = ({ product }) => {
   }
 
   const productDetails = (product) =>{
-    window.location.href = `/product-page/${product._id}`
+    window.location.href = `/store/${product._id}`
   }
   useEffect(() => {
     if (product?._id) {

@@ -79,7 +79,7 @@ const Landingpage = () => {
   console.log(promoProduct1);
 
   const productDetails = (product) => {
-    navigate(`/product-page/${product._id}`);
+    navigate(`/store/${product.name}`, { state: { id: product._id, product: product } });
   };
 
   const filteredProducts =
@@ -175,7 +175,7 @@ const Landingpage = () => {
           <div className="bg-primary-light rounded-lg p-2 text-white overflow-hidden shadow-sm">
             <img
               className="w-full h-32 object-cover rounded mb-2"
-              data-alt="Graphic advertising Jumia Pay services with mobile phones and digital payment icons on a vibrant orange background"
+              alt="rukatech_store_location"
               src="src/assets/debash.webp"
             />
             <p className="text-[10px] font-bold text-center">
@@ -635,13 +635,13 @@ const Landingpage = () => {
       {/* <!-- Information Text Section --> */}
       <section className="my-12 text-center text-gray-600 max-w-3xl mx-auto">
         <h1 className="text-xl font-bold mb-4">
-          Jumia Nigeria - Nigeria's No. 1 Shopping Destination
+          Rukatech Store - Nigeria's No. 1 Gadget Shopping Destination
         </h1>
         <p className="text-xs leading-relaxed">
-          Shop for everything you need on Jumia Nigeria - from Groceries,
-          Phones, Tablets, Health &amp; Beauty, Home &amp; Office items and
+          Shop for everything you need on Rukatech Store - from Laptops,
+          Phones, Tablets, Office monitors and
           more. Experience fast delivery and easy returns on our official
-          stores. Jumia is your one-stop shop for all your daily essentials and
+          stores. Rukatech Store is your one-stop shop for all your daily essentials and
           luxury needs at the best prices in Nigeria.
         </p>
       </section>

@@ -11,6 +11,7 @@ import { addToCart } from "../redux/Cart";
 
 const ShopPage = () => {
   const { allCategory, allProduct } = useContext(CategoryContext);
+  console.log("All product in shoppage: ",allProduct);
   const dispatch = useDispatch();
   const [productShowName, setProductShowName] = useState("All Product");
   const [productPrice, setProductPrice] = useState("all");
@@ -206,22 +207,22 @@ const ShopPage = () => {
               />
               <label htmlFor="category-all-aside">All Product</label>
             </div>
-            {allCategory?.map((cat) => (
+            {allCategory?.map((cat, index) => (
               <div
                 className="flex space-x-1 items-center px-4 py-1 text-sm"
-                key={cat.name}
+                key={index}
               >
                 <input
                   type="radio"
-                  id={`category-aside-${cat.name}`}
-                  onChange={() => setProductShowName(cat.name)}
-                  checked={productShowName === cat.name}
+                  id={`category-aside-${cat}`}
+                  onChange={() => setProductShowName(cat)}
+                  checked={productShowName === cat}
                   name="category-aside"
                 />
                 <span className="material-symbols-outlined text-primary">
                   category
                 </span>
-                <label htmlFor={`category-aside-${cat.name}`}>{cat.name}</label>
+                <label htmlFor={`category-aside-${cat}`}>{cat}</label>
               </div>
             ))}
           </div>
@@ -361,7 +362,7 @@ const ShopPage = () => {
         {/* <!-- Product Grid --> */}
         <div className="flex-1 space-y-8">
           <section className="">
-            {displayedCategories.map((cat) => {
+            {displayedCategories.map((cat, index) => {
               const sectionProducts = cat.allProducts
                 ? currentProducts
                 : allProduct
@@ -371,7 +372,7 @@ const ShopPage = () => {
                     .slice(0, 4);
 
               return (
-                <div key={cat.name} className="mb-8">
+                <div key={index} className="mb-8">
                   <div className="bg-primary text-white px-4 py-4 rounded-t-3xl flex items-center justify-between">
                     <div className="flex items-center justify-center space-x-1">
                       <h2 className="text-lg font-bold">{cat.name}</h2>
@@ -390,11 +391,11 @@ const ShopPage = () => {
                     </div>
                   </div>
                   <div className="bg-white p-4 grid grid-cols-2 lg:grid-cols-4 gap-4 rounded-b-3xl shadow-sm">
-                    {sectionProducts.map((product) => (
+                    {sectionProducts.map((product, index) => (
                       <div
                         className="bg-white border border-gray-100 rounded-lg overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300 relative cursor-pointer"
-                        key={product._id}
-                        onClick={() => navigate(`/product-page/${product._id}`)}
+                        key={index}
+                        onClick={() => navigate(`/store/${product.name}`, { state: { id: product._id, product: product}})}
                       >
                         {product.discountprice && (
                           <div className="absolute top-2 right-2 z-10">
@@ -504,17 +505,17 @@ const ShopPage = () => {
                   />
                   <label htmlFor="category-all-mobile">All Product</label>
                 </div>
-                {allCategory?.map((cat) => (
-                  <div className="flex gap-2 items-center" key={cat.name}>
+                {allCategory?.map((cat, index) => (
+                  <div className="flex gap-2 items-center" key={index}>
                     <input
                       type="radio"
-                      id={`category-mobile-${cat.name}`}
-                      onChange={() => setProductShowName(cat.name)}
-                      checked={productShowName === cat.name}
+                      id={`category-mobile-${index}`}
+                      onChange={() => setProductShowName(cat)}
+                      checked={productShowName === cat}
                       name="category"
                     />
-                    <label htmlFor={`category-mobile-${cat.name}`}>
-                      {cat.name}
+                    <label htmlFor={`category-mobile-${categoryName}`}>
+                      {cat}
                     </label>
                   </div>
                 ))}

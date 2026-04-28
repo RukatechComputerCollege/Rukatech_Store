@@ -17,13 +17,13 @@ const Footer = () => {
         <div className="max-w-[1184px] mx-auto px-4 flex items-center justify-between gap-12">
           <div className="flex-1">
             <p className="text-xl font-bold text-white uppercase">
-              New to Jumia?
+              New to Rukatech Store?
             </p>
             <p className="text-xs text-gray-400">
               Subscribe to our newsletter to get updates on our latest offers!
             </p>
           </div>
-          <div className="flex-1 flex gap-2">
+          <div className="flex gap-2">
             <input
               className="flex-1 bg-white rounded border-none px-4 py-3 text-sm"
               placeholder="Enter E-mail Address"
