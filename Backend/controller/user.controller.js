@@ -9,14 +9,12 @@ dotenv.config()
 
 
 const greetingUser = async (req, res) => {
-  const { confirmPassword, ...userData } = req.body;
-  const rawEmail = req.body.email;
+  const { firstname, lastname, email, password } = req.body;
+  const rawEmail = email?.trim().toLowerCase();
 
   if (!rawEmail || typeof rawEmail !== 'string') {
     return res.status(400).json({ message: 'Invalid email input.' });
   }
-
-  const email = rawEmail.trim().toLowerCase();
 
   try {
     const emailCheck = await axios.get('http://apilayer.net/api/check', {
@@ -39,7 +37,12 @@ const greetingUser = async (req, res) => {
       });
     }
 
-    const form = new userModel(userData);
+    const form = new userModel({
+      firstname,
+      lastname,
+      email: rawEmail,
+      password,
+    });
 
     try {
       await form.save();  
@@ -55,7 +58,7 @@ const greetingUser = async (req, res) => {
       const htmlContent = welcomeEmail(req.body);
 
       const info = await transporter.sendMail({
-        from: "Fastcart Online Store",
+        from: "Rukatech Online Store",
         to: email,
         subject: "Registration Successful ✅",
         html: htmlContent,
@@ -85,14 +88,14 @@ const welcomeEmail = (user) => {
   return `
     <div style="font-family: Arial, sans-serif; padding: 10px; background-color: #f9f9f9;">
       <div style="max-width: 600px; margin: auto; background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-        <h2 style="color: #2d2d2d;">Welcome to Fastcart, ${user.firstname}!</h2>
+        <h2 style="color: #2d2d2d;">Welcome to Rukatech Online Store, ${user.firstname}!</h2>
         <p style="font-size: 16px; color: #333;">
           Thank you for creating an account with us. 🎉<br />
           You're now part of a growing community of smart shoppers and savvy sellers.
         </p>
 
         <p style="font-size: 16px; color: #333;">
-          Here's what you can do on Fastcart:
+          Here's what you can do on Rukatech Online Store:
           <ul style="padding-left: 20px; color: #333;">
             <li>🛍️ Explore top trending products at great prices</li>
             <li>💳 Shop securely with multiple payment options</li>
@@ -107,16 +110,16 @@ const welcomeEmail = (user) => {
 
         <div style="margin-top: 30px; text-align: center;">
           <a href="https://fastcart-ecommerce-web-app.vercel.app" style="background-color: #ff6600; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-            Visit Fastcart
+            Visit Rukatech Online Store
           </a>
         </div>
 
         <p style="margin-top: 30px; font-size: 14px; color: #888;">
-          If you didn’t sign up for Fastcart, please ignore this email or contact our support team.
+          If you didn’t sign up for Rukatech Online Store, please ignore this email or contact our support team.
         </p>
 
         <p style="font-size: 14px; color: #888;">
-          — The Fastcart Team
+          — The Rukatech Online Store Team
         </p>
       </div>
     </div>
@@ -220,7 +223,7 @@ const forgotPassword = async (req, res) => {
     const emailContent = ResetPasswordEmail(user, resetUrl)
 
     const passwordReset = await transporter.sendMail({
-      from: 'Fastcart Online Store',
+      from: 'Rukaech Online Store',
       to: email,
       subject: 'Password Reset Link',
       html: emailContent
@@ -246,7 +249,7 @@ const ResetPasswordEmail = (user, resetUrl) => {
         <h1 style="color: black;">Reset Password</h1>
         <h2 style="color: #2d2d2d;">Hi ${user.firstname},</h2>
         <p style="font-size: 16px; color: #333;">
-          Tap the button below to reset your fastcart account password.
+          Tap the button below to reset your rukatech online store account password.
           <br />
           if you didn't request a new password, you can safely delete this email.
           your password will expire within 15 minutes
@@ -259,7 +262,7 @@ const ResetPasswordEmail = (user, resetUrl) => {
         </p>
 
         <p style="font-size: 14px; color: #888;">
-          — The Fastcart Team
+          — The Rukatech Online Store Team
         </p>
       </div>
     </div>
@@ -433,9 +436,9 @@ const orderDetails = async (req, res) => {
     const htmlContent = generateEmailHTML(user, order)
 
     const info = await transporter.sendMail({
-      from: "Fastcart Online Store @fastcastonlinestore@store.com",
+      from: "Rukatech Online Store @fastcastonlinestore@store.com",
       to: user.email,
-      subject: "Your Order Confirmation from Fastcart 🛒",
+      subject: "Your Order Confirmation from Rukatech Online Store 🛒",
       text: `Thank you for your purchase, ${user.firstname}!`,
       html: htmlContent,
     });

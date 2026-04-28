@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +20,10 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.4",
-    "nodemailer": "^7.0.6",
+    "nodemailer": "^8.0.7",
     "serverless-http": "^4.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }

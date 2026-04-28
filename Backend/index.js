@@ -12,6 +12,7 @@ const PORT = process.env.PORT
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
 const { ipKeyGenerator } = require("express-rate-limit");
+const adminModel = require('./model/admin.model');
 
 // Middleware
 app.use(helmet())
@@ -25,8 +26,8 @@ app.use(cors({
   origin: ['http://localhost:5173', 'https://fastcartonlinestore.vercel.app'],
   credentials: true
 }));
-app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/user", userRouter);
@@ -34,16 +35,12 @@ app.use(`/${process.env.ADMIN_ROUTE_NAME}`, adminRouter);
 app.use("/orders", orderRouter);
 
 // Connect DB once
-mongoose.connect(process.env.URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.URI)
   .then(async () => {
     console.log("Database Connected");
-    // app.listen(PORT, ()=>{
-    //   console.log('app running on Port', PORT);
-    // })
-    const { adminModel } = require('./model/admin.model');
+    app.listen(PORT, ()=>{
+      console.log('app running on Port', PORT);
+    })
     const existingAdmin = await adminModel.findOne({ username: process.env.admin_username });
     if (!existingAdmin) {
       await adminRegister();
@@ -55,5 +52,5 @@ mongoose.connect(process.env.URI, {
   });
 
 // 👉 Export handler for Vercel
-module.exports = app;
-module.exports.handler = serverless(app);
+// module.exports = app;
+// module.exports.handler = serverless(app);
