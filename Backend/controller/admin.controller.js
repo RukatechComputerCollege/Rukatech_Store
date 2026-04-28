@@ -1,4 +1,5 @@
-const {adminModel, categoryModel, productModel} = require("../model/admin.model");
+const adminModel = require("../model/admin.model");
+const productModel = require("../model/productModel");
 const userModel = require("../model/user.model")
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
@@ -73,7 +74,7 @@ const fetchPaginatedCustomers = async (page = 1, limit = 10) => {
 }
 const fetchAllCustomers = async (req, res) => {
   try {
-    const customers = await userModel.find({}, '-password');
+    const customers = await userModel.find({}, '-password').lean();
     res.status(200).json({
       status: true,
       message: 'All customers fetched',
@@ -130,66 +131,66 @@ const deleteCustomer = (req, res) =>{
   })
 }
 
-const productCategory = (req, res) => {
-  const { name, description, image } = req.body;
-  const newCategory = new categoryModel({ name, description, image });
+// const productCategory = (req, res) => {
+//   const { name, description, image } = req.body;
+//   const newCategory = new categoryModel({ name, description, image });
   
-  newCategory.save()
-    .then((category) => {
-      res.status(201).json({
-        status: true,
-        message: 'Category created successfully',
-        data: category
-      });
-    })
-    .catch((err) => {
-      console.error('Error creating category:', err);
-      res.status(500).json({
-        status: false,
-        message: 'Failed to create category',
-        error: err.message
-      });
-    });
-}
+//   newCategory.save()
+//     .then((category) => {
+//       res.status(201).json({
+//         status: true,
+//         message: 'Category created successfully',
+//         data: category
+//       });
+//     })
+//     .catch((err) => {
+//       console.error('Error creating category:', err);
+//       res.status(500).json({
+//         status: false,
+//         message: 'Failed to create category',
+//         error: err.message
+//       });
+//     });
+// }
 
-const getCategory = (req, res) =>{
-  const fetchingCategory = categoryModel.find()
-  .then((fetchedCategory) =>{
-    res.status(200).json({
-      status: true,
-      message: 'These are all the categories',
-      data: fetchedCategory
-    })
-  })
-  .catch((err) =>{
-    res.status(500).json({
-      status: false,
-      message: 'Failed to fetch category',
-      error: err
-    });
-  })
-}
+// const getCategory = (req, res) =>{
+//   const fetchingCategory = categoryModel.find()
+//   .then((fetchedCategory) =>{
+//     res.status(200).json({
+//       status: true,
+//       message: 'These are all the categories',
+//       data: fetchedCategory
+//     })
+//   })
+//   .catch((err) =>{
+//     res.status(500).json({
+//       status: false,
+//       message: 'Failed to fetch category',
+//       error: err
+//     });
+//   })
+// }
 
 const createProduct = async (req, res) =>{
+  // console.log("Received product data:", req.body);
   try {
-    const  { name, description, price, discountprice, image, inventory, size, weight, country, color, category, keyFeatures, productBox, discountPercentage } = req.body;
+    const { name, price, description, image, inventory, weight, region, condition, processor, ram, storage, storageType, displaySize, graphicsCardMemory, numberOfCores, operatingSystem, openToNegotiation, size, color, category } = req.body;
 
-    const newProduct = new productModel({
-      name,
-      description,
-      price,
-      discountprice,
-      image,
-      inventory,
-      color,
-      size,
-      weight,
-      country,
-      category,
-      productBox,
-      keyFeatures,
-      discountPercentage
-    });
+    if(!name || !price || !description || !image || !inventory || !region || !condition || !category){
+      return res.status(400).json({
+        status: false,
+        message: "name, price, description, image, inventory, region, condition and category are required fields"
+      })
+    }
+
+    if(!['laptops', 'monitors', 'phones', 'tablets', 'accessories', 'processors'].includes(category)){
+      return res.status(400).json({
+        status: false,
+        message: "Invalid category"
+      })
+    }
+    
+    const newProduct = new productModel(req.body);
     const savedProduct = await newProduct.save()
     
     res.status(201).json({
@@ -198,6 +199,7 @@ const createProduct = async (req, res) =>{
       data: savedProduct
     })
   }
+
   catch(err){
     console.error("Product creation failed:", err);
     res.status(500).json({
@@ -254,7 +256,7 @@ const deleteSelectedProduct = async (req, res) =>{
 
 const getAllProducts = async (req, res) => {
   try {
-    const products = await productModel.find().populate('category');
+    const products = await productModel.find();
     res.status(200).json({
       status: true,
       message: "All products fetched",
@@ -270,130 +272,13 @@ const getAllProducts = async (req, res) => {
   }
 };
 
-const getCategoriesWithProducts = async (req, res) => {
-  try {
-    const categories = await categoryModel.aggregate([
-      {
-        $lookup: {
-          from: 'products',
-          localField: '_id',
-          foreignField: 'category',
-          as: 'products'
-        }
-      }
-    ]);
-
-    res.status(200).json({
-      status: true,
-      message: 'Categories with their products',
-      data: categories
-    });
-
-  } catch (err) {
-    console.error("Error fetching categories with products:", err);
-    res.status(500).json({
-      status: false,
-      message: 'Failed to fetch categories with products',
-      error: err.message
-    });
-  }
-};
-
-const deleteCategory = async (req, res) =>{
-  const { id } = req.params;
-
-  try{
-    const deletedCategory = await categoryModel.findByIdAndDelete(id)
-
-    if(!deletedCategory){
-      return res.status(404).json({
-        status: false,
-        message: 'Category not found',
-      });
-    }
-
-    await productModel.updateMany(
-      { category: id},
-      { $unset: {category: ''}}
-    );
-
-    res.status(201).json({
-      status: true,
-      message: "Category Deleted Successfully",
-      data: deletedCategory
-    })
-  }
-  catch(err) {
-    console.error('Error deleting category:', err);
-    res.status(500).json({
-      status: false,
-      message: 'Failed to delete category',
-      error: err.message
-    });
-  }
-}
-const editCategory = async (req, res) =>{
-  const { id } = req.params;
-  const { name, description, image } = req.body;
-  try{
-    const updatedCategory = await categoryModel.findByIdAndUpdate(
-      id,
-      {name, description, image },
-      {new: true, runValidators: true}
-    )
-
-    if(!updatedCategory){
-      return res.status(404).json({
-        status: false,
-        message: "Category not found",
-      })
-    }
-
-    res.status(200).json({
-      status: true,
-      message: 'Category updated successfully',
-      data: updatedCategory,
-    });
-  }
-  catch(err) {
-    console.error("Error Updating Category:", err);
-    res.status(500).json({
-      status: false,
-      message: "Failed to update category",
-      data: err
-    })
-  }
-}
 const editProduct = async (req, res) => {
   const { id } = req.params;
-  const {
-    name,
-    description,
-    image,
-    inventory,
-    price,
-    discountprice,
-    weight,
-    country,
-    size,
-    category,
-  } = req.body;
 
   try {
     const updatedProduct = await productModel.findByIdAndUpdate(
       id,
-      {
-        name,
-        description,
-        image,
-        inventory,
-        price,
-        discountprice,
-        weight,
-        country,
-        size,
-        category,
-      },
+      { ...req.body },
       { new: true, runValidators: true }
     );
 
@@ -418,33 +303,34 @@ const editProduct = async (req, res) => {
     });
   }
 };
-const addSubcategory = async (req, res) => {
-  const { id } = req.params;
-  const { name } = req.body;
 
-  try {
-    const category = await categoryModel.findById(id);
-    if (!category) {
-      return res.status(404).json({ message: 'Category not found' });
-    }
+// const addSubcategory = async (req, res) => {
+//   const { id } = req.params;
+//   const { name } = req.body;
 
-    const duplicate = category.subcategories.some(
-      (sub) => sub.name.toLowerCase() === name.toLowerCase()
-    );
+//   try {
+//     const category = await categoryModel.findById(id);
+//     if (!category) {
+//       return res.status(404).json({ message: 'Category not found' });
+//     }
 
-    if (duplicate) {
-      return res.status(400).json({ message: 'Subcategory already exists' });
-    }
+//     const duplicate = category.subcategories.some(
+//       (sub) => sub.name.toLowerCase() === name.toLowerCase()
+//     );
 
-    category.subcategories.push({ name });
-    await category.save();
+//     if (duplicate) {
+//       return res.status(400).json({ message: 'Subcategory already exists' });
+//     }
 
-    return res.json(category);
-  } catch (error) {
-    console.error("Error in addSubcategory:", error);
-    return res.status(500).json({ message: 'Internal server error', error: error.message });
-  }
-};
+//     category.subcategories.push({ name });
+//     await category.save();
+
+//     return res.json(category);
+//   } catch (error) {
+//     console.error("Error in addSubcategory:", error);
+//     return res.status(500).json({ message: 'Internal server error', error: error.message });
+//   }
+// };
 
 const getAllOrdersForAdmin = async (req, res) =>{
   try{
@@ -714,17 +600,11 @@ module.exports = {
   adminDashboard, 
   adminCustomer, 
   deleteCustomer, 
-  productCategory, 
-  getCategory, 
   createProduct,
   getAllProducts,
-  getCategoriesWithProducts,
-  deleteCategory,
-  editCategory,
   deleteProduct,
   editProduct,
   fetchPaginatedCustomers,
-  addSubcategory,
   deleteSelectedProduct,
   getAllOrdersForAdmin,
   updateOrderStatus,

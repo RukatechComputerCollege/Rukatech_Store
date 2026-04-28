@@ -11,49 +11,6 @@ const adminSchema = mongoose.Schema({
   password: { type: String, required: true, default: admin_password},
   role: {type:String, enum: ['admin'], default: 'admin'}
 })
-const subCategorySchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now }
-});
-const categorySchema = mongoose.Schema({
-  name: { type: String, required: true, unique: true },
-  description: { type: String },
-  image: { type: String },
-  createdAt: { type: Date, default: Date.now },
-  subcategories: [subCategorySchema]
-})
-const ratingSchema = new mongoose.Schema({
-  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
-  ratingGrade: { type: Number, min: 1, max: 5, required: true },
-  feedback: { type: String },
-  createdAt: { type: Date, default: Date.now }
-});
-
-const productSchema = mongoose.Schema({
-  name: {type:String, required: true, trim: true},
-  description: {type:String, required: true},
-  price: {type: Number, required:true},
-  discountprice: {type: Number},
-  image: {type: [String], required: true},
-  inventory: {type:Number},
-  weight: {type: Number},
-  country: {type: String},
-  size: {type: String},
-  color: {type:String},
-  category: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'product-category',
-      required: true
-    }
-  ],
-  productBox: {type: String},
-  keyFeatures: {type: String},
-  discountPercentage: {type:Number},
-  rating: [ratingSchema],
-  createdAt: {type:Date, default: Date.now}
-})
-
 
 let saltRounds = 10
 adminSchema.pre('save', function(next){
@@ -85,7 +42,5 @@ adminSchema.methods.validatePassword = function(password, callback){
 }
 
 const adminModel = mongoose.model('admin-registration', adminSchema)
-const categoryModel = mongoose.model('product-category', categorySchema)
-const productModel = mongoose.model('product', productSchema)
 
-module.exports = { adminModel, categoryModel, productModel}
+module.exports = adminModel
