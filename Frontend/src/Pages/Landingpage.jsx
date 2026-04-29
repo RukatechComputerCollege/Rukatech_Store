@@ -29,6 +29,7 @@ const Landingpage = () => {
   const { allCategory } = useContext(CategoryContext);
   const { allProduct } = useContext(CategoryContext);
   const [chunkSize, setChunkSize] = useState(6);
+  const [bestDealsProduct, setbestDealsProduct] = useState([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -65,7 +66,7 @@ const Landingpage = () => {
   useEffect(() => {
     if (allProduct && allProduct.length > 0) {
       const promoProducts = allProduct.filter((prod) =>
-        prod.category?.some((cat) => cat.name === "Promo"),
+        [prod.category]?.some((cat) => cat.name === "Promo"),
       );
       if (promoProducts.length > 0) {
         setPromoProduct1(promoProducts[0]);
@@ -75,8 +76,14 @@ const Landingpage = () => {
         setPromoProduct5(promoProducts[4]);
       }
     }
+
+    const eightBestDeals = allProduct.filter((product) => product.discountPercentage)
+    .sort((a, b) => b.discountPercentage - a.discountPercentage)
+    .slice(0, 8);
+    setbestDealsProduct(eightBestDeals);
+
   }, [allProduct]);
-  console.log(promoProduct1);
+  // console.log(promoProduct1);
 
   const productDetails = (product) => {
     navigate(`/store/${product.name}`, { state: { id: product._id, product: product } });
@@ -86,7 +93,7 @@ const Landingpage = () => {
     productShowName === "Product"
       ? allProduct
       : allProduct.filter((product) =>
-          product.category.some((cat) => cat.name === productShowName),
+          product.category === productShowName,
         );
 
   return (
@@ -100,25 +107,25 @@ const Landingpage = () => {
         <aside className="hidden lg:block col-span-3 bg-white rounded-4xl shadow-sm border border-gray-100 flex-col py-2 max-h-[50dvh] overflow-y-scroll">
           <h2 className="px-4 uppercase font-bold text-primary">Categories</h2>
           <a
-            href={`/store/`}
+            href={`/store`}
             className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 hover:text-primary-light transition-all text-xs text-gray-600"
           >
             <span className="material-symbols-outlined text-lg">
               shopping_basket
             </span>
-            All Products
+            ALL PRODUCTS
           </a>
           {allCategory &&
             allCategory.map((category, index) => (
               <div key={index}>
                 <a
-                  href={`/store/${category.name}`}
+                  href={`/store?category=${encodeURIComponent(category)}`}
                   className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 hover:text-primary-light transition-all text-xs text-gray-600"
                 >
                   <span className="material-symbols-outlined text-lg">
                     shopping_basket
                   </span>
-                  {category.name}
+                  {category.toUpperCase()}
                 </a>
               </div>
             ))}
@@ -433,11 +440,11 @@ const Landingpage = () => {
         </div>
         <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-sm">
           {/* <!-- Phone Product Cards --> */}
-          {allProduct.slice(0, 16).map((product) => (
+          {allProduct.slice(0, 16).map((product, index) => (
             <div
               onClick={() => productDetails(product)}
               className="group cursor-pointer flex flex-col items-center relative"
-              key={product._id}
+              key={index}
             >
               <img
                 className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
@@ -448,7 +455,7 @@ const Landingpage = () => {
                 <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
                   -
                   {Math.round(
-                    (1 - product.discountprice / product.price) * 100,
+                    (1 - product.discountPrice / product.price) * 100,
                   )}
                   %
                 </span>
@@ -458,11 +465,11 @@ const Landingpage = () => {
               </p>
               <p className="text-sm font-bold">
                 ₦
-                {product.discountprice
-                  ? product.discountprice.toLocaleString()
+                {product.discountPrice
+                  ? product.discountPrice.toLocaleString()
                   : product.price.toLocaleString()}
               </p>
-              {product.discountprice && (
+              {product.discountPrice && (
                 <p className="text-[10px] text-gray-400 line-through">
                   ₦{product.price.toLocaleString()}
                 </p>
@@ -472,53 +479,55 @@ const Landingpage = () => {
         </div>
       </section>
       {/* <!-- Best Deals --> */}
-      <section className="mt-8">
-        <div className="bg-primary text-white px-4 py-4 rounded-t-3xl flex items-center justify-between">
-          <h2 className="text-lg font-bold">Best Deals</h2>
-          {/* <span className="text-sm font-bold cursor-pointer uppercase hover:underline" onClick={() => navigate("/store")}>
-            See All
-          </span> */}
-        </div>
-        <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-sm">
-          {/* <!-- Phone Product Cards --> */}
-          {allProduct.slice(0, 16).map((product) => (
-            <div
-              onClick={() => productDetails(product)}
-              className="group cursor-pointer flex flex-col items-center relative"
-              key={product._id}
-            >
-              <img
-                className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
-                src={product.image[0]}
-                alt={product.name}
-              />
-              {product.discountprice && (
-                <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
-                  -
-                  {Math.round(
-                    (1 - product.discountprice / product.price) * 100,
-                  )}
-                  %
-                </span>
-              )}
-              <p className="text-xs text-center line-clamp-2 mb-1 group-hover:text-primary-light">
-                {product.name}
-              </p>
-              <p className="text-sm font-bold">
-                ₦
-                {product.discountprice
-                  ? product.discountprice.toLocaleString()
-                  : product.price.toLocaleString()}
-              </p>
-              {product.discountprice && (
-                <p className="text-[10px] text-gray-400 line-through">
-                  ₦{product.price.toLocaleString()}
+      {bestDealsProduct.length > 0 && (
+        <section className="mt-8">
+          <div className="bg-primary text-white px-4 py-4 rounded-t-3xl flex items-center justify-between">
+            <h2 className="text-lg font-bold">Best Deals</h2>
+            {/* <span className="text-sm font-bold cursor-pointer uppercase hover:underline" onClick={() => navigate("/store")}>
+              See All
+            </span> */}
+          </div>
+          <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-sm">
+            {/* <!-- Phone Product Cards --> */}
+            {bestDealsProduct.map((product, index) => (
+              <div
+                onClick={() => productDetails(product)}
+                className="group cursor-pointer flex flex-col items-center relative"
+                key={index}
+              >
+                <img
+                  className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
+                  src={product.image[0]}
+                  alt={product.name}
+                />
+                {product.discountprice && (
+                  <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
+                    -
+                    {Math.round(
+                      (1 - product.discountprice / product.price) * 100,
+                    )}
+                    %
+                  </span>
+                )}
+                <p className="text-xs text-center line-clamp-2 mb-1 group-hover:text-primary-light">
+                  {product.name}
                 </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+                <p className="text-sm font-bold">
+                  ₦
+                  {product.discountprice
+                    ? product.discountprice.toLocaleString()
+                    : product.price.toLocaleString()}
+                </p>
+                {product.discountprice && (
+                  <p className="text-[10px] text-gray-400 line-through">
+                    ₦{product.price.toLocaleString()}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       {/* <!-- Categories --> */}
       <section className="mt-8">
         <div className="bg-primary text-white px-4 py-4 rounded-t-3xl flex items-center justify-between">
@@ -533,11 +542,10 @@ const Landingpage = () => {
             {allCategory?.slice(0, 4).map((cat) => (
               <span
                 key={cat._id}
-                onClick={() => setProductShowName(cat.name)}
+                onClick={() => setProductShowName(cat)}
                 className="text-sm cursor-pointer font-bold uppercase hover:underline"
-                href="#"
               >
-                {cat.name}
+                {cat}
               </span>
             ))}
             <span
@@ -550,11 +558,11 @@ const Landingpage = () => {
         </div>
         <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-sm">
           {/* <!-- Phone Product Cards --> */}
-          {filteredProducts.slice(0, 6).map((product) => (
+          {filteredProducts.slice(0, 6).map((product, index) => (
             <div
               onClick={() => productDetails(product)}
               className="group cursor-pointer flex flex-col items-center"
-              key={product._id}
+              key={index}
             >
               <img
                 className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"

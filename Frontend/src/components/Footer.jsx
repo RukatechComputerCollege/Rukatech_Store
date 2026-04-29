@@ -103,7 +103,7 @@ const Footer = () => {
             {allCategory &&
               allCategory
                 .slice(0, 6)
-                .map((cat) => <li className="text-gray-400 text-xs hover:text-white transition-colors" key={cat._id}>{cat.name}</li>)}
+                .map((cat, index) => <li className="text-gray-400 text-xs hover:text-white transition-colors" key={index}>{cat}</li>)}
             <p
               onClick={() => navigate("/store")}
               className="font-semibold cursor-pointer text-[#EBC80C] text-[14px] flex gap-2 item-center justify-center md:justify-start"

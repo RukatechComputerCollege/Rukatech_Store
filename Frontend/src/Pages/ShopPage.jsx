@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { CategoryContext } from "../CategoryContext";
 // import ProductCard from "../components/ProductCard";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Loader from "../components/Loader";
 import { IoFilter } from "react-icons/io5";
 import { IoIosArrowRoundForward, IoIosArrowRoundBack } from "react-icons/io";
@@ -11,7 +11,7 @@ import { addToCart } from "../redux/Cart";
 
 const ShopPage = () => {
   const { allCategory, allProduct } = useContext(CategoryContext);
-  console.log("All product in shoppage: ",allProduct);
+  // console.log("All category in shoppage: ", allCategory);
   const dispatch = useDispatch();
   const [productShowName, setProductShowName] = useState("All Product");
   const [productPrice, setProductPrice] = useState("all");
@@ -19,7 +19,10 @@ const ShopPage = () => {
   const [sidebarTopOffset, setSidebarTopOffset] = useState(90);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
-  const { categoryName } = useParams();
+  const [searchParams] = useSearchParams()
+  const categoryName = searchParams.get('category');
+  console.log("Category name from param: ", categoryName);
+
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 40;
@@ -43,7 +46,10 @@ const ShopPage = () => {
     if (productShowName === "All Product") {
       return [{ name: "All Products", allProducts: true }];
     }
-    return allCategory.filter((cat) => cat.name === productShowName);
+    const filtered = allCategory.filter((cat) => cat === productShowName);
+    // console.log("Displayed Cat", filtered);
+
+    return filtered;
   }, [allCategory, productShowName]);
 
   useEffect(() => {
@@ -100,9 +106,8 @@ const ShopPage = () => {
     return allProduct?.filter((product) => {
       const matchesCategory =
         productShowName === "All Product" ||
-        product.category?.some((cat) => cat.name === productShowName) ||
-        (categoryName &&
-          product.category?.some((cat) => cat.name === categoryName));
+        product.category === productShowName ||
+        (categoryName && product.category === categoryName);
 
       const matchesSearchQuery =
         product.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
@@ -363,22 +368,23 @@ const ShopPage = () => {
         <div className="flex-1 space-y-8">
           <section className="">
             {displayedCategories.map((cat, index) => {
-              const sectionProducts = cat.allProducts
-                ? currentProducts
-                : allProduct
-                    .filter((product) =>
-                      product.category.some((c) => c.name === cat.name),
-                    )
-                    .slice(0, 4);
+              const isAllProducts = typeof cat === 'object' && cat.allProducts;
+              const categoryName = isAllProducts ? cat.name : cat;
+  
+              const sectionProducts = isAllProducts
+              ? currentProducts
+              : allProduct
+                  .filter((product) => product.category === categoryName) 
 
               return (
                 <div key={index} className="mb-8">
                   <div className="bg-primary text-white px-4 py-4 rounded-t-3xl flex items-center justify-between">
                     <div className="flex items-center justify-center space-x-1">
-                      <h2 className="text-lg font-bold">{cat.name}</h2>
+                      <h2 className="text-lg font-bold">{categoryName}</h2>
                       <h2 className="text-sm font-medium text-[#2ea4f2]">
-                        ({filteredProducts?.length.toLocaleString()} Products
-                        found)
+                        ({isAllProducts 
+                          ? filteredProducts?.length.toLocaleString() 
+                          : allProduct.filter(p => p.category === categoryName).length.toLocaleString()} Products found)
                       </h2>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-white">

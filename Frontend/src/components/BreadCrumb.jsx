@@ -14,9 +14,9 @@ const BreadCrumb = () => {
   return (
     <div className="w-full bg-[#F2F4F5] text-[#5F6C72]" style={{ padding: '10px 6%' }}>
       <div className="flex gap-4 items-center overflow-x-auto whitespace-nowrap">
-        <NavLink to="/" className="hover:text-[#191C1F]">
+        <a href="/" className="hover:text-[#191C1F]">
           Home
-        </NavLink>
+        </a>
 
         {pathnames.length > 0 && (
           pathnames.map((value, index) => {
@@ -24,12 +24,12 @@ const BreadCrumb = () => {
             const isLast = index === pathnames.length - 1;
 
             return (
-              <span key={to} className="flex items-center gap-4">
+              <span key={index} className="flex items-center gap-4">
                 <span><RxCaretRight /></span>
                 {isLast ? (
                   <span className="text-[#2DA5F3] font-semibold capitalize">{decodeURIComponent(value)}</span>
                 ) : (
-                  <NavLink to={to} className="hover:text-[#191C1F] capitalize">{decodeURIComponent(value)}</NavLink>
+                  <a href={to} className="hover:text-[#191C1F] capitalize">{decodeURIComponent(value)}</a>
                 )}
               </span>
             );

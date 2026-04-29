@@ -20,11 +20,11 @@ const CategoryProvider = ({ children }) => {
       if(res.data.status){
         setallProduct(res.data.data)
         const products = res.data.data;
-        console.log("These are all the products", products);
+        // console.log("These are all the products", products);
         const categoryName = products.filter((product) => product.category);
-        console.log("These are all the category", categoryName);
+        // console.log("These are all the category", categoryName);
         const uniqueCategory = [...new Set(categoryName.map((product) => product.category).flat().map((cat) => cat))];
-        console.log("These are unique category", uniqueCategory);
+        // console.log("These are unique category", uniqueCategory);
         setAllCategory(uniqueCategory)
       }
     })
