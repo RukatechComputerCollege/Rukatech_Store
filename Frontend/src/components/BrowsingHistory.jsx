@@ -44,7 +44,7 @@ const BrowsingHistory = () => {
   );
 
   const handleCardClick = (product) => {
-    navigate(`/store/${product.name}`, { state: { id: product._id, product: product } });
+    navigate(`/store/${encodeURIComponent(product.name)}`, { state: { id: product._id, product: product } });
   };
 
   const handleCartToggle = (e, product) => {

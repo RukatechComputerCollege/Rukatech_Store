@@ -14,7 +14,7 @@ const Footer = () => {
     <footer className="w-full mt-12 bg-[#313133] border-t border-gray-700">
       {/* <!-- Newsletter Bar --> */}
       <div className="bg-[#313133] border-b border-gray-700 py-8">
-        <div className="max-w-[1184px] mx-auto px-4 flex items-center justify-between gap-12">
+        <div className="max-w-[1184px] mx-auto px-4 flex flex-col md:flex-row md:items-center justify-between gap-12">
           <div className="flex-1">
             <p className="text-xl font-bold text-white uppercase">
               New to Rukatech Store?
@@ -30,11 +30,11 @@ const Footer = () => {
               type="email"
             />
             <button className="bg-[#f68b1e] text-white px-8 py-3 rounded font-bold hover:bg-[#e07b1a] transition-colors uppercase text-sm">
-              Male
+              Subscribe
             </button>
-            <button className="bg-[#f68b1e] text-white px-8 py-3 rounded font-bold hover:bg-[#e07b1a] transition-colors uppercase text-sm">
+            {/* <button className="bg-[#f68b1e] text-white px-8 py-3 rounded font-bold hover:bg-[#e07b1a] transition-colors uppercase text-sm">
               Female
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -103,10 +103,10 @@ const Footer = () => {
             {allCategory &&
               allCategory
                 .slice(0, 6)
-                .map((cat, index) => <li className="text-gray-400 text-xs hover:text-white transition-colors" key={index}>{cat}</li>)}
+                .map((cat, index) => <li className="text-gray-400 text-xs hover:text-white transition-colors" key={index}>{cat.toUpperCase()}</li>)}
             <p
               onClick={() => navigate("/store")}
-              className="font-semibold cursor-pointer text-[#EBC80C] text-[14px] flex gap-2 item-center justify-center md:justify-start"
+              className="font-semibold cursor-pointer text-[#EBC80C] text-[14px] flex gap-2 md:item-center md:justify-start"
             >
               {" "}
               <span>Browse All Product</span>
@@ -147,8 +147,8 @@ const Footer = () => {
         </div>
       </div>
       {/* <!-- Social & App Download --> */}
-      <div className="max-w-[1184px] mx-auto px-4 py-8 border-t border-gray-700 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="max-w-[1184px] mx-auto px-4 py-8 border-t border-gray-700 flex flex-col md:flex-row md:items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
           <span className="text-white text-sm font-bold">JOIN US ON</span>
           <div className="flex gap-4">
             <a

@@ -143,7 +143,7 @@ const Navbar = () => {
                 </div>
               )}
               {cartShown && (
-                <div className="z-10 absolute w-auto md:w-[376px] top-[120%] shadow-md md:right-0">
+                <div className="z-10 absolute w-80 top-[120%] shadow-md md:right-0">
                   <CartCard />
                 </div>
               )}

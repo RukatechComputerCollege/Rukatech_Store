@@ -11,7 +11,7 @@ import Customer from './adminPages/Customer'
 
 
 const AdminDashboard = () => {
-  document.title = 'Dashboard - Fastcart Online Store'
+  document.title = 'Dashboard - RukatechStore'
   return (
     <div className="w-full h-screen bg-[#F5F6FA] overflow-hidden">
       <AdminProvider>

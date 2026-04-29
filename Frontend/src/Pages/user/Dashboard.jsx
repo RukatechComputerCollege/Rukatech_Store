@@ -8,7 +8,7 @@ import { IoIosClose } from "react-icons/io";
 const Dashboard = () => {
   const { userData } = useContext(UserAccountContext);
   const [isOpen, setIsOpen] = useState(false);
-  document.title = 'Dashboard | Fastcart Online Store'
+  document.title = 'Dashboard | RukatechStore'
   return (
     <div style={{ padding: "40px 6%" }} className="w-full h-auto items-start flex flex-col lg:flex-row gap-5 overflow-x-hidden relative">
       

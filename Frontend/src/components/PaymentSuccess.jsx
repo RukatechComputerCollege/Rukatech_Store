@@ -8,7 +8,7 @@ const PaymentSuccess = () => {
   const { orderId } = useParams()
   const navigate = useNavigate()
   useEffect(() => {
-    document.title = `${orderId} Payment Successful | Fastcart Online Store`
+    document.title = `${orderId} Payment Successful | RukatechStore`
 
   }, [orderId])
   

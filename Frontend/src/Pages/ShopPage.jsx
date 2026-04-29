@@ -10,10 +10,14 @@ import { useDispatch } from "react-redux";
 import { addToCart } from "../redux/Cart";
 
 const ShopPage = () => {
-  const { allCategory, allProduct } = useContext(CategoryContext);
-  // console.log("All category in shoppage: ", allCategory);
+  const { allCategory, allProduct, allBrand, allBrandForCategory} = useContext(CategoryContext);
+  console.log("All brand in shoppage: ", allBrand);
   const dispatch = useDispatch();
   const [productShowName, setProductShowName] = useState("All Product");
+  const [brandShowName, setBrandShowName] = useState([]);
+  const [uniqueBrands, setUniqueBrands] = useState("");
+  const [selectedOS, setSelectedOS] = useState([]);
+  const [selectedRAM, setSelectedRAM] = useState([]);
   const [productPrice, setProductPrice] = useState("all");
   const [priceSlider, setPriceSlider] = useState(10000000);
   const [sidebarTopOffset, setSidebarTopOffset] = useState(90);
@@ -21,7 +25,23 @@ const ShopPage = () => {
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
   const [searchParams] = useSearchParams()
   const categoryName = searchParams.get('category');
-  console.log("Category name from param: ", categoryName);
+  console.log("All category: ", allCategory, "All brand for category: ", allBrandForCategory);
+
+  const brandForSelectedCategory = useMemo(() => {
+    if (!allProduct) return [];
+
+    // If "All Product" → return all brands
+    if (productShowName === "All Product") {
+      return [...new Set(allProduct.map(p => p.brand).filter(Boolean))];
+    }
+
+    // Otherwise → filter by category first
+    const filtered = allProduct.filter(
+      (p) => p.category === productShowName
+    );
+
+    return [...new Set(filtered.map(p => p.brand).filter(Boolean))];
+  }, [allProduct, productShowName]);
 
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,6 +61,7 @@ const ShopPage = () => {
     }
   }, [maxProductPrice]);
 
+  // for category filter
   const displayedCategories = useMemo(() => {
     if (!allCategory) return [];
     if (productShowName === "All Product") {
@@ -51,6 +72,38 @@ const ShopPage = () => {
 
     return filtered;
   }, [allCategory, productShowName]);
+
+  // for operating system filter
+  const osForSelectedCategory = useMemo(() => {
+    if (!allProduct) return [];
+
+    const filtered =
+      productShowName === "All Product"
+        ? allProduct
+        : allProduct.filter(p => p.category === productShowName);
+
+    return [...new Set(
+      filtered
+        .map(p => p.operatingSystem)
+        .filter(Boolean)
+    )];
+  }, [allProduct, productShowName]);
+
+  // for brand
+  const ramForSelectedCategory = useMemo(() => {
+    if (!allProduct) return [];
+
+    const filtered =
+      productShowName === "All Product"
+        ? allProduct
+        : allProduct.filter(p => p.category === productShowName);
+
+    return [...new Set(
+      filtered
+        .map(p => p.ram)
+        .filter(Boolean)
+    )];
+  }, [allProduct, productShowName]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -77,7 +130,7 @@ const ShopPage = () => {
     if (categoryName) {
       setProductShowName(categoryName);
     }
-    document.title = `${categoryName || "Shop All Product"} - Fastcart`;
+    document.title = `${categoryName || "Shop All Product"} - RukatechStore`;
   }, [categoryName]);
 
   const filterByPrice = (priceRange, product) => {
@@ -103,32 +156,55 @@ const ShopPage = () => {
   };
 
   const filteredProducts = useMemo(() => {
-    return allProduct?.filter((product) => {
-      const matchesCategory =
-        productShowName === "All Product" ||
-        product.category === productShowName ||
-        (categoryName && product.category === categoryName);
+  return allProduct?.filter((product) => {
+    const matchesCategory =
+      productShowName === "All Product" ||
+      product.category === productShowName ||
+      (categoryName && product.category === categoryName);
 
-      const matchesSearchQuery =
-        product.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-        (product.description || "")
-          .toLowerCase()
-          .includes(debouncedQuery.toLowerCase());
+    const matchesBrand =
+      brandShowName.length === 0 || brandShowName.includes(product.brand);
 
-      const matchesPrice = filterByPrice(productPrice, product);
-      const matchesSlider = Number(product.price) <= priceSlider;
-      return (
-        matchesCategory && matchesSearchQuery && matchesPrice && matchesSlider
-      );
-    });
-  }, [
-    allProduct,
-    productShowName,
-    categoryName,
-    debouncedQuery,
-    productPrice,
-    priceSlider,
-  ]);
+    const matchesSearchQuery =
+      product.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+      (product.description || "")
+        .toLowerCase()
+        .includes(debouncedQuery.toLowerCase());
+
+    const matchesPrice = filterByPrice(productPrice, product);
+    const matchesSlider = Number(product.price) <= priceSlider;
+
+    const matchesOS =
+    selectedOS.length === 0 || selectedOS.includes(product.operatingSystem);
+
+    const matchesRAM =
+    selectedRAM.length === 0 || selectedRAM.includes(product.ram);
+
+    return (
+      matchesCategory &&
+      matchesBrand &&
+      matchesSearchQuery &&
+      matchesPrice &&
+      matchesSlider &&
+      matchesOS &&
+      matchesRAM
+    );
+  });
+}, [
+  allProduct,
+  productShowName,
+  categoryName,
+  brandShowName,
+  debouncedQuery,
+  productPrice,
+  priceSlider,
+]);
+
+useEffect(() => {
+  setBrandShowName([]);
+  setSelectedOS([]);
+  setSelectedRAM([]);
+}, [productShowName]);
 
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
@@ -220,14 +296,14 @@ const ShopPage = () => {
                 <input
                   type="radio"
                   id={`category-aside-${cat}`}
-                  onChange={() => setProductShowName(cat)}
+                  onChange={() => setProductShowName(cat) }
                   checked={productShowName === cat}
                   name="category-aside"
                 />
                 <span className="material-symbols-outlined text-primary">
                   category
                 </span>
-                <label htmlFor={`category-aside-${cat}`}>{cat}</label>
+                <label htmlFor={`category-aside-${cat}`}>{cat.toUpperCase()}</label>
               </div>
             ))}
           </div>
@@ -266,80 +342,83 @@ const ShopPage = () => {
           style={{ position: "sticky", top: `${sidebarTopOffset}px` }}
         >
           <div className="bg-white p-4 border border-gray-100 rounded-3xl shadow-sm">
-            <h3 className="font-inter font-bold mb-4 text-primary uppercase">
-              Brand
-            </h3>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  className="rounded text-primary-light focus:ring-primary-light border-gray-300"
-                  type="checkbox"
-                />
-                <span className="font-inter  text-secondary group-hover:text-primary-light transition-colors">
-                  Samsung
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  className="rounded text-primary-light focus:ring-primary-light border-gray-300"
-                  type="checkbox"
-                />
-                <span className="font-inter  text-secondary group-hover:text-primary-light transition-colors">
-                  Apple
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  className="rounded text-primary-light focus:ring-primary-light border-gray-300"
-                  type="checkbox"
-                />
-                <span className="font-inter  text-secondary group-hover:text-primary-light transition-colors">
-                  Xiaomi
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  className="rounded text-primary-light focus:ring-primary-light border-gray-300"
-                  type="checkbox"
-                />
-                <span className="font-inter  text-secondary group-hover:text-primary-light transition-colors">
-                  Infinix
-                </span>
-              </label>
-            </div>
+            
+            {brandForSelectedCategory.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="font-inter font-bold mb-4 text-primary uppercase">
+                  Brand
+                </h3>
+                {brandForSelectedCategory.map((brand, index) => (
+                  <div className="flex items-center gap-2 cursor-pointer text-sm">
+                      <input
+                        type="checkbox"
+                        id="category-all-aside"
+                        onChange={() => {
+                          setBrandShowName((prev) =>
+                            prev.includes(brand)
+                              ? prev.filter((b) => b !== brand)
+                              : [...prev, brand]
+                          );
+                        }}
+                        checked={brandShowName.includes(brand)}
+                        name="brand-aside"
+                      />
+                      <label htmlFor={`category-aside-${brand}`}>{brand}</label>
+                    </div>
+                ))}
             <hr className="my-6 border-gray-100" />
-            <h3 className="font-inter font-bold mb-4 text-primary uppercase">
-              Operating System
-            </h3>
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  className="rounded text-primary-light focus:ring-primary-light border-gray-300"
-                  type="checkbox"
-                />
-                <span className="font-inter  text-secondary group-hover:text-primary-light transition-colors">
-                  Windows
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  className="rounded text-primary-light focus:ring-primary-light border-gray-300"
-                  type="checkbox"
-                />
-                <span className="font-inter  text-secondary group-hover:text-primary-light transition-colors">
-                  MacBook
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                  className="rounded text-primary-light focus:ring-primary-light border-gray-300"
-                  type="checkbox"
-                />
-                <span className="font-inter  text-secondary group-hover:text-primary-light transition-colors">
-                  Linux
-                </span>
-              </label>
-            </div>
+              </div>
+            )}
+
+            {osForSelectedCategory.length > 0 && (
+              <>
+                <h3 className="font-inter font-bold mb-4 text-primary uppercase">
+                  Operating System
+                </h3>
+
+                {osForSelectedCategory.map((os) => (
+                  <label key={os} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedOS.includes(os)}
+                      onChange={() => {
+                        setSelectedOS(prev =>
+                          prev.includes(os)
+                            ? prev.filter(o => o !== os)
+                            : [...prev, os]
+                        );
+                      }}
+                    />
+                    <span>{os}</span>
+                  </label>
+                ))}
+              </>
+            )}
+            <hr className="my-6 border-gray-100" />
+            {ramForSelectedCategory.length > 0 && (
+              <>
+                <h3 className="font-inter font-bold mb-4 text-primary uppercase">
+                  RAM
+                </h3>
+
+                {ramForSelectedCategory.map((ram) => (
+                  <label key={ram} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedRAM.includes(ram)}
+                      onChange={() => {
+                        setSelectedRAM(prev =>
+                          prev.includes(ram)
+                            ? prev.filter(r => r !== ram)
+                            : [...prev, ram]
+                        );
+                      }}
+                    />
+                    <span>{ram}</span>
+                  </label>
+                ))}
+              </>
+            )}
             <hr className="my-6 border-gray-100" />
             <h3 className="font-inter font-bold mb-4 text-primary uppercase">
               Price Range
@@ -401,7 +480,7 @@ const ShopPage = () => {
                       <div
                         className="bg-white border border-gray-100 rounded-lg overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300 relative cursor-pointer"
                         key={index}
-                        onClick={() => navigate(`/store/${product.name}`, { state: { id: product._id, product: product}})}
+                        onClick={() => navigate(`/store/${encodeURIComponent(product.name)}`, { state: { id: product._id, product: product}})}
                       >
                         {product.discountprice && (
                           <div className="absolute top-2 right-2 z-10">

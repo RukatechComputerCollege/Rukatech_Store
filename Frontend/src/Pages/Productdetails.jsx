@@ -37,7 +37,7 @@ const Productdetails = () => {
     // const foundProduct = allProduct.find((product) => product?._id === id.id);
     // setProduct(foundProduct);
     // console.log("Product found: ", foundProduct);
-    document.title = `${product?.name || "Loading..."} | Fastcart Online Store`;
+    document.title = `${product?.name || "Loading..."} | RukatechStore`;
   }, [id, product]);
 
   useEffect(() => {
