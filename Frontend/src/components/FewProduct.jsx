@@ -33,7 +33,7 @@ const FewProduct = () => {
           
           {allCategory?.slice(0, 4).map((cat) => (
             <p
-              key={cat._id}
+              key={cat?._id}
               className={`cursor-pointer ${productShowName === cat.name ? 'border-b-2 border-[#FA8232]' : ''}`}
               onClick={() => setProductShowName(cat.name)}
             >
@@ -53,11 +53,11 @@ const FewProduct = () => {
 
       <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
         {filteredProducts && filteredProducts.length > 0 ? filteredProducts?.map((product) => (
-          <ProductCard key={product._id} product={product}/>
+          <ProductCard key={product?._id} product={product}/>
         ))
         :
         Array.from({ length: 10}).map((_, index) => (
-          <div className="w-full h-[250px] cursor-pointer flex flex-col gap-2 border-1 border-[#E4E7E9]" style={{ padding: "10px" }}>
+          <div key={index} className="w-full h-[250px] cursor-pointer flex flex-col gap-2 border-1 border-[#E4E7E9]" style={{ padding: "10px" }}>
             <SkelentonLoader />
           </div>
         ))

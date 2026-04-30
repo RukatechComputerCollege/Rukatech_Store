@@ -53,7 +53,7 @@ const BestDeals = () => {
   }
   const navigate  = useNavigate()
   const productDetails = (productWithHighestDiscount) =>{
-    navigate(`/product-page/${productWithHighestDiscount._id}`)
+    navigate(`/store/${productWithHighestDiscount._id}`)
   }
   return (
     <div className="w-full gap-4 md:gap-0 grid items-start lg:grid-cols-[24%_76%] lg:border-1 lg:border-[#E4E7E9]">

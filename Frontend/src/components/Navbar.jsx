@@ -63,7 +63,7 @@ const Navbar = () => {
   };
 
   return (
-    <div>
+    <div className="shop-navbar">
       <div
         className="w-full bg-white text-black"
         style={{ padding: "10px 6%" }}
@@ -136,8 +136,8 @@ const Navbar = () => {
               </div>
               {cartItem.length > 0 && (
                 <div
-                  style={{ padding: "10px" }}
-                  className="absolute top-[-12px] right-[-12px] border-4 w-[20px] h-[20px] bg-white border-[#1B6392] rounded-[50%] flex flex-col items-center justify-center text-[#1B6392]"
+                  style={{ padding: "8px" }}
+                  className="absolute top-[-6px] right-[30px] w-[10px] h-[10px] bg-primary border border-white rounded-full flex items-center justify-center text-white text-[12px]"
                 >
                   <span>{cartItem.length}</span>
                 </div>

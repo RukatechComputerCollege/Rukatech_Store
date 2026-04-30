@@ -93,7 +93,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                   </p>
                   <div>
                     <button
-                      onClick={()=>navigate(`/product-page/${promoProduct1._id}`)}
+                      onClick={()=>navigate(`/store/${promoProduct1._id}`)}
                       className="flex gap-4 cursor-pointer text-white bg-[#FA8232] rounded-[3px]"
                       style={{ padding: "20px 32px" }}
                     >
@@ -167,7 +167,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                   </p>
                   <div>
                     <button
-                      onClick={()=>navigate(`/product-page/${promoProduct2._id}`)}
+                      onClick={()=>navigate(`/store/${promoProduct2._id}`)}
                       className="flex gap-4 cursor-pointer text-white bg-[#FA8232] rounded-[3px]"
                       style={{ padding: "20px 32px" }}
                     >
@@ -241,7 +241,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                   </p>
                   <div>
                     <button
-                      onClick={()=>navigate(`/product-page/${promoProduct3._id}`)}
+                      onClick={()=>navigate(`/store/${promoProduct3._id}`)}
                       className="flex gap-4 cursor-pointer text-white bg-[#FA8232] rounded-[3px]"
                       style={{ padding: "20px 32px" }}
                     >

@@ -58,15 +58,15 @@ const App = () => {
             <Route index element={<Landingpage />} />
             <Route path='/who-we-are' element={<AboutUs />} />
             <Route path='/store' element={<ShopPage />} />
-            <Route path='/account/forgot-password' element={<ForgotPassword />} />
-            <Route path='/reset-password/:token' element={<ResetPassword />} />
-
-            <Route path='/store/:categoryName' element={<ShopPage />} />
-            <Route path='/product-page/:id' element={
+            <Route path='/store/:name' element={
               <CategoryProvider>
                 <Productdetails />
               </CategoryProvider>
             } />
+            <Route path='/account/forgot-password' element={<ForgotPassword />} />
+            <Route path='/reset-password/:token' element={<ResetPassword />} />
+
+            <Route path='/store/:categoryName' element={<ShopPage />} />
             <Route path='/order-tracking' element={<OrderTrack />} />
             <Route path='/order-tracking/:id' element={<OrderTrackDetails />} />
             <Route path='/shopping-cart' element={<ShoppingCart />} />
