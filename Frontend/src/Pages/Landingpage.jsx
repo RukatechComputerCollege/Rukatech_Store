@@ -22,6 +22,9 @@ import { useNavigate } from "react-router-dom";
 import ShowcaseProduct from "../components/ShowcaseProduct";
 import SkelentonLoader from "../components/SkelentonLoader";
 import LandingPagePC from "../components/LandingPagePC";
+import StoreProductCard from "../components/StoreProductCard";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, removeFromCart } from "../redux/Cart";
 
 const categoryImage = [
   {
@@ -41,15 +44,18 @@ const categoryImage = [
   },
   {
     name: "monitors",
-    image: "https://rukatech-store.s3.amazonaws.com/category/laptop.png",
+    image:
+      "https://images.unsplash.com/photo-1616763355548-1b606f439f86?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bW9uaXRvcnN8ZW58MHx8MHx8fDA%3D",
   },
   {
     name: "tablets",
-    image: "https://rukatech-store.s3.amazonaws.com/category/laptop.png",
+    image:
+      "https://images.unsplash.com/photo-1622531636820-5d727319e45d?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dGFibGV0c3xlbnwwfHwwfHx8MA%3D%3D",
   },
   {
     name: "processors",
-    image: "https://rukatech-store.s3.amazonaws.com/category/laptop.png",
+    image:
+      "https://plus.unsplash.com/premium_photo-1681426698212-53e47fec9a2c?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fHByb2Nlc3NvcnN8ZW58MHx8MHx8fDA%3D",
   },
 ];
 
@@ -87,6 +93,8 @@ const Landingpage = () => {
   };
   const slideCategory = chunkArray(allCategory, chunkSize);
   const navigate = useNavigate();
+  const cartItem = useSelector((state) => state.cart.cartItem);
+  const dispatch = useDispatch();
 
   const [promoProduct1, setPromoProduct1] = useState(null);
   const [promoProduct2, setPromoProduct2] = useState(null);
@@ -135,7 +143,7 @@ const Landingpage = () => {
       {/* Hero Section & Sidebar */}
       <div className="grid grid-cols-12 gap-4">
         {/* Sidebar Categories */}
-        <aside className="hidden lg:block col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 flex-col py-2 h-[50dvh] overflow-y-scroll">
+        <aside className="hidden lg:block col-span-3 bg-white rounded-2xl shadow-[12px] border border-gray-100 flex-col py-2 h-[50dvh] overflow-y-scroll">
           <h2 className="px-4 uppercase font-bold text-primary">Categories</h2>
           <a
             href={`/store`}
@@ -162,7 +170,7 @@ const Landingpage = () => {
             ))}
         </aside>
         {/* Hero Slider */}
-        <div className="col-span-12 lg:col-span-7 lg:h-[50dvh] bg-white rounded-2xl overflow-hidden shadow-sm relative">
+        <div className="col-span-12 lg:col-span-7 lg:h-[50dvh] bg-white rounded-2xl overflow-hidden shadow-[12px] relative">
           <ShowcaseProduct
             promoProduct1={promoProduct1}
             promoProduct2={promoProduct2}
@@ -171,7 +179,7 @@ const Landingpage = () => {
         </div>
         {/* Right Column Info */}
         <div className="hidden lg:flex col-span-2 flex-col gap-4">
-          <div className="bg-white rounded-lg p-4 shadow-sm flex flex-col gap-3">
+          <div className="bg-white rounded-lg p-4 shadow-[12px] flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
                 <span className="material-symbols-outlined text-primary-light text-lg">
@@ -210,7 +218,7 @@ const Landingpage = () => {
               </div>
             </div>
           </div>
-          <div className="bg-primary-light rounded-lg p-2 text-white overflow-hidden shadow-sm">
+          <div className="bg-primary-light rounded-lg p-2 text-white overflow-hidden shadow-[12px]">
             <img
               className="w-full h-32 object-cover rounded mb-2"
               alt="rukatech_store_location"
@@ -257,14 +265,14 @@ const Landingpage = () => {
                               navigate(`/store?category=${category}`)
                             }
                             key={i}
-                            className="relative bg-white cursor-pointer border-1 border-[#E4E7E9] rounded-[4px] flex flex-col items-center justify-start h-[200px]"
+                            className="relative bg-white cursor-pointer border-1 border-[#E4E7E9] rounded-4xl flex flex-col items-center justify-start h-[200px]"
                           >
-                            <div className="absolute w-full h-full bg-black/60"></div>
+                            <div className="absolute w-full h-full bg-black/60 rounded-4xl"></div>
                             {categoryImage.map(
                               (cat, index) =>
                                 cat.name === category && (
                                   <img
-                                    className="h-full w-full"
+                                    className="h-full w-full rounded-4xl"
                                     src={cat.image}
                                     alt={category}
                                   />
@@ -314,16 +322,17 @@ const Landingpage = () => {
         </div>
       </div>
       {/* <!-- Flash Sales --> */}
-      <section className="bg-white rounded-3xl shadow-sm overflow-hidden">
+      <section className="bg-white rounded-3xl shadow-[12px] overflow-hidden">
         <div className="bg-red-600 px-4 py-3 flex items-center justify-between text-white">
           <div className="flex items-center gap-4">
-            <span className="material-symbols-outlined fill !text-[34px] text-primary-light font-bold">
+            <img src="/chatgptflash.png" className="w-15 -mt-1 h-full" />
+            {/* <span className="material-symbols-outlined fill !text-[34px] text-primary-light font-bold">
               sell
-            </span>
-            <h2 className="text-xl font-bold uppercase tracking-tight">
+            </span> */}
+            {/* <h2 className="text-[32px] font-bold uppercase tracking-tight">
               Flash Sales
-            </h2>
-            <div className="flex items-center gap-2 text-sm ml-4">
+            </h2> */}
+            <div className="flex items-center gap-2 text-[12px] ml-4">
               <span className="opacity-80">Time Left:</span>
               <div className="flex gap-1 font-mono flash-sale-timer">
                 <span className="bg-white/20 px-1 rounded">08</span>:
@@ -333,11 +342,11 @@ const Landingpage = () => {
             </div>
           </div>
           <a
-            className="text-sm font-bold flex items-center gap-1 hover:underline"
+            className="text-[12px] font-bold flex items-center gap-1 hover:underline"
             href="#"
           >
             SEE ALL
-            <span className="material-symbols-outlined text-sm">
+            <span className="material-symbols-outlined text-[12px]">
               chevron_right
             </span>
           </a>
@@ -358,7 +367,7 @@ const Landingpage = () => {
             <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
               Smart Watch Series 7 - Black Silicon Strap
             </p>
-            <p className="text-sm font-bold">₦ 12,450</p>
+            <p className="text-[12px] font-bold">₦ 12,450</p>
             <p className="text-[10px] text-gray-400 line-through">₦ 22,600</p>
             <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-red-500 w-3/4"></div>
@@ -379,7 +388,7 @@ const Landingpage = () => {
             <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
               Bluetooth Over-ear Stereo Headphones
             </p>
-            <p className="text-sm font-bold">₦ 45,900</p>
+            <p className="text-[12px] font-bold">₦ 45,900</p>
             <p className="text-[10px] text-gray-400 line-through">₦ 57,400</p>
             <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-red-500 w-1/2"></div>
@@ -400,7 +409,7 @@ const Landingpage = () => {
             <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
               Premium Aviator Polarized Sunglasses
             </p>
-            <p className="text-sm font-bold">₦ 3,200</p>
+            <p className="text-[12px] font-bold">₦ 3,200</p>
             <p className="text-[10px] text-gray-400 line-through">₦ 8,000</p>
             <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-red-500 w-5/6"></div>
@@ -421,7 +430,7 @@ const Landingpage = () => {
             <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
               Sports Running Shoes - Red/White Edition
             </p>
-            <p className="text-sm font-bold">₦ 15,800</p>
+            <p className="text-[12px] font-bold">₦ 15,800</p>
             <p className="text-[10px] text-gray-400 line-through">₦ 22,500</p>
             <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-red-500 w-1/4"></div>
@@ -442,7 +451,7 @@ const Landingpage = () => {
             <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
               Instant Film Camera - classNameic Blue
             </p>
-            <p className="text-sm font-bold">₦ 38,000</p>
+            <p className="text-[12px] font-bold">₦ 38,000</p>
             <p className="text-[10px] text-gray-400 line-through">₦ 45,000</p>
             <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-red-500 w-2/3"></div>
@@ -463,7 +472,7 @@ const Landingpage = () => {
             <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
               RGB Gaming Mouse 12000 DPI
             </p>
-            <p className="text-sm font-bold">₦ 7,500</p>
+            <p className="text-[12px] font-bold">₦ 7,500</p>
             <p className="text-[10px] text-gray-400 line-through">₦ 15,000</p>
             <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
               <div className="h-full bg-red-500 w-1/2"></div>
@@ -476,11 +485,11 @@ const Landingpage = () => {
       <section className="mt-8">
         <div className="bg-primary text-white px-4 py-4 rounded-t-2xl flex items-center justify-between">
           <h2 className="text-lg font-bold">New Arrivals</h2>
-          {/* <span className="text-sm font-bold cursor-pointer uppercase hover:underline" onClick={() => navigate("/store")}>
+          {/* <span className="text-[12px] font-bold cursor-pointer uppercase hover:underline" onClick={() => navigate("/store")}>
             See All
           </span> */}
         </div>
-        <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-sm">
+        <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-[12px]">
           {/* <!-- Phone Product Cards --> */}
           {allProduct.slice(0, 16).map((product, index) => (
             <LandingPagePC
@@ -496,11 +505,11 @@ const Landingpage = () => {
         <section className="mt-8">
           <div className="bg-primary text-white px-4 py-4 rounded-t-2xl flex items-center justify-between">
             <h2 className="text-lg font-bold">Best Deals</h2>
-            {/* <span className="text-sm font-bold cursor-pointer uppercase hover:underline" onClick={() => navigate("/store")}>
+            {/* <span className="text-[12px] font-bold cursor-pointer uppercase hover:underline" onClick={() => navigate("/store")}>
               See All
             </span> */}
           </div>
-          <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-sm">
+          <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-[12px]">
             {/* <!-- Phone Product Cards --> */}
             {bestDealsProduct.map((product, index) => (
               <LandingPagePC
@@ -512,48 +521,233 @@ const Landingpage = () => {
           </div>
         </section>
       )}
-      {/* <!-- Categories --> */}
-      <section className="mt-8">
-        <div className="bg-primary text-white px-4 py-4 rounded-t-3xl flex items-center justify-between">
-          <h2 className="text-lg font-bold">Categories</h2>
-          <div className="space-x-16">
-            <span
-              onClick={() => setProductShowName("Product")}
-              className="text-sm font-bold cursor-pointer uppercase hover:underline"
-            >
-              All
+      {/* Apple Store Section */}
+      <section className="mt-8 bg-white rounded-3xl shadow-[12px] overflow-hidden border border-gray-100">
+        {/* <!-- Header --> */}
+        <div className="bg-primary px-4 py-3 flex items-center justify-between text-white">
+          <div className="flex items-center"> 
+            {/* <img src="/apple_logo.png" className="w-8 -mt-1 h-full" /> */}
+            {/* <span className="material-symbols-outlined fill !text-[34px] text-primary-light font-bold">
+              ios
+            </span> */}
+            <h2 className="text-[18px] font-bold tracking-tight">
+              Apple Store
+            </h2>
+          </div>
+          <a
+            className="text-[12px] font-bold flex items-center gap-1 hover:underline"
+            href="#"
+          >
+            SEE ALL
+            <span className="material-symbols-outlined text-[12px]">
+              chevron_right
             </span>
-            {allCategory?.slice(0, 4).map((cat) => (
-              <span
-                key={cat._id}
-                onClick={() => setProductShowName(cat)}
-                className="text-sm cursor-pointer font-bold uppercase hover:underline"
-              >
-                {cat}
-              </span>
-            ))}
-            <span
-              onClick={() => navigate("/store")}
-              className="text-sm font-bold cursor-pointer uppercase hover:underline"
-            >
-              See All
-            </span>
+          </a>
+        </div>
+        <div className="p-4 grid grid-cols-3 gap-4">
+          {/* <!-- Side Promo Banner --> */}
+          <div className="col-span-1 h-full">
+            <img
+              alt="Apple Store Promo"
+              className="w-full h-full object-cover rounded-3xl"
+              src="https://pcplaceng.com/laxgts/2025/08/apple-deal-1.jpg"
+            />
+          </div>
+          {/* <!-- Product Grid --> */}
+          <div className="col-span-2 grid grid-cols-5 grid-rows-2 gap-3">
+            {allProduct
+              .filter(
+                (product) =>
+                  product.name.toLowerCase().includes("apple") ||
+                  product.name.toLowerCase().includes("iphone") ||
+                  product.name.toLowerCase().includes("macbook") ||
+                  product.name.toLowerCase().includes("ipad") ||
+                  product.name.toLowerCase().includes("airpods") ||
+                  product.name.toLowerCase().includes("ios") ||
+                  product.name.toLowerCase().includes("apple watch"),
+              )
+              .slice(0, 4)
+              .map((product, index) => (
+                <div key={index}>
+                  <StoreProductCard
+                    product={product}
+                    isInCart={cartItem.some((item) => item._id === product._id)}
+                    onAddToCart={(product) => dispatch(addToCart(product))}
+                    onRemoveFromCart={(product) =>
+                      dispatch(removeFromCart(product))
+                    }
+                  />
+                </div>
+              ))}
           </div>
         </div>
-        <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-sm">
-          {/* <!-- Phone Product Cards --> */}
-          {filteredProducts.slice(0, 6).map((product, index) => (
-            <LandingPagePC
-              key={index}
-              product={product}
-              onClick={() => productDetails(product)}
-            />
-          ))}
+      </section>
+      {/* <!-- Computing Deals Section --> */}
+      <section className="mt-8 bg-white rounded-3xl shadow-[12px] overflow-hidden border border-gray-100">
+        <div className="bg-white rounded-lg shadow-[12px] border border-gray-100 p-8">
+          <h2 className="text-[32px] font-semibold text-center">
+            Computing Deals
+          </h2>
+          <div className="grid grid-cols-6 gap-x-2 gap-y-4">
+            {/* <!-- Row 1 --> */}
+            <div
+              onClick={() => navigate("/store?category=laptops")}
+              className="group cursor-pointer"
+            >
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <img
+                  alt="Laptops"
+                  className="w-full h-20 object-contain"
+                  src="https://ng.jumia.is/cms/0-0-black-friday/2021/userneeds/computing-deals/laptops_260x144.png"
+                />
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                Laptops
+              </p>
+            </div>
+            <div
+              onClick={() => navigate("/store?category=tablets")}
+              className="group cursor-pointer"
+            >
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <img
+                  alt="Tablets"
+                  className="w-full h-20 object-contain"
+                  src="https://ng.jumia.is/cms/0-0-black-friday/2021/cyber-monday/tablets_260x144.png"
+                />
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                Tablets
+              </p>
+            </div>
+            <div
+              onClick={() => navigate("/store?category=phones")}
+              className="group cursor-pointer"
+            >
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <img
+                  alt="Phones"
+                  className="w-full h-20 object-contain"
+                  src="https://ng.jumia.is/cms/0-1-category-pages/phones-tablets/2025/300x400/Phones_Tablet/iphone-300X400.png"
+                />
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                Phones
+              </p>
+            </div>
+            <div className="group cursor-pointer">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <img
+                  alt="Scanners"
+                  className="w-full h-20 object-contain"
+                  src="https://ng.jumia.is/cms/0-0-black-friday/2021/userneeds/computing-deals/scanners_260x144.png"
+                />
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                Scanners
+              </p>
+            </div>
+            <div className="group cursor-pointer">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <img
+                  alt="Laptop Bags"
+                  className="w-full h-20 object-contain"
+                  src="https://ng.jumia.is/cms/0-0-black-friday/2021/userneeds/computing-deals/laptop-bags_260x144.png"
+                />
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                Laptop Bags
+              </p>
+            </div>
+            <div className="group cursor-pointer">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <img
+                  alt="Gaming"
+                  className="w-full h-20 object-contain"
+                  src="https://ng.jumia.is/cms/0-5-TechWeek/2022/userneeds/work-from-anywhere/gaming_260x144.png"
+                />
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                Gaming
+              </p>
+            </div>
+            {/* <!-- Row 2 --> */}
+            <div className="group cursor-pointer">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <img
+                  alt="Apple"
+                  className="w-full h-20 object-contain"
+                  src="https://ng.jumia.is/cms/0-5-TechWeek/2022/userneeds/work-from-anywhere/apple_260x144.png"
+                />
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                Apple
+              </p>
+            </div>
+            <div className="group cursor-pointer">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <img
+                  alt="HP"
+                  className="w-full h-20 object-contain"
+                  src="https://ng.jumia.is/cms/0-5-TechWeek/2022/userneeds/work-from-anywhere/hp_260x144.png"
+                />
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                HP
+              </p>
+            </div>
+            <div className="group cursor-pointer">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <img
+                  alt="Dell"
+                  className="w-full h-20 object-contain"
+                  src="https://ng.jumia.is/cms/0-5-TechWeek/2022/userneeds/work-from-anywhere/dell_260x144.png"
+                />
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                Dell
+              </p>
+            </div>
+            <div className="group cursor-pointer">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <img
+                  alt="Intel"
+                  className="w-full h-20 object-contain"
+                  src="https://ng.jumia.is/cms/0-5-TechWeek/2022/userneeds/work-from-anywhere/intel_260x144.png"
+                />
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                Intel
+              </p>
+            </div>
+            <div className="group cursor-pointer">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <img
+                  alt="Lenovo"
+                  className="w-full h-20 object-contain"
+                  src="https://ng.jumia.is/cms/0-5-TechWeek/2022/userneeds/work-from-anywhere/lenovo_260x144.png"
+                />
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                Lenovo
+              </p>
+            </div>
+            <div className="group cursor-pointer">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+                <span className="material-symbols-outlined text-3xl text-gray-400">
+                  arrow_forward
+                </span>
+              </div>
+              <p className="text-[12px] group-hover:text-primary-light text-center font-medium text-gray-700">
+                Work from Anywhere
+              </p>
+            </div>
+          </div>
         </div>
       </section>
       {/* <!-- Information Text Section --> */}
       <section className="my-12 text-center text-gray-600 max-w-3xl mx-auto">
-        <h1 className="text-xl font-bold mb-4">
+        <h1 className="text-[32px] font-bold mb-4">
           Rukatech Store - Nigeria's No. 1 Gadget Shopping Destination
         </h1>
         <p className="text-xs leading-relaxed">

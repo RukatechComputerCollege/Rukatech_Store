@@ -3,15 +3,17 @@ import { CategoryContext } from "../CategoryContext";
 // import ProductCard from "../components/ProductCard";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Loader from "../components/Loader";
+import StoreProductCard from "../components/StoreProductCard";
 import { IoFilter } from "react-icons/io5";
 import { IoIosArrowRoundForward, IoIosArrowRoundBack } from "react-icons/io";
-import { FaRegHeart } from "react-icons/fa";
-import { useDispatch } from "react-redux";
-import { addToCart } from "../redux/Cart";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, removeFromCart } from "../redux/Cart";
 
 const ShopPage = () => {
-  const { allCategory, allProduct, allBrand, allBrandForCategory} = useContext(CategoryContext);
+  const { allCategory, allProduct, allBrand, allBrandForCategory } =
+    useContext(CategoryContext);
   console.log("All brand in shoppage: ", allBrand);
+  const cartItem = useSelector((state) => state.cart.cartItem);
   const dispatch = useDispatch();
   const [productShowName, setProductShowName] = useState("All Product");
   const [brandShowName, setBrandShowName] = useState([]);
@@ -23,24 +25,29 @@ const ShopPage = () => {
   const [sidebarTopOffset, setSidebarTopOffset] = useState(90);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
-  const [searchParams] = useSearchParams()
-  const categoryName = searchParams.get('category');
-  console.log("All category: ", allCategory, "All brand for category: ", allBrandForCategory);
+  const [searchParams] = useSearchParams();
+  const categoryName = searchParams.get("category");
+  console.log(
+    "All category: ",
+    allCategory,
+    "All brand for category: ",
+    allBrandForCategory,
+  );
 
   const brandForSelectedCategory = useMemo(() => {
     if (!allProduct) return [];
 
     // If "All Product" → return all brands
     if (productShowName === "All Product") {
-      return [...new Set(allProduct.map(p => p.brand).filter(Boolean))];
+      return [
+        ...new Set(allProduct.map((p) => p.brand?.trim()).filter(Boolean)),
+      ];
     }
 
     // Otherwise → filter by category first
-    const filtered = allProduct.filter(
-      (p) => p.category === productShowName
-    );
+    const filtered = allProduct.filter((p) => p.category === productShowName);
 
-    return [...new Set(filtered.map(p => p.brand).filter(Boolean))];
+    return [...new Set(filtered.map((p) => p.brand?.trim()).filter(Boolean))];
   }, [allProduct, productShowName]);
 
   const navigate = useNavigate();
@@ -80,13 +87,9 @@ const ShopPage = () => {
     const filtered =
       productShowName === "All Product"
         ? allProduct
-        : allProduct.filter(p => p.category === productShowName);
+        : allProduct.filter((p) => p.category === productShowName);
 
-    return [...new Set(
-      filtered
-        .map(p => p.operatingSystem)
-        .filter(Boolean)
-    )];
+    return [...new Set(filtered.map((p) => p.operatingSystem).filter(Boolean))];
   }, [allProduct, productShowName]);
 
   // for brand
@@ -96,13 +99,9 @@ const ShopPage = () => {
     const filtered =
       productShowName === "All Product"
         ? allProduct
-        : allProduct.filter(p => p.category === productShowName);
+        : allProduct.filter((p) => p.category === productShowName);
 
-    return [...new Set(
-      filtered
-        .map(p => p.ram)
-        .filter(Boolean)
-    )];
+    return [...new Set(filtered.map((p) => p.ram).filter(Boolean))];
   }, [allProduct, productShowName]);
 
   useEffect(() => {
@@ -156,55 +155,55 @@ const ShopPage = () => {
   };
 
   const filteredProducts = useMemo(() => {
-  return allProduct?.filter((product) => {
-    const matchesCategory =
-      productShowName === "All Product" ||
-      product.category === productShowName ||
-      (categoryName && product.category === categoryName);
+    return allProduct?.filter((product) => {
+      const matchesCategory =
+        productShowName === "All Product" ||
+        product.category === productShowName ||
+        (categoryName && product.category === categoryName);
 
-    const matchesBrand =
-      brandShowName.length === 0 || brandShowName.includes(product.brand);
+      const matchesBrand =
+        brandShowName.length === 0 || brandShowName.includes(product.brand);
 
-    const matchesSearchQuery =
-      product.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-      (product.description || "")
-        .toLowerCase()
-        .includes(debouncedQuery.toLowerCase());
+      const matchesSearchQuery =
+        product.name.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+        (product.description || "")
+          .toLowerCase()
+          .includes(debouncedQuery.toLowerCase());
 
-    const matchesPrice = filterByPrice(productPrice, product);
-    const matchesSlider = Number(product.price) <= priceSlider;
+      const matchesPrice = filterByPrice(productPrice, product);
+      const matchesSlider = Number(product.price) <= priceSlider;
 
-    const matchesOS =
-    selectedOS.length === 0 || selectedOS.includes(product.operatingSystem);
+      const matchesOS =
+        selectedOS.length === 0 || selectedOS.includes(product.operatingSystem);
 
-    const matchesRAM =
-    selectedRAM.length === 0 || selectedRAM.includes(product.ram);
+      const matchesRAM =
+        selectedRAM.length === 0 || selectedRAM.includes(product.ram);
 
-    return (
-      matchesCategory &&
-      matchesBrand &&
-      matchesSearchQuery &&
-      matchesPrice &&
-      matchesSlider &&
-      matchesOS &&
-      matchesRAM
-    );
-  });
-}, [
-  allProduct,
-  productShowName,
-  categoryName,
-  brandShowName,
-  debouncedQuery,
-  productPrice,
-  priceSlider,
-]);
+      return (
+        matchesCategory &&
+        matchesBrand &&
+        matchesSearchQuery &&
+        matchesPrice &&
+        matchesSlider &&
+        matchesOS &&
+        matchesRAM
+      );
+    });
+  }, [
+    allProduct,
+    productShowName,
+    categoryName,
+    brandShowName,
+    debouncedQuery,
+    productPrice,
+    priceSlider,
+  ]);
 
-useEffect(() => {
-  setBrandShowName([]);
-  setSelectedOS([]);
-  setSelectedRAM([]);
-}, [productShowName]);
+  useEffect(() => {
+    setBrandShowName([]);
+    setSelectedOS([]);
+    setSelectedRAM([]);
+  }, [productShowName]);
 
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
@@ -286,7 +285,12 @@ useEffect(() => {
                 checked={productShowName === "All Product"}
                 name="category-aside"
               />
-              <label htmlFor="category-all-aside">All Product</label>
+              <label
+                htmlFor="category-all-aside"
+                className="uppercase cursor-pointer"
+              >
+                All Product
+              </label>
             </div>
             {allCategory?.map((cat, index) => (
               <div
@@ -296,14 +300,16 @@ useEffect(() => {
                 <input
                   type="radio"
                   id={`category-aside-${cat}`}
-                  onChange={() => setProductShowName(cat) }
+                  onChange={() => setProductShowName(cat)}
                   checked={productShowName === cat}
                   name="category-aside"
                 />
                 <span className="material-symbols-outlined text-primary">
                   category
                 </span>
-                <label htmlFor={`category-aside-${cat}`}>{cat.toUpperCase()}</label>
+                <label htmlFor={`category-aside-${cat}`}>
+                  {cat.toUpperCase()}
+                </label>
               </div>
             ))}
           </div>
@@ -311,12 +317,12 @@ useEffect(() => {
         {/* <!-- Right Column: Main Content --> */}
         <div className="flex-1 space-y-8">
           {/* <!-- Category Banner --> */}
-          <section className="relative h-[450px] rounded-4xl overflow-hidden shadow-lg group">
+          <section className="relative h-[350px] rounded-4xl overflow-hidden shadow-lg group">
             <img
               alt="Flagship Phones"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              data-alt="high-end flagship smartphones arranged artistically on a glass surface with neon blue and pink ambient lighting"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBc6EUWuBRaZRWt2aRVAqG_tNyWeCIbN8W2z_8jGDvuncyuqL-ZdMBCGya_yJkmgZfmGTxjgIoquOhZOmx0VVtaqClzIKNpc3dqwcFmTz-RtjqSaqbj_TWuLi8Z2lVXHDvTquJATTW78rqIoP2A52w-bg3yjeDsNSTWD-Df3-9dSCo9UY6CKBZl4zG15Y1iX9arqqdTf6z1HJCj7rXRESDLafgji0BCeX-frO0TtKCmLmE50PBuLzQyR706reVEyyMCkRcTwo3OlqI"
+              data-alt=""
+              src="https://images.unsplash.com/photo-1547479117-da9abbff3fa0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGdhZGdldHN8ZW58MHx8MHx8fDA%3D"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent flex flex-col justify-center px-12">
               <span className="text-primary-light font-bold tracking-widest text-sm uppercase mb-2">
@@ -329,9 +335,12 @@ useEffect(() => {
                 Upgrade to the latest 5G devices. Up to 40% off on flagship
                 models.
               </p>
-              <button className="w-fit bg-primary-light text-white px-8 py-3 rounded-full font-bold uppercase text-sm tracking-wider active:scale-95 transition-all">
+              <a
+                href="#products"
+                className="w-fit bg-primary-light text-white px-8 py-3 rounded-full font-bold uppercase text-sm tracking-wider active:scale-95 transition-all"
+              >
                 Shop Now
-              </button>
+              </a>
             </div>
           </section>
         </div>
@@ -342,7 +351,6 @@ useEffect(() => {
           style={{ position: "sticky", top: `${sidebarTopOffset}px` }}
         >
           <div className="bg-white p-4 border border-gray-100 rounded-3xl shadow-sm">
-            
             {brandForSelectedCategory.length > 0 && (
               <div className="space-y-2">
                 <h3 className="font-inter font-bold mb-4 text-primary uppercase">
@@ -350,23 +358,23 @@ useEffect(() => {
                 </h3>
                 {brandForSelectedCategory.map((brand, index) => (
                   <div className="flex items-center gap-2 cursor-pointer text-sm">
-                      <input
-                        type="checkbox"
-                        id="category-all-aside"
-                        onChange={() => {
-                          setBrandShowName((prev) =>
-                            prev.includes(brand)
-                              ? prev.filter((b) => b !== brand)
-                              : [...prev, brand]
-                          );
-                        }}
-                        checked={brandShowName.includes(brand)}
-                        name="brand-aside"
-                      />
-                      <label htmlFor={`category-aside-${brand}`}>{brand}</label>
-                    </div>
+                    <input
+                      type="checkbox"
+                      id="category-all-aside"
+                      onChange={() => {
+                        setBrandShowName((prev) =>
+                          prev.includes(brand)
+                            ? prev.filter((b) => b !== brand)
+                            : [...prev, brand],
+                        );
+                      }}
+                      checked={brandShowName.includes(brand)}
+                      name="brand-aside"
+                    />
+                    <label className="uppercase cursor-pointer" htmlFor={`category-aside-${brand}`}>{brand}</label>
+                  </div>
                 ))}
-            <hr className="my-6 border-gray-100" />
+                <hr className="my-6 border-gray-100" />
               </div>
             )}
 
@@ -377,15 +385,18 @@ useEffect(() => {
                 </h3>
 
                 {osForSelectedCategory.map((os) => (
-                  <label key={os} className="flex items-center gap-2 cursor-pointer">
+                  <label
+                    key={os}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedOS.includes(os)}
                       onChange={() => {
-                        setSelectedOS(prev =>
+                        setSelectedOS((prev) =>
                           prev.includes(os)
-                            ? prev.filter(o => o !== os)
-                            : [...prev, os]
+                            ? prev.filter((o) => o !== os)
+                            : [...prev, os],
                         );
                       }}
                     />
@@ -402,15 +413,18 @@ useEffect(() => {
                 </h3>
 
                 {ramForSelectedCategory.map((ram) => (
-                  <label key={ram} className="flex items-center gap-2 cursor-pointer">
+                  <label
+                    key={ram}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       checked={selectedRAM.includes(ram)}
                       onChange={() => {
-                        setSelectedRAM(prev =>
+                        setSelectedRAM((prev) =>
                           prev.includes(ram)
-                            ? prev.filter(r => r !== ram)
-                            : [...prev, ram]
+                            ? prev.filter((r) => r !== ram)
+                            : [...prev, ram],
                         );
                       }}
                     />
@@ -444,16 +458,17 @@ useEffect(() => {
           </div>
         </aside>
         {/* <!-- Product Grid --> */}
-        <div className="flex-1 space-y-8">
+        <div id="products" className="flex-1 space-y-8">
           <section className="">
             {displayedCategories.map((cat, index) => {
-              const isAllProducts = typeof cat === 'object' && cat.allProducts;
+              const isAllProducts = typeof cat === "object" && cat.allProducts;
               const categoryName = isAllProducts ? cat.name : cat;
-  
+
               const sectionProducts = isAllProducts
-              ? currentProducts
-              : allProduct
-                  .filter((product) => product.category === categoryName) 
+                ? currentProducts
+                : allProduct.filter(
+                    (product) => product.category === categoryName,
+                  );
 
               return (
                 <div key={index} className="mb-8">
@@ -461,9 +476,13 @@ useEffect(() => {
                     <div className="flex items-center justify-center space-x-1">
                       <h2 className="text-lg font-bold">{categoryName}</h2>
                       <h2 className="text-sm font-medium text-[#2ea4f2]">
-                        ({isAllProducts 
-                          ? filteredProducts?.length.toLocaleString() 
-                          : allProduct.filter(p => p.category === categoryName).length.toLocaleString()} Products found)
+                        (
+                        {isAllProducts
+                          ? filteredProducts?.length.toLocaleString()
+                          : allProduct
+                              .filter((p) => p.category === categoryName)
+                              .length.toLocaleString()}{" "}
+                        Products found)
                       </h2>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-white">
@@ -477,83 +496,17 @@ useEffect(() => {
                   </div>
                   <div className="bg-white p-4 grid grid-cols-2 lg:grid-cols-4 gap-4 rounded-b-3xl shadow-sm">
                     {sectionProducts.map((product, index) => (
-                      <div
-                        className="bg-white border border-gray-100 rounded-lg overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300 relative cursor-pointer"
+                      <StoreProductCard
                         key={index}
-                        onClick={() => navigate(`/store/${encodeURIComponent(product.name)}`, { state: { id: product._id, product: product}})}
-                      >
-                        {product.discountprice && (
-                          <div className="absolute top-2 right-2 z-10">
-                            <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-2 py-1 rounded">
-                              -
-                              {Math.round(
-                                (1 - product.discountprice / product.price) *
-                                  100,
-                              )}
-                              %
-                            </span>
-                          </div>
+                        product={product}
+                        isInCart={cartItem.some(
+                          (item) => item._id === product._id,
                         )}
-
-                        <div className="aspect-square bg-gray-50 overflow-hidden relative">
-                          <img
-                            alt={product.name}
-                            className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500"
-                            src={product.image[0]}
-                          />
-                          <div className="absolute bottom-2 right-2 z-10">
-                            <FaRegHeart
-                              size={16}
-                              className="text-gray-400 hover:text-red-500 cursor-pointer"
-                            />
-                          </div>
-                        </div>
-                        <div className="p-4 flex flex-col flex-1">
-                          <h3 className="font-inter text-on-background mb-2 line-clamp-2">
-                            {product.name}
-                          </h3>
-                          <div className="mt-auto">
-                            <div className="flex items-center gap-1 mb-1">
-                              <span className="material-symbols-outlined fill text-orange-400 text-xs">
-                                star
-                              </span>
-                              <span className="text-[10px] font-bold text-gray-400">
-                                {product.rating?.length > 0
-                                  ? (
-                                      product.rating.reduce(
-                                        (acc, r) => acc + r.ratingGrade,
-                                        0,
-                                      ) / product.rating.length
-                                    ).toFixed(1)
-                                  : 0}{" "}
-                                ({product.rating?.length || 0})
-                              </span>
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-lg font-black text-on-background">
-                                ₦
-                                {product.discountprice
-                                  ? product.discountprice.toLocaleString()
-                                  : product.price.toLocaleString()}
-                              </span>
-                              {product.discountprice && (
-                                <span className="text-xs text-gray-400 line-through">
-                                  ₦{product.price.toLocaleString()}
-                                </span>
-                              )}
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                dispatch(addToCart(product));
-                              }}
-                              className="mt-4 w-full bg-white border-2 border-primary-light text-primary-light font-bold py-2 rounded-lg text-xs hover:bg-primary-light hover:text-white transition-colors uppercase"
-                            >
-                              Add to Cart
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                        onAddToCart={(product) => dispatch(addToCart(product))}
+                        onRemoveFromCart={(product) =>
+                          dispatch(removeFromCart(product))
+                        }
+                      />
                     ))}
                   </div>
                 </div>

@@ -119,7 +119,7 @@ const Productdetails = () => {
               favorite
             </span>
           </div>
-          <h1 className="font-headline-lg text-on-background mb-2">
+          <h1 className="font-headline-lg text-on-background mb-2 capitalize">
             <span className="font-bold text-primary">Category: </span>
             {product?.category || "-"}
           </h1>
@@ -151,7 +151,7 @@ const Productdetails = () => {
               >
                 ₦{product?.price?.toLocaleString()}
               </span>
-              {product?.discountPercentage && (
+              {product?.discountPercentage > 0 && (
                 <span className="bg-primary text-white text-xs px-2 py-1 rounded-full font-bold">
                   -{product?.discountPercentage}%
                 </span>
@@ -166,7 +166,9 @@ const Productdetails = () => {
               {product?.storage && (
                 <span className="font-inter block mb-3">
                   Memory Capacity:
-                  <span className="text-primary font-bold">{product?.storage}</span>
+                  <span className="text-primary font-bold">
+                    {product?.storage}
+                  </span>
                 </span>
               )}
               {product?.ram && (
@@ -263,7 +265,9 @@ const Productdetails = () => {
                     location_on
                   </span>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold">New York, NY 10001</p>
+                    <p className="text-sm font-semibold">
+                      Debash, Awokoya, Ijebu Ode
+                    </p>
                     <button className="text-xs text-primary font-bold hover:underline">
                       Change Location
                     </button>
@@ -342,109 +346,156 @@ const Productdetails = () => {
             <div className="p-8">
               {/* <!-- Specifications Content --> */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-4">
-                <div className="space-y-4">
-                  <h4 className="text-lg font-bold border-l-4 border-primary-light pl-3 mb-6">
-                    General Specs
-                  </h4>
-                  {product?.brand && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary">Brand</span>
-                      <span className="font-medium">{product?.brand}</span>
-                    </div>
-                  )}
-                  {product?.displaySize && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary">Display Size</span>
-                      <span className="font-medium">
-                        {product?.displaySize}
-                      </span>
-                    </div>
-                  )}
-                  {product?.model && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary">Model</span>
-                      <span className="font-medium">{product?.model}</span>
-                    </div>
-                  )}
-                  {product?.processor && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary">Processor</span>
-                      <span className="font-medium">{product?.processor}</span>
-                    </div>
-                  )}
-                  {product?.operatingSystem && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary">Operating System</span>
-                      <span className="font-medium">{product?.operatingSystem}</span>
-                    </div>
-                  )}
-                  {product?.weight && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary">Weight</span>
-                      <span className="font-medium">{product?.weight}</span>
-                    </div>
-                  )}
-                  {product?.color && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary">Color</span>
-                      <span className="font-medium">{product?.color}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  <h4 className="text-lg font-bold border-l-4 border-primary-light pl-3 mb-6">
-                    Performance
-                  </h4>
-                  {product?.ram && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary uppercase">ram</span>
-                      <span className="font-medium uppercase">{product?.ram}</span>
-                    </div>
-                  )}
-                  {product?.graphicsCardMemory && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary uppercase">Graphics Card Memory</span>
-                      <span className="font-medium">{product?.graphicsCardMemory}</span>
-                    </div>
-                  )}
-                  {product?.battery && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary uppercase">Battery</span>
-                      <span className="font-medium">{product?.battery}</span>
-                    </div>
-                  )}
-                  {product?.storage && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary uppercase">storage</span>
-                      <span className="font-medium uppercase">{product?.storage}</span>
-                    </div>
-                  )}
-                  {product?.storageType && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary uppercase">storageType</span>
-                      <span className="font-medium uppercase">{product?.storageType}</span>
-                    </div>
-                  )}
-                  {product?.operatingSystem && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary uppercase">Operating System</span>
-                      <span className="font-medium uppercase">{product?.operatingSystem}</span>
-                    </div>
-                  )}
-                  {product?.numberOfCores && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary uppercase">Number of Cores</span>
-                      <span className="font-medium uppercase">{product?.numberOfCores}</span>
-                    </div>
-                  )}
-                  {product?.numberOfCores && (
-                    <div className="flex justify-between border-b border-surface-container pb-2">
-                      <span className="text-secondary uppercase">Number of Cores</span>
-                      <span className="font-medium uppercase">{product?.numberOfCores}</span>
-                    </div>
-                  )}
-                  
-                </div>
+                {(product?.brand ||
+                  product?.displaySize ||
+                  product?.model ||
+                  product?.processor ||
+                  product?.operatingSystem ||
+                  product?.weight ||
+                  product?.color) && (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-bold border-l-4 border-primary-light pl-3 mb-6">
+                      General Specs
+                    </h4>
+                    {product?.brand && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary">Brand</span>
+                        <span className="font-medium">{product?.brand}</span>
+                      </div>
+                    )}
+                    {product?.displaySize && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary">Display Size</span>
+                        <span className="font-medium">
+                          {product?.displaySize}
+                        </span>
+                      </div>
+                    )}
+                    {product?.model && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary">Model</span>
+                        <span className="font-medium">{product?.model}</span>
+                      </div>
+                    )}
+                    {product?.processor && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary">Processor</span>
+                        <span className="font-medium">
+                          {product?.processor}
+                        </span>
+                      </div>
+                    )}
+                    {product?.operatingSystem && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary">Operating System</span>
+                        <span className="font-medium">
+                          {product?.operatingSystem}
+                        </span>
+                      </div>
+                    )}
+                    {product?.weight && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary">Weight</span>
+                        <span className="font-medium">{product?.weight}</span>
+                      </div>
+                    )}
+                    {product?.color && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary">Color</span>
+                        <span className="font-medium">{product?.color}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {(product?.ram ||
+                  product?.graphicsCardMemory ||
+                  product?.battery ||
+                  product?.storage ||
+                  product?.storageType ||
+                  product?.operatingSystem ||
+                  product?.numberOfCores) && (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-bold border-l-4 border-primary-light pl-3 mb-6">
+                      Performance
+                    </h4>
+                    {product?.ram && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary uppercase">ram</span>
+                        <span className="font-medium uppercase">
+                          {product?.ram}
+                        </span>
+                      </div>
+                    )}
+                    {product?.graphicsCardMemory && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary uppercase">
+                          Graphics Card Memory
+                        </span>
+                        <span className="font-medium">
+                          {product?.graphicsCardMemory}
+                        </span>
+                      </div>
+                    )}
+                    {product?.battery && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary uppercase">
+                          Battery
+                        </span>
+                        <span className="font-medium">{product?.battery}</span>
+                      </div>
+                    )}
+                    {product?.storage && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary uppercase">
+                          storage
+                        </span>
+                        <span className="font-medium uppercase">
+                          {product?.storage}
+                        </span>
+                      </div>
+                    )}
+                    {product?.storageType && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary uppercase">
+                          storageType
+                        </span>
+                        <span className="font-medium uppercase">
+                          {product?.storageType}
+                        </span>
+                      </div>
+                    )}
+                    {product?.operatingSystem && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary uppercase">
+                          Operating System
+                        </span>
+                        <span className="font-medium uppercase">
+                          {product?.operatingSystem}
+                        </span>
+                      </div>
+                    )}
+                    {product?.numberOfCores && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary uppercase">
+                          Number of Cores
+                        </span>
+                        <span className="font-medium uppercase">
+                          {product?.numberOfCores}
+                        </span>
+                      </div>
+                    )}
+                    {product?.numberOfCores && (
+                      <div className="flex justify-between border-b border-surface-container pb-2">
+                        <span className="text-secondary uppercase">
+                          Number of Cores
+                        </span>
+                        <span className="font-medium uppercase">
+                          {product?.numberOfCores}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               {/* Product Overview */}
               {/* <div className="mt-12">
@@ -495,43 +546,49 @@ const Productdetails = () => {
             <div className="p-8">
               {/* <!-- Specifications Content --> */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-4">
-                <div className="space-y-4">
-                  <h4 className="text-lg font-bold border-l-4 border-primary-light pl-3 mb-6">
-                    Description
-                  </h4>
-                  <div className="flex justify-between border-b border-surface-container pb-2">
-                    <p className="text-justify text-on-surface-variant">
-                      {product?.description}
-                    </p>
+                {product?.description && (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-bold border-l-4 border-primary-light pl-3 mb-6">
+                      Description
+                    </h4>
+                    <div className="flex justify-between border-b border-surface-container pb-2">
+                      <p className="text-justify text-on-surface-variant">
+                        {product?.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-4">
-                  <h4 className="text-lg font-bold border-l-4 border-primary-light pl-3 mb-6">
-                    Features
-                  </h4>
-                  <div className="flex justify-between border-b border-surface-container pb-2">
-                    <ul>
-                      {product?.features?.split(",").map((feature, index) => (
-                        <li key={index} className="list-disc ml-5 mb-2">
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
+                )}
+                {product?.features && (
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-bold border-l-4 border-primary-light pl-3 mb-6">
+                      Features
+                    </h4>
+                    <div className="flex justify-between border-b border-surface-container pb-2">
+                      <ul>
+                        {product?.features?.split(",").map((feature, index) => (
+                          <li key={index} className="list-disc ml-5 mb-2">
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
+                )}
+              </div>
+              {product?.productBox && (
+                <div className="mt-12">
+                  <h4 className="text-lg font-bold border-l-4 border-primary-light pl-3 mb-6">
+                    What's in the box?
+                  </h4>
+                  <ul>
+                    {product?.productBox?.split(",").map((item, index) => (
+                      <li key={index} className="list-disc ml-5">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
-              <div className="mt-12">
-                <h4 className="text-lg font-bold border-l-4 border-primary-light pl-3 mb-6">
-                  What's in the box?
-                </h4>
-                <ul>
-                  {product?.productBox?.split(",").map((item, index) => (
-                    <li key={index} className="list-disc ml-5 mb-6">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              )}
             </div>
           )}
           {featureTab === "Customer's Review" && (

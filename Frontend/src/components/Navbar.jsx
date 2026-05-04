@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Fastcart from "../assets/fastcartLogo.png";
 import { FiShoppingCart, FiSearch } from "react-icons/fi";
 import { FaRegHeart, FaRegUser } from "react-icons/fa6";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import CartCard from "./CartCard";
 import { RxHamburgerMenu } from "react-icons/rx";
@@ -10,9 +10,6 @@ import Menubar from "./Menubar";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const goHome = () => {
-    navigate("/");
-  };
   const cartItem = useSelector((state) => state.cart.cartItem);
   const [cartShown, setCartShown] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -52,6 +49,7 @@ const Navbar = () => {
 
   const handleMouseLeave = () => {
     if (!isMobile) {
+      
       setCartShown(false);
     }
   };
@@ -76,15 +74,15 @@ const Navbar = () => {
               className="md:hidden cursor-pointer"
               size={24}
             />
-            <div
-              onClick={goHome}
+            <Link
+              to="/"
               className="flex items-center gap-2 cursor-pointer"
             >
               <img src={Fastcart} className="max-[400px]:w-[30px]" alt="logo" />
               <h1 className="logoTxt max-[400px]:text-[20px] text-primary text-[25px]">
                 Rukatech Store
               </h1>
-            </div>
+            </Link>
           </div>
           {isOpen && <Menubar closeMenu={closeMenu} />}
           {/* for discount */}
@@ -107,7 +105,7 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => (window.location = "/dashboard/account")}
-              className="flex items-center gap-2 text-gray-700 hover:text-primary-light transition-colors cursor-pointer group"
+              className="flex items-center gap-1 text-gray-700 hover:text-primary-light transition-colors cursor-pointer group"
             >
               <span className="material-symbols-outlined" data-icon="person">
                 person
@@ -121,9 +119,12 @@ const Navbar = () => {
               onClick={handleClick}
               onMouseLeave={handleMouseLeave}
               onMouseEnter={handleMouseEnter}
-              className="relative cursor-pointer"
+              className="relative cursor-pointer group"
             >
-              <div className="flex items-center gap-2 text-gray-700 hover:text-primary-light transition-colors cursor-pointer group">
+              <Link
+                to="/shopping-cart"
+                className="flex items-center gap-1 text-gray-700 hover:text-primary-light transition-colors cursor-pointer group"
+              >
                 <span
                   className="material-symbols-outlined"
                   data-icon="shopping_cart"
@@ -133,11 +134,11 @@ const Navbar = () => {
                 <span className="hidden lg:block font-medium text-sm">
                   Cart
                 </span>
-              </div>
+              </Link>
               {cartItem.length > 0 && (
                 <div
                   style={{ padding: "8px" }}
-                  className="absolute top-[-6px] right-[30px] w-[10px] h-[10px] bg-primary border border-white rounded-full flex items-center justify-center text-white text-[12px]"
+                  className="absolute top-[-6px] right-[27px] w-[10px] h-[10px] bg-primary border border-white rounded-full flex items-center justify-center text-white text-[12px]"
                 >
                   <span>{cartItem.length}</span>
                 </div>
