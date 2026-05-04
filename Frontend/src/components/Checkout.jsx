@@ -177,14 +177,14 @@ const Checkout = () => {
                       key={product._id || index}
                       className="flex gap-4 mb-4 pb-4 border-b border-surface-container last:border-b-0 last:pb-0 last:mb-0"
                     >
-                      <div className="w-20 h-20 bg-surface rounded flex-shrink-0 overflow-hidden">
+                      <div className="w-20 h-20 bg-surface rounded shrink-0 overflow-hidden">
                         <img
                           alt={product.name}
                           className="w-full h-full object-cover"
                           src={product.image?.[0] || ""}
                         />
                       </div>
-                      <div className="flex-grow">
+                      <div className="grow">
                         <p className="text-sm text-on-surface line-clamp-2">
                           {product.name}
                         </p>

@@ -8,6 +8,10 @@ import { IoFilter } from "react-icons/io5";
 import { IoIosArrowRoundForward, IoIosArrowRoundBack } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart, removeFromCart } from "../redux/Cart";
+import {
+  RowSkeletonLoader,
+  ProductsSkeletonLoader,
+} from "../components/SkeletonLoader";
 
 const ShopPage = () => {
   const { allCategory, allProduct, allBrand, allBrandForCategory } =
@@ -274,7 +278,7 @@ const ShopPage = () => {
       <div className="flex flex-col md:flex-row gap-8">
         {/* <!-- Left Column: Sidebar Filters --> */}
 
-        <aside className="hidden lg:block w-64 flex-shrink-0 space-y-6">
+        <aside className="hidden lg:block w-64 shrink-0 space-y-6">
           <div className="rounded-4xl shadow-sm border border-gray-100 flex flex-col py-2 max-h-[50dvh] overflow-y-scroll">
             <h2 className="px-4 uppercase">Categories</h2>
             <div className="flex items-center px-4 py-1 text-sm">
@@ -292,39 +296,43 @@ const ShopPage = () => {
                 All Product
               </label>
             </div>
-            {allCategory?.map((cat, index) => (
-              <div
-                className="flex space-x-1 items-center px-4 py-1 text-sm"
-                key={index}
-              >
-                <input
-                  type="radio"
-                  id={`category-aside-${cat}`}
-                  onChange={() => setProductShowName(cat)}
-                  checked={productShowName === cat}
-                  name="category-aside"
-                />
-                <span className="material-symbols-outlined text-primary">
-                  category
-                </span>
-                <label htmlFor={`category-aside-${cat}`}>
-                  {cat.toUpperCase()}
-                </label>
-              </div>
-            ))}
+            {allCategory && allCategory.length > 0
+              ? allCategory.map((cat, index) => (
+                  <div
+                    className="flex space-x-1 items-center px-4 py-1 text-sm"
+                    key={index}
+                  >
+                    <input
+                      type="radio"
+                      id={`category-aside-${cat}`}
+                      onChange={() => setProductShowName(cat)}
+                      checked={productShowName === cat}
+                      name="category-aside"
+                    />
+                    <span className="material-symbols-outlined text-primary">
+                      category
+                    </span>
+                    <label htmlFor={`category-aside-${cat}`}>
+                      {cat.toUpperCase()}
+                    </label>
+                  </div>
+                ))
+              : Array.from({ length: 6 }).map((_, index) => (
+                  <RowSkeletonLoader key={index} />
+                ))}
           </div>
         </aside>
         {/* <!-- Right Column: Main Content --> */}
         <div className="flex-1 space-y-8">
           {/* <!-- Category Banner --> */}
-          <section className="relative h-[350px] rounded-4xl overflow-hidden shadow-lg group">
+          <section className="relative h-87.5 rounded-4xl overflow-hidden shadow-lg group">
             <img
               alt="Flagship Phones"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               data-alt=""
               src="https://images.unsplash.com/photo-1547479117-da9abbff3fa0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fGdhZGdldHN8ZW58MHx8MHx8fDA%3D"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent flex flex-col justify-center px-12">
+            <div className="absolute inset-0 bg-linear-to-r from-black/80 to-transparent flex flex-col justify-center px-12">
               <span className="text-primary-light font-bold tracking-widest text-sm uppercase mb-2">
                 Exclusive Deals
               </span>
@@ -347,7 +355,7 @@ const ShopPage = () => {
       </div>
       <div className="flex flex-col md:flex-row gap-8 mt-10">
         <aside
-          className="hidden lg:block w-64 flex-shrink-0 space-y-6 self-start"
+          className="hidden lg:block w-64 shrink-0 space-y-6 self-start"
           style={{ position: "sticky", top: `${sidebarTopOffset}px` }}
         >
           <div className="bg-white p-4 border border-gray-100 rounded-3xl shadow-sm">
@@ -371,7 +379,12 @@ const ShopPage = () => {
                       checked={brandShowName.includes(brand)}
                       name="brand-aside"
                     />
-                    <label className="uppercase cursor-pointer" htmlFor={`category-aside-${brand}`}>{brand}</label>
+                    <label
+                      className="uppercase cursor-pointer"
+                      htmlFor={`category-aside-${brand}`}
+                    >
+                      {brand}
+                    </label>
                   </div>
                 ))}
                 <hr className="my-6 border-gray-100" />
@@ -495,19 +508,25 @@ const ShopPage = () => {
                     </div>
                   </div>
                   <div className="bg-white p-4 grid grid-cols-2 lg:grid-cols-4 gap-4 rounded-b-3xl shadow-sm">
-                    {sectionProducts.map((product, index) => (
-                      <StoreProductCard
-                        key={index}
-                        product={product}
-                        isInCart={cartItem.some(
-                          (item) => item._id === product._id,
-                        )}
-                        onAddToCart={(product) => dispatch(addToCart(product))}
-                        onRemoveFromCart={(product) =>
-                          dispatch(removeFromCart(product))
-                        }
-                      />
-                    ))}
+                    {sectionProducts && sectionProducts.length > 0
+                      ? sectionProducts.map((product, index) => (
+                          <StoreProductCard
+                            key={index}
+                            product={product}
+                            isInCart={cartItem.some(
+                              (item) => item._id === product._id,
+                            )}
+                            onAddToCart={(product) =>
+                              dispatch(addToCart(product))
+                            }
+                            onRemoveFromCart={(product) =>
+                              dispatch(removeFromCart(product))
+                            }
+                          />
+                        ))
+                      : Array.from({ length: 12 }).map((_, index) => (
+                          <ProductsSkeletonLoader key={index} />
+                        ))}
                   </div>
                 </div>
               );
@@ -661,7 +680,7 @@ const ShopPage = () => {
         {/* Filter button for mobile */}
         <div
           onClick={openFilterPanel}
-          className="fixed cursor-pointer bottom-[10px] left-1/2 -translate-x-1/2 md:hidden bg-[#1d1d1d] rounded-[30px] text-white border border-[#E4E7E9]"
+          className="fixed cursor-pointer bottom-2.5 left-1/2 -translate-x-1/2 md:hidden bg-[#1d1d1d] rounded-[30px] text-white border border-[#E4E7E9]"
           style={{ padding: "10px 20px" }}
         >
           <p className="flex items-center justify-center gap-4">

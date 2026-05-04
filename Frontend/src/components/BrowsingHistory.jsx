@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToCart, removeFromCart } from "../redux/Cart";
 import { getRecentlyViewed } from "./Recentlyview";
 import { CategoryContext } from "../CategoryContext";
-import SkelentonLoader from "./SkelentonLoader";
+import {CardSkeletonLoader} from "./SkeletonLoader";
 
 const BrowsingHistory = () => {
   const viewedIds = getRecentlyViewed();
@@ -129,10 +129,10 @@ const BrowsingHistory = () => {
               : Array.from({ length: itemsPerView }).map((_, index) => (
                   <div
                     key={index}
-                    className="w-full h-[250px] cursor-pointer flex flex-col gap-2 border-1 border-[#E4E7E9]"
+                    className="w-full h-62.5 cursor-pointer flex flex-col gap-2 border border-[#E4E7E9]"
                     style={{ padding: "10px" }}
                   >
-                    <SkelentonLoader />
+                    <CardSkeletonLoader />
                   </div>
                 ))}
           </div>

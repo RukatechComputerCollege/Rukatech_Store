@@ -20,7 +20,11 @@ import FeaturedProducts from "../components/FeaturedProducts";
 import FewProduct from "../components/FewProduct";
 import { useNavigate } from "react-router-dom";
 import ShowcaseProduct from "../components/ShowcaseProduct";
-import SkelentonLoader from "../components/SkelentonLoader";
+import {
+  CardSkeletonLoader,
+  RowSkeletonLoader,
+  ProductsSkeletonLoader,
+} from "../components/SkeletonLoader";
 import LandingPagePC from "../components/LandingPagePC";
 import StoreProductCard from "../components/StoreProductCard";
 import { useDispatch, useSelector } from "react-redux";
@@ -124,6 +128,19 @@ const Landingpage = () => {
   }, [allProduct]);
   // console.log(promoProduct1);
 
+  const appleProducts = allProduct
+    .filter(
+      (product) =>
+        product.name.toLowerCase().includes("apple") ||
+        product.name.toLowerCase().includes("iphone") ||
+        product.name.toLowerCase().includes("macbook") ||
+        product.name.toLowerCase().includes("ipad") ||
+        product.name.toLowerCase().includes("airpods") ||
+        product.name.toLowerCase().includes("ios") ||
+        product.name.toLowerCase().includes("apple watch"),
+    )
+    .slice(0, 4);
+
   const productDetails = (product) => {
     navigate(`/store/${encodeURIComponent(product.name)}`, {
       state: { id: product._id, product: product },
@@ -154,20 +171,23 @@ const Landingpage = () => {
             </span>
             ALL PRODUCTS
           </a>
-          {allCategory &&
-            allCategory.map((category, index) => (
-              <div key={index}>
-                <a
-                  href={`/store?category=${encodeURIComponent(category)}`}
-                  className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 hover:text-primary-light transition-all text-xs text-gray-600"
-                >
-                  <span className="material-symbols-outlined text-lg">
-                    shopping_basket
-                  </span>
-                  {category.toUpperCase()}
-                </a>
-              </div>
-            ))}
+          {allCategory && allCategory.length > 0
+            ? allCategory.map((category, index) => (
+                <div key={index}>
+                  <a
+                    href={`/store?category=${encodeURIComponent(category)}`}
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 hover:text-primary-light transition-all text-xs text-gray-600"
+                  >
+                    <span className="material-symbols-outlined text-lg">
+                      shopping_basket
+                    </span>
+                    {category.toUpperCase()}
+                  </a>
+                </div>
+              ))
+            : Array.from({ length: 6 }).map((_, index) => (
+                <RowSkeletonLoader key={index} />
+              ))}
         </aside>
         {/* Hero Slider */}
         <div className="col-span-12 lg:col-span-7 lg:h-[50dvh] bg-white rounded-2xl overflow-hidden shadow-[12px] relative">
@@ -194,7 +214,7 @@ const Landingpage = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+              <div className="w-10 h-9 rounded-full bg-orange-100 flex items-center justify-center">
                 <FaWhatsapp className="text-primary-light text-2xl" />
               </div>
               <div>
@@ -265,7 +285,7 @@ const Landingpage = () => {
                               navigate(`/store?category=${category}`)
                             }
                             key={i}
-                            className="relative bg-white cursor-pointer border-1 border-[#E4E7E9] rounded-4xl flex flex-col items-center justify-start h-[200px]"
+                            className="relative bg-white cursor-pointer border border-[#E4E7E9] rounded-4xl flex flex-col items-center justify-start h-50"
                           >
                             <div className="absolute w-full h-full bg-black/60 rounded-4xl"></div>
                             {categoryImage.map(
@@ -294,10 +314,10 @@ const Landingpage = () => {
                         {Array.from({ length: chunkSize }).map((_, index) => (
                           <div
                             key={index}
-                            className="w-full h-[250px] cursor-pointer flex flex-col gap-2 border border-[#E4E7E9]"
+                            className="w-full h-62.5 cursor-pointer flex flex-col gap-2 border border-[#E4E7E9]"
                             style={{ padding: "10px" }}
                           >
-                            <SkelentonLoader />
+                            <CardSkeletonLoader />
                           </div>
                         ))}
                       </div>
@@ -308,13 +328,13 @@ const Landingpage = () => {
           <div className="w-full flex justify-between items-center">
             <button
               ref={prevRef}
-              className="bg-[#FA8232] w-[48px] h-[48px] absolute top-[55%] left-[-20px] z-10 rounded-[50%] text-white flex flex-col items-center justify-center cursor-pointer"
+              className="bg-[#FA8232] w-12 h-12 absolute top-[40%] -left-5 z-10 rounded-[50%] text-white flex flex-col items-center justify-center cursor-pointer"
             >
               <IoIosArrowRoundBack size={24} />
             </button>
             <button
               ref={nextRef}
-              className="bg-[#FA8232] w-[48px] h-[48px] absolute top-[55%] right-[-20px] z-10 rounded-[50%] text-white flex flex-col items-center justify-center cursor-pointer"
+              className="bg-[#FA8232] w-12 h-12 absolute top-[40%] -right-5 z-10 rounded-[50%] text-white flex flex-col items-center justify-center cursor-pointer"
             >
               <IoIosArrowRoundForward size={24} />
             </button>
@@ -491,41 +511,51 @@ const Landingpage = () => {
         </div>
         <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-[12px]">
           {/* <!-- Phone Product Cards --> */}
-          {allProduct.slice(0, 16).map((product, index) => (
-            <LandingPagePC
-              key={index}
-              product={product}
-              onClick={() => productDetails(product)}
-            />
-          ))}
+          {allProduct && allProduct.length > 0
+            ? allProduct
+                .slice(0, 16)
+                .map((product, index) => (
+                  <LandingPagePC
+                    key={index}
+                    product={product}
+                    onClick={() => productDetails(product)}
+                  />
+                ))
+            : Array.from({ length: 16 }).map((_, index) => (
+                <ProductsSkeletonLoader key={index} />
+              ))}
         </div>
       </section>
       {/* <!-- Best Deals --> */}
-      {bestDealsProduct.length > 0 && (
-        <section className="mt-8">
-          <div className="bg-primary text-white px-4 py-4 rounded-t-2xl flex items-center justify-between">
-            <h2 className="text-lg font-bold">Best Deals</h2>
-            {/* <span className="text-[12px] font-bold cursor-pointer uppercase hover:underline" onClick={() => navigate("/store")}>
-              See All
-            </span> */}
-          </div>
-          <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-[12px]">
-            {/* <!-- Phone Product Cards --> */}
-            {bestDealsProduct.map((product, index) => (
-              <LandingPagePC
-                key={index}
-                product={product}
-                onClick={() => productDetails(product)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      <section className="mt-8">
+        <div className="bg-primary text-white px-4 py-4 rounded-t-2xl flex items-center justify-between">
+          <h2 className="text-lg font-bold">Best Deals</h2>
+          {/* <span className="text-[12px] font-bold cursor-pointer uppercase hover:underline" onClick={() => navigate("/store")}>
+            See All
+          </span> */}
+        </div>
+        <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-[12px]">
+          {/* <!-- Phone Product Cards --> */}
+          {allProduct && allProduct.length > 0
+            ? bestDealsProduct.length > 0
+              ? bestDealsProduct.map((product, index) => (
+                  <LandingPagePC
+                    key={index}
+                    product={product}
+                    onClick={() => productDetails(product)}
+                  />
+                ))
+              : null
+            : Array.from({ length: 8 }).map((_, index) => (
+                <ProductsSkeletonLoader key={index} />
+              ))}
+        </div>
+      </section>
       {/* Apple Store Section */}
       <section className="mt-8 bg-white rounded-3xl shadow-[12px] overflow-hidden border border-gray-100">
         {/* <!-- Header --> */}
         <div className="bg-primary px-4 py-3 flex items-center justify-between text-white">
-          <div className="flex items-center"> 
+          <div className="flex items-center">
             {/* <img src="/apple_logo.png" className="w-8 -mt-1 h-full" /> */}
             {/* <span className="material-symbols-outlined fill !text-[34px] text-primary-light font-bold">
               ios
@@ -555,30 +585,26 @@ const Landingpage = () => {
           </div>
           {/* <!-- Product Grid --> */}
           <div className="col-span-2 grid grid-cols-5 grid-rows-2 gap-3">
-            {allProduct
-              .filter(
-                (product) =>
-                  product.name.toLowerCase().includes("apple") ||
-                  product.name.toLowerCase().includes("iphone") ||
-                  product.name.toLowerCase().includes("macbook") ||
-                  product.name.toLowerCase().includes("ipad") ||
-                  product.name.toLowerCase().includes("airpods") ||
-                  product.name.toLowerCase().includes("ios") ||
-                  product.name.toLowerCase().includes("apple watch"),
-              )
-              .slice(0, 4)
-              .map((product, index) => (
-                <div key={index}>
-                  <StoreProductCard
-                    product={product}
-                    isInCart={cartItem.some((item) => item._id === product._id)}
-                    onAddToCart={(product) => dispatch(addToCart(product))}
-                    onRemoveFromCart={(product) =>
-                      dispatch(removeFromCart(product))
-                    }
-                  />
-                </div>
-              ))}
+            {allProduct && allProduct.length > 0
+              ? appleProducts.length > 0
+                ? appleProducts.map((product, index) => (
+                    <div key={index}>
+                      <StoreProductCard
+                        product={product}
+                        isInCart={cartItem.some(
+                          (item) => item._id === product._id,
+                        )}
+                        onAddToCart={(product) => dispatch(addToCart(product))}
+                        onRemoveFromCart={(product) =>
+                          dispatch(removeFromCart(product))
+                        }
+                      />
+                    </div>
+                  ))
+                : null
+              : Array.from({ length: 4 }).map((_, index) => (
+                  <ProductsSkeletonLoader key={index} />
+                ))}
           </div>
         </div>
       </section>
@@ -594,7 +620,7 @@ const Landingpage = () => {
               onClick={() => navigate("/store?category=laptops")}
               className="group cursor-pointer"
             >
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <img
                   alt="Laptops"
                   className="w-full h-20 object-contain"
@@ -609,7 +635,7 @@ const Landingpage = () => {
               onClick={() => navigate("/store?category=tablets")}
               className="group cursor-pointer"
             >
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <img
                   alt="Tablets"
                   className="w-full h-20 object-contain"
@@ -624,7 +650,7 @@ const Landingpage = () => {
               onClick={() => navigate("/store?category=phones")}
               className="group cursor-pointer"
             >
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <img
                   alt="Phones"
                   className="w-full h-20 object-contain"
@@ -636,7 +662,7 @@ const Landingpage = () => {
               </p>
             </div>
             <div className="group cursor-pointer">
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <img
                   alt="Scanners"
                   className="w-full h-20 object-contain"
@@ -648,7 +674,7 @@ const Landingpage = () => {
               </p>
             </div>
             <div className="group cursor-pointer">
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <img
                   alt="Laptop Bags"
                   className="w-full h-20 object-contain"
@@ -660,7 +686,7 @@ const Landingpage = () => {
               </p>
             </div>
             <div className="group cursor-pointer">
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <img
                   alt="Gaming"
                   className="w-full h-20 object-contain"
@@ -673,7 +699,7 @@ const Landingpage = () => {
             </div>
             {/* <!-- Row 2 --> */}
             <div className="group cursor-pointer">
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <img
                   alt="Apple"
                   className="w-full h-20 object-contain"
@@ -685,7 +711,7 @@ const Landingpage = () => {
               </p>
             </div>
             <div className="group cursor-pointer">
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <img
                   alt="HP"
                   className="w-full h-20 object-contain"
@@ -697,7 +723,7 @@ const Landingpage = () => {
               </p>
             </div>
             <div className="group cursor-pointer">
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <img
                   alt="Dell"
                   className="w-full h-20 object-contain"
@@ -709,7 +735,7 @@ const Landingpage = () => {
               </p>
             </div>
             <div className="group cursor-pointer">
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <img
                   alt="Intel"
                   className="w-full h-20 object-contain"
@@ -721,7 +747,7 @@ const Landingpage = () => {
               </p>
             </div>
             <div className="group cursor-pointer">
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <img
                   alt="Lenovo"
                   className="w-full h-20 object-contain"
@@ -733,7 +759,7 @@ const Landingpage = () => {
               </p>
             </div>
             <div className="group cursor-pointer">
-              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-[140px] group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 rounded-lg p-4 mb-2 flex flex-col shadow-sm items-center justify-center min-h-35 group-hover:shadow-lg group-hover:bg-gray-100 transition-colors">
                 <span className="material-symbols-outlined text-3xl text-gray-400">
                   arrow_forward
                 </span>
