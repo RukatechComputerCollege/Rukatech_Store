@@ -50,7 +50,7 @@ const Checkout = () => {
       logo: 'https://st2.depositphotos.com/4403291/7418/v/450/depositphotos_74189661-stock-illustration-online-shop-log.jpg',
     },
   };
-  document.title = 'Checkout | Fastcart Online Store'
+  document.title = 'Checkout | RukatechStore'
 
   const handleFlutterPayment = useFlutterwave(config);
   const today = new Date();

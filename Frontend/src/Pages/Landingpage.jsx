@@ -21,6 +21,37 @@ import FewProduct from "../components/FewProduct";
 import { useNavigate } from "react-router-dom";
 import ShowcaseProduct from "../components/ShowcaseProduct";
 import SkelentonLoader from "../components/SkelentonLoader";
+import LandingPagePC from "../components/LandingPagePC";
+
+const categoryImage = [
+  {
+    name: "laptops",
+    image:
+      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXBwbGUlMjBsYXB0b3B8ZW58MHx8MHx8fDA%3D",
+  },
+  {
+    name: "accessories",
+    image:
+      "https://images.unsplash.com/photo-1678851836066-dc27614cc56b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGdhZGdldHMlMjBhY2Nlc3Nvcmllc3xlbnwwfHwwfHx8MA%3D%3D",
+  },
+  {
+    name: "phones",
+    image:
+      "https://images.unsplash.com/photo-1742108273412-7e020daf956f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHBob25lc3xlbnwwfHwwfHx8MA%3D%3D",
+  },
+  {
+    name: "monitors",
+    image: "https://rukatech-store.s3.amazonaws.com/category/laptop.png",
+  },
+  {
+    name: "tablets",
+    image: "https://rukatech-store.s3.amazonaws.com/category/laptop.png",
+  },
+  {
+    name: "processors",
+    image: "https://rukatech-store.s3.amazonaws.com/category/laptop.png",
+  },
+];
 
 const Landingpage = () => {
   const prevRef = useRef(null);
@@ -45,7 +76,7 @@ const Landingpage = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  document.title = "Fastcart | Online Store for Fastcart E-commerce";
+  document.title = "RukatechStore | Online Store for Gadgets E-commerce";
 
   const chunkArray = (arr, size) => {
     const result = [];
@@ -66,7 +97,7 @@ const Landingpage = () => {
   useEffect(() => {
     if (allProduct && allProduct.length > 0) {
       const promoProducts = allProduct.filter((prod) =>
-        [prod.category]?.some((cat) => cat.name === "Promo"),
+        [prod.category]?.some((cat) => cat === "Promo"),
       );
       if (promoProducts.length > 0) {
         setPromoProduct1(promoProducts[0]);
@@ -77,34 +108,34 @@ const Landingpage = () => {
       }
     }
 
-    const eightBestDeals = allProduct.filter((product) => product.discountPercentage)
-    .sort((a, b) => b.discountPercentage - a.discountPercentage)
-    .slice(0, 8);
+    const eightBestDeals = allProduct
+      .filter((product) => product.discountPercentage)
+      .sort((a, b) => b.discountPercentage - a.discountPercentage)
+      .slice(0, 8);
     setbestDealsProduct(eightBestDeals);
-
   }, [allProduct]);
   // console.log(promoProduct1);
 
   const productDetails = (product) => {
-    navigate(`/store/${product.name}`, { state: { id: product._id, product: product } });
+    navigate(`/store/${encodeURIComponent(product.name)}`, {
+      state: { id: product._id, product: product },
+    });
   };
 
   const filteredProducts =
     productShowName === "Product"
       ? allProduct
-      : allProduct.filter((product) =>
-          product.category === productShowName,
-        );
+      : allProduct.filter((product) => product.category === productShowName);
 
   return (
     <div
-      className="w-full h-auto flex flex-col gap-y-[1em]"
+      className="w-full mt-10 h-auto flex flex-col gap-y-[1em]"
       style={{ padding: "10px 6%" }}
     >
       {/* Hero Section & Sidebar */}
       <div className="grid grid-cols-12 gap-4">
         {/* Sidebar Categories */}
-        <aside className="hidden lg:block col-span-3 bg-white rounded-4xl shadow-sm border border-gray-100 flex-col py-2 max-h-[50dvh] overflow-y-scroll">
+        <aside className="hidden lg:block col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 flex-col py-2 h-[50dvh] overflow-y-scroll">
           <h2 className="px-4 uppercase font-bold text-primary">Categories</h2>
           <a
             href={`/store`}
@@ -131,7 +162,7 @@ const Landingpage = () => {
             ))}
         </aside>
         {/* Hero Slider */}
-        <div className="col-span-12 lg:col-span-7 lg:h-[450px] bg-white rounded-4xl overflow-hidden shadow-sm relative">
+        <div className="col-span-12 lg:col-span-7 lg:h-[50dvh] bg-white rounded-2xl overflow-hidden shadow-sm relative">
           <ShowcaseProduct
             promoProduct1={promoProduct1}
             promoProduct2={promoProduct2}
@@ -139,7 +170,7 @@ const Landingpage = () => {
           />
         </div>
         {/* Right Column Info */}
-        <div className="hidden lg:block col-span-2 flex-col gap-4">
+        <div className="hidden lg:flex col-span-2 flex-col gap-4">
           <div className="bg-white rounded-lg p-4 shadow-sm flex flex-col gap-3">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
@@ -222,14 +253,25 @@ const Landingpage = () => {
                       >
                         {allCategory.map((category, i) => (
                           <div
-                            onClick={() => navigate(`/store/${category.name}`)}
+                            onClick={() =>
+                              navigate(`/store?category=${category}`)
+                            }
                             key={i}
-                            className="bg-white cursor-pointer border-1 border-[#E4E7E9] rounded-[4px] flex flex-col gap-4 items-center justify-center"
-                            style={{ padding: "24px 12px" }}
+                            className="relative bg-white cursor-pointer border-1 border-[#E4E7E9] rounded-[4px] flex flex-col items-center justify-start h-[200px]"
                           >
-                            <img src={category.image} alt="category-image" />
-                            <h1 className="text-[#191C1F] text-[16px] font-bold">
-                              {category.name}
+                            <div className="absolute w-full h-full bg-black/60"></div>
+                            {categoryImage.map(
+                              (cat, index) =>
+                                cat.name === category && (
+                                  <img
+                                    className="h-full w-full"
+                                    src={cat.image}
+                                    alt={category}
+                                  />
+                                ),
+                            )}
+                            <h1 className="absolute top-[50%] translate-y-[-50%] left-[50%] translate-x-[-50%] text-center text-white text-[16px] font-bold">
+                              {category.toUpperCase()}
                             </h1>
                           </div>
                         ))}
@@ -432,7 +474,7 @@ const Landingpage = () => {
       </section>
       {/* <!-- New Arrivals --> */}
       <section className="mt-8">
-        <div className="bg-primary text-white px-4 py-4 rounded-t-3xl flex items-center justify-between">
+        <div className="bg-primary text-white px-4 py-4 rounded-t-2xl flex items-center justify-between">
           <h2 className="text-lg font-bold">New Arrivals</h2>
           {/* <span className="text-sm font-bold cursor-pointer uppercase hover:underline" onClick={() => navigate("/store")}>
             See All
@@ -441,47 +483,18 @@ const Landingpage = () => {
         <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-sm">
           {/* <!-- Phone Product Cards --> */}
           {allProduct.slice(0, 16).map((product, index) => (
-            <div
-              onClick={() => productDetails(product)}
-              className="group cursor-pointer flex flex-col items-center relative"
+            <LandingPagePC
               key={index}
-            >
-              <img
-                className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
-                src={product.image[0]}
-                alt={product.name}
-              />
-              {product.discountprice && (
-                <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
-                  -
-                  {Math.round(
-                    (1 - product.discountPrice / product.price) * 100,
-                  )}
-                  %
-                </span>
-              )}
-              <p className="text-xs text-center line-clamp-2 mb-1 group-hover:text-primary-light">
-                {product.name}
-              </p>
-              <p className="text-sm font-bold">
-                ₦
-                {product.discountPrice
-                  ? product.discountPrice.toLocaleString()
-                  : product.price.toLocaleString()}
-              </p>
-              {product.discountPrice && (
-                <p className="text-[10px] text-gray-400 line-through">
-                  ₦{product.price.toLocaleString()}
-                </p>
-              )}
-            </div>
+              product={product}
+              onClick={() => productDetails(product)}
+            />
           ))}
         </div>
       </section>
       {/* <!-- Best Deals --> */}
       {bestDealsProduct.length > 0 && (
         <section className="mt-8">
-          <div className="bg-primary text-white px-4 py-4 rounded-t-3xl flex items-center justify-between">
+          <div className="bg-primary text-white px-4 py-4 rounded-t-2xl flex items-center justify-between">
             <h2 className="text-lg font-bold">Best Deals</h2>
             {/* <span className="text-sm font-bold cursor-pointer uppercase hover:underline" onClick={() => navigate("/store")}>
               See All
@@ -490,40 +503,11 @@ const Landingpage = () => {
           <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-sm">
             {/* <!-- Phone Product Cards --> */}
             {bestDealsProduct.map((product, index) => (
-              <div
-                onClick={() => productDetails(product)}
-                className="group cursor-pointer flex flex-col items-center relative"
+              <LandingPagePC
                 key={index}
-              >
-                <img
-                  className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
-                  src={product.image[0]}
-                  alt={product.name}
-                />
-                {product.discountprice && (
-                  <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
-                    -
-                    {Math.round(
-                      (1 - product.discountprice / product.price) * 100,
-                    )}
-                    %
-                  </span>
-                )}
-                <p className="text-xs text-center line-clamp-2 mb-1 group-hover:text-primary-light">
-                  {product.name}
-                </p>
-                <p className="text-sm font-bold">
-                  ₦
-                  {product.discountprice
-                    ? product.discountprice.toLocaleString()
-                    : product.price.toLocaleString()}
-                </p>
-                {product.discountprice && (
-                  <p className="text-[10px] text-gray-400 line-through">
-                    ₦{product.price.toLocaleString()}
-                  </p>
-                )}
-              </div>
+                product={product}
+                onClick={() => productDetails(product)}
+              />
             ))}
           </div>
         </section>
@@ -559,85 +543,12 @@ const Landingpage = () => {
         <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-sm">
           {/* <!-- Phone Product Cards --> */}
           {filteredProducts.slice(0, 6).map((product, index) => (
-            <div
-              onClick={() => productDetails(product)}
-              className="group cursor-pointer flex flex-col items-center"
+            <LandingPagePC
               key={index}
-            >
-              <img
-                className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
-                src={product.image[0]}
-                alt={product.name}
-              />
-              <p className="text-xs text-center line-clamp-2 mb-1 group-hover:text-primary-light">
-                {product.name}
-              </p>
-              <p className="text-sm font-bold">
-                ₦
-                {product.discountprice
-                  ? product.discountprice.toLocaleString()
-                  : product.price.toLocaleString()}
-              </p>
-              {product.discountprice && (
-                <p className="text-[10px] text-gray-400 line-through">
-                  ₦{product.price.toLocaleString()}
-                </p>
-              )}
-            </div>
+              product={product}
+              onClick={() => productDetails(product)}
+            />
           ))}
-        </div>
-      </section>
-      {/* <!-- Official Brand Stores Section --> */}
-      <section className="mt-8 grid grid-cols-2 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-3">
-          <div className="flex items-center justify-between border-b border-gray-50 pb-2">
-            <h3 className="font-bold text-sm">Official Store: NIVEA</h3>
-            <a className="text-xs font-bold text-primary-light" href="#">
-              Shop Now
-            </a>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <img
-              className="w-full aspect-[4/3] object-cover rounded"
-              data-alt="Professional display of Nivea skin care products in a retail setting"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBz2V3OltgSUP0KjySIcr9qUnvOMHQlGiGpkWU1tJugsxqCXUqpCSSa7DGvbJLTpfts1kevCoBA0lDp9qSYC-nMmnBsd4ytOYqD3T5xmLAcDi41FKukWm_NrzJDTHZhIykXrp8wEFl1-ExXd7Cjz2-Yh1EYvJr2XzXYF-Oz9aA2TshzsD4D39izoHo9heHdOAVuhV83Z2SEG7oe-C0nilaMTucOQoXaCQsvIuYIxp8A-tYv0tl5a4uySlZloDHfsNzneptMluCO1wmR"
-            />
-            <img
-              className="w-full aspect-[4/3] object-cover rounded"
-              data-alt="Nivea cream jars on a clean blue background with water splashes"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYjoREE3k4EsHwaUfIoeZJw-Rtqv9IvUdFPCHvNxx1yGgy70Tq6NNZ0fC8dml4TYpiAvFYTmXQJQ8XNwKlVUqCfocrZrvXRuDKXriw-7VQDCWdfKuCTjp8oOaSxpIqdcDU5cKCTaCzzuDwYttbNlUkGHVpFcKtabUmfdNSVGHa6wq2FVz9JQyIxyIhj6Xd0OJvfv1LD31S637FqsdwWeK7HgsTMpgPGtic-Loig-G785wN1fFvng4IovVyshBz5VF_20z_zl_LL5ME"
-            />
-            <img
-              className="w-full aspect-[4/3] object-cover rounded"
-              data-alt="Close-up of Nivea lotion bottle with clear product detailing"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1mNBvVBXxp5fPcvAlJQaqSyZhBTeA71mcDwIAuuXfu6e-PwtuyAnQi3p9cbdw4ra1pPYv9sXWCCXY8siRfqCQtAmjyzNrdkPSyAO4i-dIFhpYxxZx8RimRayiAvJsCx0IwharXXbfGTwS1oxSp1S5nZm8B6tht8IMUOVQsNwaRPrAclsQq4uW1gIsdc053_mMJ1wCs_T8Da2TcEg_EDKocDfbgLY1vDgLgO-3-vrQqu9kdmXRwSnY3CZy79_EDSbx6yn1UN6eXfrg"
-            />
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-3">
-          <div className="flex items-center justify-between border-b border-gray-50 pb-2">
-            <h3 className="font-bold text-sm">Official Store: Oraimo</h3>
-            <a className="text-xs font-bold text-primary-light" href="#">
-              Shop Now
-            </a>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <img
-              className="w-full aspect-[4/3] object-cover rounded"
-              data-alt="Oraimo earbuds in their charging case on a green neon surface"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0HoqexyXWu4iheEv0WLTcEZkY4-_jB0YEAVgkiKNUYRazEjyGO0OjceyaXBBYSutgLMnZE_J-dmR8U71oWhg_ptVxLNReK0X-z0YWxZvITOo16eRuMLCxSwDX_vUbBvH47QZuWRzMst1R1FBKplvdRmiHNSeKySfo8FDOIu2eW9TpdY04nVayuKuzN8iABkpWeAj-8ST4WO7m4uskU9RyIt_qQmccasWcXKfhs7yEJ5wBNqsXUF0wkk1a6se9ZYYL1tcUKVc4oj35"
-            />
-            <img
-              className="w-full aspect-[4/3] object-cover rounded"
-              data-alt="Oraimo power bank and charging cables in a high-tech setting"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuB602ou0sVFSlv1KI5-PyuqFKn4uCPNo0e6tmsxdfzH9x00F6rK_YCv2JROyN5xZ5GOxvJrMo7IkQMCi85XDlJ289AP_UPK6Y4uzHy69XbSAs820IK9PsczS0Qv-tn6-ETwbDoVOwcZzaD6aLTNIWYbo4SBXnkc8DBvR1_s6UvVQfaaLThCBYCVNUas85MBp51CgSsPb8jf_iCX8zxO5q0BkOX_a0E8yR1ZnayAOTFd2J32wsF5eCZBawmuZkQ9Gtqe70QgOlASHbyp"
-            />
-            <img
-              className="w-full aspect-[4/3] object-cover rounded"
-              data-alt="Oraimo smart watch on a wrist against a blurred fitness background"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCo_arJARGk7FVTMo7oYrSqMVGJM_z_aHmPRI4Nuy45vBJUtGHG-OOrZyYRR-Aows0YOoJJUHxCpiEezUWgJsNjQNeSzDw2o4q1e5PVzVPW8T2-fEM143TJz93KnAwS2SVZjAk9-Zq393DCN90kaiJqywNPzw1Awe3Nnd6Q2O4HlcNAN5D7vCjVwbvymwjvDTsCoWQFsj77I5AqSxYXsb4hROCM9mJvEvT8YXpqEGJyoHfAw8Z9UfhyVLysp2XJjkKwmU1WpYwrLjZz"
-            />
-          </div>
         </div>
       </section>
       {/* <!-- Information Text Section --> */}
@@ -646,11 +557,11 @@ const Landingpage = () => {
           Rukatech Store - Nigeria's No. 1 Gadget Shopping Destination
         </h1>
         <p className="text-xs leading-relaxed">
-          Shop for everything you need on Rukatech Store - from Laptops,
-          Phones, Tablets, Office monitors and
-          more. Experience fast delivery and easy returns on our official
-          stores. Rukatech Store is your one-stop shop for all your daily essentials and
-          luxury needs at the best prices in Nigeria.
+          Shop for everything you need on Rukatech Store - from Laptops, Phones,
+          Tablets, Office monitors and more. Experience fast delivery and easy
+          returns on our official stores. Rukatech Store is your one-stop shop
+          for all your daily essentials and luxury needs at the best prices in
+          Nigeria.
         </p>
       </section>
     </div>

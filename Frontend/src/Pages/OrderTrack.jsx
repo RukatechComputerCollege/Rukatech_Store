@@ -16,7 +16,7 @@ const OrderTrack = () => {
       toast.warning('Make sure both fields are provided');
     }
   }
-  document.title = 'Track Order | Fastcart Online Store'
+  document.title = 'Track Order | RukatechStore'
   return (
     <div className='w-full flex flex-col gap-4' style={{padding: '5% 6%'}}>
       <h1 className='text-[32px] font-semibold text-[#191C1F]'>Track Order</h1>

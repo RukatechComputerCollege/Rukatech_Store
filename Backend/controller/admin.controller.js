@@ -256,7 +256,7 @@ const deleteSelectedProduct = async (req, res) =>{
 
 const getAllProducts = async (req, res) => {
   try {
-    const products = await productModel.find();
+    const products = await productModel.find().sort({ createdAt: -1 } );
     res.status(200).json({
       status: true,
       message: "All products fetched",

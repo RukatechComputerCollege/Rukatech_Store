@@ -9,6 +9,8 @@ const CategoryProvider = ({ children }) => {
   const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
 
   const [allCategory, setAllCategory] = useState([])
+  const [allBrand, setAllBrand] = useState([])
+  const [allBrandForCategory, setAllBrandForCategory] = useState([])
   const [allProduct, setallProduct] = useState([])
   const [allOrders, setAllOrders] = useState([])
 
@@ -26,6 +28,16 @@ const CategoryProvider = ({ children }) => {
         const uniqueCategory = [...new Set(categoryName.map((product) => product.category).flat().map((cat) => cat))];
         // console.log("These are unique category", uniqueCategory);
         setAllCategory(uniqueCategory)
+
+        const brandName = products.filter((product) => product.brand);
+        const uniqueBrand = [...new Set(brandName.map((product) => product.brand).flat().map((brand) => brand))];
+        console.log("These are unique brand", uniqueBrand);
+        setAllBrand(uniqueBrand)
+
+        const uniqueBrandForCategory = [...new Set(categoryName.map((product) => product.brand).flat().map((brand) => brand))];
+        console.log("These are unique brand for category", uniqueBrandForCategory);
+        setAllBrandForCategory(uniqueBrandForCategory);
+
       }
     })
     .catch((err) =>{
@@ -48,7 +60,7 @@ const CategoryProvider = ({ children }) => {
    
 
   return (
-    <CategoryContext.Provider value={{ setAllCategory, allCategory, setallProduct, allProduct, allOrders, setAllOrders }}>
+    <CategoryContext.Provider value={{ setAllCategory, allCategory, setallProduct, allProduct, allOrders, setAllOrders, allBrand, setAllBrand, allBrandForCategory, setAllBrandForCategory }}>
       {children}
     </CategoryContext.Provider>
   )

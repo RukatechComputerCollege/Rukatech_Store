@@ -21,7 +21,7 @@ const OrderTrackDetails = () => {
     .catch(error => {
       console.error(error);
     });
-    document.title = `Order Detais: ${id} | Fastcart Online Store`
+    document.title = `Order Details: ${id} | RukatechStore`
     
   }, [id])
   
