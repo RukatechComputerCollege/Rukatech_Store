@@ -43,12 +43,13 @@ const productSchema = mongoose.Schema({
 
 
 productSchema.pre('save', function(next) {
-  if(this.discountprice && this.price) {
-    this.discountPercentage = Math.round(((this.price - this.discountprice) / this.price) * 100)
+  if(this.discountPrice && this.price) {
+    this.discountPercentage = Math.round(((this.price - this.discountPrice) / this.price) * 100)
   }else{
     this.discountPercentage = 0
   }
   next()
 })
+
 const productModel = mongoose.model('product', productSchema)
 module.exports = productModel
