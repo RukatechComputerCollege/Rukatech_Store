@@ -6,7 +6,7 @@ import { FaPlus, FaMinus } from "react-icons/fa6";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { CgArrowRight } from "react-icons/cg";
 import { FiShoppingCart } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const ShoppingCart = () => {
   const cartItem = useSelector((state) => state.cart.cartItem);
@@ -50,7 +50,7 @@ const ShoppingCart = () => {
                     <div className="flex-grow">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-inter text-headline-[24px] text-on-surface">
+                          <h3 className="font-bold text-headline-[24px] text-on-surface">
                             {cartProduct?.name}
                           </h3>
                           <p className="text-[14px] font-inter text-secondary mt-1">
@@ -152,8 +152,8 @@ const ShoppingCart = () => {
                     </div>
                   </div>
                 ))}
-                <button
-                  onClick={() => navigate("/store")}
+                <Link
+                  to="/store"
                   type="button"
                   className="flex items-center gap-[8px] group text-primary-light font-inter text-[14px] py-md"
                 >
@@ -166,7 +166,7 @@ const ShoppingCart = () => {
                   <span className="group-hover:underline">
                     Continue Shopping
                   </span>
-                </button>
+                </Link>
               </div>
               {/* <!-- Right Column: Sidebar --> */}
               <aside className="lg:col-span-4 space-y-[24px] sticky top-[100px]">
@@ -223,9 +223,9 @@ const ShoppingCart = () => {
                 </section>
                 {/* <!-- Checkout Actions --> */}
                 <div className="space-y-[12px]">
-                  <button
+                  <Link
                     type="button"
-                    onClick={() => navigate("/shopping-cart/checkout")}
+                    to="/shopping-cart/checkout"
                     className="w-full bg-primary-light text-white font-inter text-[24px] py-4 rounded-full shadow-[16px] hover:bg-primary transition-all active:scale-[0.98] flex items-center justify-center gap-[12px]"
                   >
                     Proceed to Checkout
@@ -235,7 +235,7 @@ const ShoppingCart = () => {
                     >
                       shopping_cart_checkout
                     </span>
-                  </button>
+                  </Link>
                   <button className="w-full bg-[#25D366] text-white font-inter text-[24px] py-4 rounded-full shadow-[16px] hover:brightness-95 transition-all active:scale-[0.98] flex items-center justify-center gap-[16px]">
                     <svg
                       className="w-6 h-6 fill-current"
@@ -264,13 +264,13 @@ const ShoppingCart = () => {
                 Browse our categories and discover our best deals!
               </p>
             </div>
-            <button
-              onClick={() => navigate("/store")}
+            <Link
+              to="/store"
               className="w-full cursor-pointer hover:bg-[#fa8232cf] active:bg-[#fa8232d3] rounded-[4px] bg-[#FA8232] text-white"
               style={{ padding: "10px" }}
             >
               Start Shopping
-            </button>
+            </Link>
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { useLocation, Link, NavLink } from 'react-router-dom';
+import React from "react";
+import { useLocation, Link, NavLink } from "react-router-dom";
 import { RxCaretRight } from "react-icons/rx";
 
 const BreadCrumb = () => {
@@ -12,29 +12,37 @@ const BreadCrumb = () => {
   const pathnames = location.pathname.split("/").filter((x) => x);
 
   return (
-    <div className="w-full bg-[#F2F4F5] text-[#5F6C72]" style={{ padding: '10px 6%' }}>
+    <div
+      className="w-full bg-[#F2F4F5] text-[#5F6C72]"
+      style={{ padding: "10px 6%" }}
+    >
       <div className="flex gap-4 items-center overflow-x-auto whitespace-nowrap">
-        <a href="/" className="hover:text-[#191C1F]">
+        <Link to="/" className="hover:text-[#191C1F]">
           Home
-        </a>
+        </Link>
 
-        {pathnames.length > 0 && (
+        {pathnames.length > 0 &&
           pathnames.map((value, index) => {
             const to = `/${pathnames.slice(0, index + 1).join("/")}`;
             const isLast = index === pathnames.length - 1;
 
             return (
               <span key={index} className="flex items-center gap-4">
-                <span><RxCaretRight /></span>
+                <span>
+                  <RxCaretRight />
+                </span>
                 {isLast ? (
-                  <span className="text-[#2DA5F3] font-semibold capitalize">{decodeURIComponent(value)}</span>
+                  <span className="text-[#2DA5F3] font-semibold capitalize">
+                    {decodeURIComponent(value)}
+                  </span>
                 ) : (
-                  <a href={to} className="hover:text-[#191C1F] capitalize">{decodeURIComponent(value)}</a>
+                  <Link to={to} className="hover:text-[#191C1F] capitalize">
+                    {decodeURIComponent(value)}
+                  </Link>
                 )}
               </span>
             );
-          })
-        )}
+          })}
       </div>
     </div>
   );
