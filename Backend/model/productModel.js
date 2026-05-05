@@ -11,10 +11,10 @@ const productSchema = mongoose.Schema({
   name: {type:String, required: true, trim: true},
   description: {type:String, required: true},
   price: {type: Number, required:true},
-  discountprice: {type: Number},
+  discountPrice: {type: Number},
   image: {type: [String], required: true},
   inventory: {type:Number},
-  weight: {type: Number},
+  weight: {type: String},
   region: {type: String},
   condition: {type: String, enum: ['new', 'used', 'refurbished']},
   processor: {type: String},
@@ -31,22 +31,25 @@ const productSchema = mongoose.Schema({
   openToNegotiation: {type: Boolean, default: false},
   size: {type: String},
   color: {type:String},
+  discountPercentage: {type: Number},
   category: { type: String, enum: ['laptops', 'monitors', 'phones', 'tablets', 'accessories', 'processors'], required: true },
   productBox: {type: String},
   features: {type: String},
-  discountPercentage: {type:Number},
   rating: [ratingSchema],
   type: {type: String},
+  status: {type: String, enum: ['published', 'draft'], default: 'draft'},
   createdAt: {type:Date, default: Date.now}
 })
 
+
 productSchema.pre('save', function(next) {
-  if(this.discountprice && this.price) {
-    this.discountPercentage = Math.round(((this.price - this.discountprice) / this.price) * 100)
+  if(this.discountPrice && this.price) {
+    this.discountPercentage = Math.round(((this.price - this.discountPrice) / this.price) * 100)
   }else{
     this.discountPercentage = 0
   }
   next()
 })
+
 const productModel = mongoose.model('product', productSchema)
 module.exports = productModel
