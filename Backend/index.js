@@ -23,7 +23,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://fastcartonlinestore.vercel.app'],
+  origin: ['http://localhost:5173', 'https://fastcartonlinestore.vercel.app', process.env.FRONTEND_URL],
   credentials: true
 }));
 app.use(express.json());
