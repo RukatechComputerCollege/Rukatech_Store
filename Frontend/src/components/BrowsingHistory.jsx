@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToCart, removeFromCart } from "../redux/Cart";
 import { getRecentlyViewed } from "./Recentlyview";
 import { CategoryContext } from "../CategoryContext";
-import SkelentonLoader from "./SkelentonLoader";
+import {CardSkeletonLoader} from "./SkeletonLoader";
 
 const BrowsingHistory = () => {
   const viewedIds = getRecentlyViewed();
@@ -86,11 +86,11 @@ const BrowsingHistory = () => {
                   >
                     <div className="relative mb-3 overflow-hidden rounded">
                       <img
-                        className="w-full h-32 object-cover group-hover:scale-110 transition-transform"
+                        className="w-full h-32 object-contain group-hover:scale-110 transition-transform"
                         alt={product?.name}
                         src={product?.image?.[0] || ""}
                       />
-                      {product?.discountPercentage && (
+                      {product?.discountPercentage > 0 && (
                         <span className="absolute top-1 right-1 bg-tertiary text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
                           -{product?.discountPercentage}%
                         </span>
@@ -129,10 +129,10 @@ const BrowsingHistory = () => {
               : Array.from({ length: itemsPerView }).map((_, index) => (
                   <div
                     key={index}
-                    className="w-full h-[250px] cursor-pointer flex flex-col gap-2 border-1 border-[#E4E7E9]"
+                    className="w-full h-62.5 cursor-pointer flex flex-col gap-2 border border-[#E4E7E9]"
                     style={{ padding: "10px" }}
                   >
-                    <SkelentonLoader />
+                    <CardSkeletonLoader />
                   </div>
                 ))}
           </div>

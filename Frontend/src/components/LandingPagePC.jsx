@@ -26,7 +26,7 @@ export default function LandingPagePC({ product, onClick }) {
         src={product.image[0]}
         alt={product.name}
       />
-      {product.discountPercentage && (
+      {product.discountPercentage > 0 && (
         <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
           -{product.discountPercentage}%
         </span>
