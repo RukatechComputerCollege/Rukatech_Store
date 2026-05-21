@@ -23,11 +23,16 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://fastcartonlinestore.vercel.app', process.env.FRONTEND_URL],
+  origin: ['http://localhost:5173', 'https://fastcartonlinestore.vercel.app', 'https://www.rukatechstore.com', 'https://rukatechstore.com'],
   credentials: true
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// healthCheck
+app.get('/health', (req, res) => {
+  res.status(200).json({ message: 'Server is healthy' });
+});
 
 // Routes
 app.use("/user", userRouter);
