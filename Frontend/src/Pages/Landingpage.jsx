@@ -177,9 +177,9 @@ const Landingpage = () => {
           <h2 className="px-4 uppercase font-bold text-primary">Categories</h2>
           <a
             href={`/store`}
-            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 hover:text-primary-light transition-all text-xs text-gray-600"
+            className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 hover:text-primary-light transition-all text-l text-gray-600"
           >
-            <TiThSmallOutline className="text-lg" />
+            <TiThSmallOutline className="text-xl" />
             ALL PRODUCTS
           </a>
           {allCategory && allCategory.length > 0
@@ -191,9 +191,9 @@ const Landingpage = () => {
                   <div key={index}>
                     <a
                       href={`/store?category=${encodeURIComponent(category)}`}
-                      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 hover:text-primary-light transition-all text-xs text-gray-600"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 hover:text-primary-light transition-all text-l text-gray-600"
                     >
-                      <span className="text-lg">
+                      <span className="text-xl">
                         <IconComponent />
                       </span>
                       {category.toUpperCase()}
