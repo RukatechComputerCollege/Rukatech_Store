@@ -3,7 +3,7 @@ import Adsbar from "../components/Adsbar";
 import Tagnav from "../components/Tagnav";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import BreadCrumb from "../components/BreadCrumb";
 import Newsletter from "../components/Newsletter";
 
@@ -11,9 +11,10 @@ const Home = () => {
   const adsbarRef = useRef(null);
   const tagnavRef = useRef(null);
   const navbarRef = useRef(null);
+  const location = useLocation();
 
   return (
-    <div>
+    <div key={location.key}>
       <div ref={adsbarRef}>
         <Adsbar />
       </div>

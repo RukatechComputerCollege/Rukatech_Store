@@ -1,5 +1,6 @@
 const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiTrendingUp, FiClock, FiShoppingBag, FiPlus, FiSearch } from 'react-icons/fi';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -12,18 +13,27 @@ const FlashSales = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState([]);
   const [newFlashSale, setNewFlashSale] = useState({
-    title: '',
-    productId: '',
-    productName: '',
-    productImage: '',
-    description: '',
     discount: '',
     startDate: '',
     endDate: ''
   });
+
+  const getProductImage = (product) => {
+    if (!product) return '';
+    if (product.productImage) return product.productImage;
+    if (product.image) {
+      return Array.isArray(product.image) ? product.image[0] || '' : product.image;
+    }
+    return '';
+  };
+
   const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem('adminToken');
+  const navigate = useNavigate();
+  const [editingSaleId, setEditingSaleId] = useState(null);
+  const [productPrices, setProductPrices] = useState({});
 
   useEffect(() => {
     loadFlashSales();
@@ -55,8 +65,8 @@ const FlashSales = () => {
       const res = await axios.get(`${API_URL}/${ADMIN_ROUTE}/getAllProducts`);
       if (res.data?.status) setProducts(res.data.data || []);
       else setProducts([]);
-    } catch (err) {
-      console.warn('Could not load products for flash sale modal', err);
+    } catch {
+      console.warn('Could not load products for flash sale modal');
       setProducts([]);
     } finally {
       setProductsLoading(false);
@@ -66,36 +76,92 @@ const FlashSales = () => {
   const handleOpenModal = () => setShowCreateModal(true);
   const handleCloseModal = () => {
     setShowCreateModal(false);
-    setNewFlashSale({ title: '', productId: '', productName: '', productImage: '', description: '', discount: '', startDate: '', endDate: '' });
+    setSelectedProducts([]);
+    setNewFlashSale({ discount: '', startDate: '', endDate: '' });
   };
 
   const handleNewFlashSaleChange = (field, value) => {
     setNewFlashSale((prev) => ({ ...prev, [field]: value }));
   };
 
+  const toggleProductSelection = (product) => {
+    setSelectedProducts((prev) => {
+      const exists = prev.some((item) => item.productId === product._id);
+      if (exists) {
+        return prev.filter((item) => item.productId !== product._id);
+      }
+      return [
+        ...prev,
+        {
+          productId: product._id,
+          productName: product.name,
+          productImage: getProductImage(product)
+        }
+      ];
+    });
+  };
+
   const submitFlashSale = async () => {
-    const { title, productName, discount, startDate, endDate } = newFlashSale;
-    if (!title || !productName || !discount || !startDate || !endDate) {
-      toast.error('Please fill in all required fields');
+    const { discount, startDate, endDate } = newFlashSale;
+    if (selectedProducts.length === 0 || !discount || !startDate || !endDate) {
+      toast.error('Please select at least one product and fill in discount and dates');
       return;
     }
 
     try {
-      const response = await axios.post(
-        `${API_URL}/${ADMIN_ROUTE}/flashsales`,
-        {
-          ...newFlashSale,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const payload = { products: selectedProducts, ...newFlashSale };
+      let response;
+      if (editingSaleId) {
+        try {
+          response = await axios.put(`${API_URL}/${ADMIN_ROUTE}/flashsales/${editingSaleId}`, payload, { headers: { Authorization: `Bearer ${token}` } });
+        } catch {
+          // fallback to create if update endpoint not available
+          response = await axios.post(`${API_URL}/${ADMIN_ROUTE}/flashsales`, payload, { headers: { Authorization: `Bearer ${token}` } });
+          toast.info('Update endpoint not available; created a new flash sale instead.');
+        }
+      } else {
+        response = await axios.post(`${API_URL}/${ADMIN_ROUTE}/flashsales`, payload, { headers: { Authorization: `Bearer ${token}` } });
+      }
+
       if (response.data?.status) {
-        toast.success('Flash sale created successfully');
+        toast.success(editingSaleId ? 'Flash sale updated' : 'Flash sale created successfully');
         handleCloseModal();
+        setEditingSaleId(null);
         loadFlashSales();
       }
     } catch (error) {
       console.error('Failed to create flash sale:', error);
-      toast.error(error.response?.data?.message || 'Could not create flash sale');
+      toast.error(error.response?.data?.message || 'Could not save flash sale');
+    }
+  };
+
+  const handleEdit = (sale) => {
+    setEditingSaleId(sale._id || null);
+    setNewFlashSale({
+      discount: sale.discount || '',
+      startDate: sale.startDate ? new Date(sale.startDate).toISOString().slice(0, 10) : '',
+      endDate: sale.endDate ? new Date(sale.endDate).toISOString().slice(0, 10) : '',
+      title: sale.title || '',
+      description: sale.description || '',
+    });
+    const mapped = (sale.products || []).map((p) => ({ productId: p.productId, productName: p.productName, productImage: p.productImage }));
+    setSelectedProducts(mapped);
+    setShowCreateModal(true);
+  };
+
+  // product price fetch handled inline in effect
+
+  const goToProduct = async (productId) => {
+    try {
+      const res = await axios.get(`${API_URL}/${ADMIN_ROUTE}/product/${productId}`);
+      if (res.data?.status && res.data.data) {
+        const product = res.data.data;
+        navigate(`/store/${encodeURIComponent(product.name)}`, { state: { id: product._id, product } });
+      } else {
+        toast.error('Product details not available');
+      }
+    } catch {
+      toast.error('Failed to load product details');
     }
   };
 
@@ -116,6 +182,24 @@ const FlashSales = () => {
     total: flashSales.length,
     upcoming: flashSales.filter((sale) => sale.status === 'upcoming').length,
   };
+
+  useEffect(() => {
+    const fetchPrices = async () => {
+      for (const sale of (filteredSales || [])) {
+        const pid = sale.products?.[0]?.productId;
+        if (!pid || productPrices[pid]) continue;
+        try {
+          const res = await axios.get(`${API_URL}/${ADMIN_ROUTE}/product/${pid}`);
+          if (res.data?.status && res.data.data) {
+            setProductPrices((prev) => ({ ...prev, [pid]: res.data.data.price }));
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+    fetchPrices();
+  }, [filteredSales, API_URL, productPrices]);
 
   return (
     <div className='w-full min-h-screen space-y-8'>
@@ -148,66 +232,47 @@ const FlashSales = () => {
               <button onClick={handleCloseModal} className='text-sm font-semibold text-[#6B7280] hover:text-[#111827]'>Close</button>
             </div>
               <div className='mt-6 grid gap-4 md:grid-cols-2'>
-              <div className='space-y-2'>
-                <label className='text-sm font-semibold text-[#111827]'>Title</label>
-                <input
-                  value={newFlashSale.title}
-                  onChange={(e) => handleNewFlashSaleChange('title', e.target.value)}
-                  placeholder='Flash sale title'
-                  className='w-full rounded-3xl border border-[#E5E7EB] px-4 py-3 text-sm outline-none'
-                />
-              </div>
               <div className='md:col-span-2'>
-                <p className='text-sm text-[#6B7280] mb-2'>Select a product (click to choose)</p>
-                <div className='grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-36 overflow-auto py-1'>
-                  {productsLoading ? (
-                    <div className='text-sm text-[#94A3B8]'>Loading products...</div>
-                  ) : products.length === 0 ? (
-                    <div className='text-sm text-[#94A3B8]'>No products found</div>
-                  ) : (
-                    products.map((p) => (
-                      <button
-                        key={p._id}
-                        type='button'
-                        onClick={() => setNewFlashSale(prev => ({
-                          ...prev,
-                          productId: p._id,
-                          productName: p.name,
-                          productImage: Array.isArray(p.image) ? p.image[0] : p.image || ''
-                        }))}
-                        className={`flex flex-col items-center gap-1 p-1 rounded-lg border ${newFlashSale.productId === p._id ? 'border-[#0F766E] bg-[#ECFDF5]' : 'border-[#E5E7EB] hover:shadow-sm'} text-left`}
-                      >
-                        <div className='w-full h-14 bg-[#F8FAFF] rounded-lg overflow-hidden flex items-center justify-center'>
-                          { (Array.isArray(p.image) ? p.image[0] : p.image) ? (
-                            <img src={Array.isArray(p.image) ? p.image[0] : p.image} alt={p.name} className='h-full w-full object-cover' />
-                          ) : (
-                            <div className='text-xs text-[#94A3B8]'>No image</div>
-                          )}
-                        </div>
-                        <div className='text-[12px] font-semibold text-[#111827] truncate mt-1'>{p.name}</div>
-                        <div className='text-[11px] text-[#6B7280]'>₦ {p.price?.toLocaleString?.() || p.price}</div>
-                      </button>
-                    ))
-                  )}
+                <div className='flex flex-col gap-2'>
+                  <div className='flex flex-wrap items-center justify-between gap-3'>
+                    <div>
+                      <p className='text-sm font-semibold text-[#111827]'>Select products</p>
+                      <p className='text-sm text-[#6B7280]'>Choose one or more products to include in this flash sale.</p>
+                    </div>
+                    <div className='text-sm font-medium text-[#0F766E]'>{selectedProducts.length} product{selectedProducts.length === 1 ? '' : 's'} selected</div>
+                  </div>
+                  <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-72 overflow-auto py-1'>
+                    {productsLoading ? (
+                      <div className='text-sm text-[#94A3B8]'>Loading products...</div>
+                    ) : products.length === 0 ? (
+                      <div className='text-sm text-[#94A3B8]'>No products found</div>
+                    ) : (
+                      products.map((p) => {
+                        const selected = selectedProducts.some((item) => item.productId === p._id);
+                        return (
+                          <button
+                            key={p._id}
+                            type='button'
+                            onClick={() => toggleProductSelection(p)}
+                            className={`flex flex-col items-start gap-2 rounded-3xl border p-3 text-left transition ${selected ? 'border-[#0F766E] bg-[#ECFDF5]' : 'border-[#E5E7EB] hover:shadow-sm'}`}
+                          >
+                            <div className='w-full h-24 rounded-3xl bg-[#F8FAFF] overflow-hidden flex items-center justify-center'>
+                              {getProductImage(p) ? (
+                                <img src={getProductImage(p)} alt={p.name} className='h-full w-full object-cover' />
+                              ) : (
+                                <div className='text-xs text-[#94A3B8]'>No image</div>
+                              )}
+                            </div>
+                            <div className='w-full'>
+                              <p className='text-[12px] font-semibold text-[#111827] truncate'>{p.name}</p>
+                              <p className='text-[11px] text-[#6B7280] mt-1'>₦ {p.price?.toLocaleString?.() || p.price}</p>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className='space-y-2'>
-                <label className='text-sm font-semibold text-[#111827]'>Product name</label>
-                <input
-                  value={newFlashSale.productName}
-                  readOnly
-                  placeholder='Selected product'
-                  className='w-full rounded-3xl border border-[#E5E7EB] px-4 py-3 text-sm outline-none bg-[#F8FAFF]'
-                />
-              </div>
-              <div className='space-y-2 md:col-span-2'>
-                <label className='text-sm font-semibold text-[#111827]'>Description</label>
-                <textarea
-                  value={newFlashSale.description}
-                  onChange={(e) => handleNewFlashSaleChange('description', e.target.value)}
-                  placeholder='Optional campaign details'
-                  className='w-full min-h-25 rounded-3xl border border-[#E5E7EB] px-4 py-3 text-sm outline-none'
-                />
               </div>
               <div className='space-y-2'>
                 <label className='text-sm font-semibold text-[#111827]'>Discount</label>
@@ -334,18 +399,20 @@ const FlashSales = () => {
                     <td className='px-6 py-5 text-sm text-[#475569]'>
                       <div className='flex items-center gap-3'>
                         <div className='w-12 h-12 rounded-lg bg-[#F8FAFF] overflow-hidden flex items-center justify-center'>
-                          { (sale.productImage || (sale.product && (Array.isArray(sale.product.image) ? sale.product.image[0] : sale.product.image))) ? (
+                          { (sale.products?.[0]?.productImage || sale.productImage || (sale.product && (Array.isArray(sale.product.image) ? sale.product.image[0] : sale.product.image))) ? (
                             <img
-                              src={sale.productImage || (sale.product && (Array.isArray(sale.product.image) ? sale.product.image[0] : sale.product.image))}
-                              alt={sale.productName}
-                              className='w-full h-full object-cover'
+                              src={sale.products?.[0]?.productImage || sale.productImage || (sale.product && (Array.isArray(sale.product.image) ? sale.product.image[0] : sale.product.image))}
+                              alt={sale.products?.[0]?.productName || sale.productName}
+                              className='w-full h-full object-cover cursor-pointer'
+                              onClick={() => goToProduct(sale.products?.[0]?.productId || sale.productId)}
                             />
                           ) : (
                             <div className='text-xs text-[#94A3B8]'>No image</div>
                           )}
                         </div>
                         <div className='truncate'>
-                          <div className='text-sm font-semibold text-[#111827]'>{sale.productName || 'Featured product'}</div>
+                          <div className='text-sm font-semibold text-[#111827] cursor-pointer' onClick={() => goToProduct(sale.products?.[0]?.productId || sale.productId)}>{sale.products?.length ? `${sale.products[0].productName}${sale.products.length > 1 ? ` +${sale.products.length - 1} more` : ''}` : sale.productName || 'Featured product'}</div>
+                          <div className='text-xs text-[#6B7280] mt-1'>₦ {productPrices[sale.products?.[0]?.productId] ? Number(productPrices[sale.products[0].productId]).toLocaleString() : '—'}</div>
                         </div>
                       </div>
                     </td>
@@ -355,7 +422,7 @@ const FlashSales = () => {
                       <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${sale.status === 'active' ? 'bg-[#ECFDF5] text-[#047857]' : sale.status === 'upcoming' ? 'bg-[#F8FAFF] text-[#1D4ED8]' : 'bg-[#FEE2E2] text-[#B91C1C]'}`}>{sale.status || 'inactive'}</span>
                     </td>
                     <td className='px-6 py-5 text-right'>
-                      <button className='rounded-full bg-[#EFF6FF] px-4 py-2 text-xs font-semibold text-[#1D4ED8] hover:bg-[#DBEAFE] transition'>Edit</button>
+                      <button onClick={() => handleEdit(sale)} className='rounded-full bg-[#EFF6FF] px-4 py-2 text-xs font-semibold text-[#1D4ED8] hover:bg-[#DBEAFE] transition'>Edit</button>
                     </td>
                   </tr>
                 ))

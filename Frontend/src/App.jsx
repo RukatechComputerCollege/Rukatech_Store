@@ -54,7 +54,7 @@ const App = () => {
   return (
     <div>
       <ScrollToTop />
-      
+
       <Routes>
           <Route path="/" element={
             <RouteWrapper>
@@ -84,36 +84,57 @@ const App = () => {
                   <Checkout />
                 </ProtectedRoute>
               </UserProvider>
-            } />
-            <Route path="/shopping-cart/checkout/payment-successful/:orderId" element={<PaymentSuccess />} />
-            <Route path="/dashboard/" element={
+            }
+          />
+          <Route
+            path="/shopping-cart/checkout/payment-successful/:orderId"
+            element={<PaymentSuccess />}
+          />
+          <Route
+            path="/dashboard/"
+            element={
               <UserProvider>
                 <ProtectedRoute role="user">
                   <UserDashboard />
                 </ProtectedRoute>
               </UserProvider>
-            }>
-              <Route path='account' element={
+            }
+          >
+            <Route
+              path="account"
+              element={
                 <UserProvider>
                   <HomeDashboard />
                 </UserProvider>
-              }/>
-              <Route path='browsing-history' element={
+              }
+            />
+            <Route
+              path="browsing-history"
+              element={
                 <UserProvider>
                   <BrowsingHistory />
                 </UserProvider>
-              }/>
-              <Route path='order-history' element={
+              }
+            />
+            <Route
+              path="order-history"
+              element={
                 <UserProvider>
                   <OrderHistory />
                 </UserProvider>
-              }/>
-              <Route path='order-history/:id' element={
+              }
+            />
+            <Route
+              path="order-history/:id"
+              element={
                 <UserProvider>
                   <OrderDetails />
                 </UserProvider>
-              }/>
-              <Route path='setting' element={
+              }
+            />
+            <Route
+              path="setting"
+              element={
                 <UserProvider>
                   <Settings />
                 </UserProvider>
