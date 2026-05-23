@@ -7,7 +7,11 @@ import { GoPackage, GoCreditCard } from "react-icons/go";
 import { PiTrophyThin } from "react-icons/pi";
 import { SlEarphonesAlt } from "react-icons/sl";
 import { IoIosArrowRoundForward, IoIosArrowRoundBack } from "react-icons/io";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp, FaTabletAlt } from "react-icons/fa";
+import { MdMonitor, MdHeadphonesBattery } from "react-icons/md";
+import { GiProcessor, GiLaptop } from "react-icons/gi";
+import { FcMultipleSmartphones } from "react-icons/fc";
+import { TiThSmallOutline } from "react-icons/ti";
 
 import "swiper/css";
 import "swiper/css/effect-coverflow";
@@ -147,6 +151,15 @@ const Landingpage = () => {
     });
   };
 
+  const categoryIconMap = {
+    monitors: MdMonitor,
+    processors: GiProcessor,
+    phones: FcMultipleSmartphones,
+    accessories: MdHeadphonesBattery,
+    laptops: GiLaptop,
+    tablets: FaTabletAlt,
+  };
+
   const filteredProducts =
     productShowName === "Product"
       ? allProduct
@@ -166,25 +179,28 @@ const Landingpage = () => {
             href={`/store`}
             className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 hover:text-primary-light transition-all text-xs text-gray-600"
           >
-            <span className="material-symbols-outlined text-lg">
-              shopping_basket
-            </span>
+            <TiThSmallOutline className="text-lg" />
             ALL PRODUCTS
           </a>
           {allCategory && allCategory.length > 0
-            ? allCategory.map((category, index) => (
-                <div key={index}>
-                  <a
-                    href={`/store?category=${encodeURIComponent(category)}`}
-                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 hover:text-primary-light transition-all text-xs text-gray-600"
-                  >
-                    <span className="material-symbols-outlined text-lg">
-                      shopping_basket
-                    </span>
-                    {category.toUpperCase()}
-                  </a>
-                </div>
-              ))
+            ? allCategory.map((category, index) => {
+                const IconComponent =
+                  categoryIconMap[category.toLowerCase()] || TiThSmallOutline;
+
+                return (
+                  <div key={index}>
+                    <a
+                      href={`/store?category=${encodeURIComponent(category)}`}
+                      className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 hover:text-primary-light transition-all text-xs text-gray-600"
+                    >
+                      <span className="text-lg">
+                        <IconComponent />
+                      </span>
+                      {category.toUpperCase()}
+                    </a>
+                  </div>
+                );
+              })
             : Array.from({ length: 6 }).map((_, index) => (
                 <RowSkeletonLoader key={index} />
               ))}
@@ -242,7 +258,7 @@ const Landingpage = () => {
             <img
               className="w-full h-32 object-cover rounded mb-2"
               alt="rukatech_store_location"
-              src="src/assets/debash.webp"
+              src="./src/assets/debash.webp"
             />
             <p className="text-[10px] font-bold text-center">
               VISIT OUR STORE FOR THE BEST DEALS AND DISCOUNTS
@@ -509,7 +525,7 @@ const Landingpage = () => {
             See All
           </span> */}
         </div>
-        <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-[12px]">
+        <div className="bg-white p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-[12px]">
           {/* <!-- Phone Product Cards --> */}
           {allProduct && allProduct.length > 0
             ? allProduct
@@ -534,7 +550,7 @@ const Landingpage = () => {
             See All
           </span> */}
         </div>
-        <div className="bg-white p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-[12px]">
+        <div className="bg-white p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 rounded-b-3xl shadow-[12px]">
           {/* <!-- Phone Product Cards --> */}
           {allProduct && allProduct.length > 0
             ? bestDealsProduct.length > 0
@@ -576,7 +592,7 @@ const Landingpage = () => {
         </div>
         <div className="p-4 grid grid-cols-3 gap-4">
           {/* <!-- Side Promo Banner --> */}
-          <div className="col-span-1 h-full">
+          <div className="hidden md:block col-span-1 h-full">
             <img
               alt="Apple Store Promo"
               className="w-full h-full object-cover rounded-3xl"
@@ -584,7 +600,7 @@ const Landingpage = () => {
             />
           </div>
           {/* <!-- Product Grid --> */}
-          <div className="col-span-2 grid grid-cols-5 grid-rows-2 gap-3">
+          <div className="col-span-3 md:col-span-2 grid grid-cols-2 lg:grid-cols-4 grid-rows-2 gap-3">
             {allProduct && allProduct.length > 0
               ? appleProducts.length > 0
                 ? appleProducts.map((product, index) => (
@@ -614,7 +630,7 @@ const Landingpage = () => {
           <h2 className="text-[32px] font-semibold text-center">
             Computing Deals
           </h2>
-          <div className="grid grid-cols-6 gap-x-2 gap-y-4">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-x-2 gap-y-4">
             {/* <!-- Row 1 --> */}
             <div
               onClick={() => navigate("/store?category=laptops")}
