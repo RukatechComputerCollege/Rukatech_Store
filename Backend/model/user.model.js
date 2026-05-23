@@ -51,6 +51,7 @@ const userSchema = new mongoose.Schema({
   state: { type: String },
   address: { type: String },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  isBanned: { type: Boolean, default: false },
 
   billingfirstname: { type: String },
   billinglastname: { type: String },

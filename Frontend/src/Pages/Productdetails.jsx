@@ -15,15 +15,19 @@ import { addToRecentlyViewed } from "../components/Recentlyview";
 import BrowsingHistory from "../components/BrowsingHistory";
 
 const Productdetails = () => {
-  const id = useLocation().state?.id;
-  const product = useLocation().state?.product;
-  console.log("product from state: ", product);
+  const { name } = useParams(); // Get product name from URL params
+  const location = useLocation();
+  const id = location.state?.id;
+  const productFromState = location.state?.product;
+  
   const API_URL = import.meta.env.VITE_API_URL;
   const ADMIN_URL = import.meta.env.VITE_ADMIN_ROUTE_NAME;
   const { allProduct } = useContext(CategoryContext);
   const dispatch = useDispatch();
   const [featureTab, setFeatureTab] = useState("Product Specification");
   const cartItem = useSelector((state) => state.cart.cartItem);
+  const [product, setProduct] = useState(productFromState || null);
+  const [loading, setLoading] = useState(!productFromState);
   const cartProduct = cartItem.find((item) => item._id === product?._id);
   const [localQuantity, setLocalQuantity] = useState(
     cartProduct ? cartProduct.quantity : 1,
@@ -33,12 +37,45 @@ const Productdetails = () => {
   const [averageRating, setAverageRating] = useState("");
   const [totalRating, setTotalRating] = useState("");
 
+  // Fetch product from API if not available from state
   useEffect(() => {
-    // const foundProduct = allProduct.find((product) => product?._id === id.id);
-    // setProduct(foundProduct);
-    // console.log("Product found: ", foundProduct);
-    document.title = `${product?.name || "Loading..."} | RukatechStore`;
-  }, [id, product]);
+    const fetchProduct = async () => {
+      if (!productFromState && name) {
+        setLoading(true);
+        try {
+          // First try to find in allProduct context
+          let foundProduct = allProduct?.find(
+            (p) => p.name === decodeURIComponent(name)
+          );
+          
+          // If not found in context, fetch from API
+          if (!foundProduct) {
+            const response = await axios.get(
+              `${API_URL}/${ADMIN_URL}/product/name/${decodeURIComponent(name)}`
+            );
+            foundProduct = response.data;
+          }
+          
+          setProduct(foundProduct);
+        } catch (error) {
+          console.error("Error fetching product:", error);
+        } finally {
+          setLoading(false);
+        }
+      } else if (productFromState) {
+        setProduct(productFromState);
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [name, productFromState, allProduct, API_URL, ADMIN_URL]);
+
+  useEffect(() => {
+    if (product?._id) {
+      document.title = `${product?.name || "Loading..."} | RukatechStore`;
+    }
+  }, [product]);
 
   useEffect(() => {
     if (product?._id) {
@@ -56,6 +93,25 @@ const Productdetails = () => {
     }
   }, [product]);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-500">Product not found</h2>
+          <p className="mt-2">The product you're looking for doesn't exist.</p>
+        </div>
+      </div>
+    );
+  }
+
   const isAddedToCart =
     product && cartItem.some((item) => item._id === product._id);
 
@@ -66,6 +122,7 @@ const Productdetails = () => {
       dispatch(addToCart(product));
     }
   };
+  
   useEffect(() => {
     if (cartProduct) {
       setLocalQuantity(cartProduct.quantity);
@@ -73,6 +130,7 @@ const Productdetails = () => {
       setLocalQuantity(1);
     }
   }, [cartProduct]);
+  
   const handleQuantityChange = (e) => {
     const value = e.target.value;
     if (value === "") {
@@ -85,6 +143,7 @@ const Productdetails = () => {
       setLocalQuantity(parsed);
     }
   };
+  
   const commitQuantity = () => {
     const finalQuantity =
       localQuantity === "" ? 1 : Math.max(1, parseInt(localQuantity, 10));
@@ -97,6 +156,7 @@ const Productdetails = () => {
       }),
     );
   };
+  
   const today = new Date();
   today.setDate(today.getDate() + 5);
   const deliveryDate = today.toLocaleDateString("en-GB", {
@@ -104,6 +164,7 @@ const Productdetails = () => {
     month: "long",
     year: "numeric",
   });
+  
   return (
     <div className="w-full flex flex-col gap-4" style={{ padding: "3% 6%" }}>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-xl">
@@ -497,49 +558,6 @@ const Productdetails = () => {
                   </div>
                 )}
               </div>
-              {/* Product Overview */}
-              {/* <div className="mt-12">
-                <h4 className="text-lg font-bold border-l-4 border-primary-light pl-3 mb-6">
-                  Product Overview
-                </h4>
-                <p className="text-on-surface-variant leading-relaxed mb-6">
-                  The 2024 Zephyrus G14 is defined by its CNC-milled aluminum
-                  chassis and the all-new Slash Lighting array on the lid. This
-                  compact powerhouse brings elite performance to a portable
-                  1.5kg frame. With the stunning 3K OLED ROG Nebula Display, you
-                  get unmatched color accuracy and deep blacks for both gaming
-                  and creative work.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-surface-container rounded-lg p-6 text-center">
-                    <span className="material-symbols-outlined text-4xl text-primary-light mb-2">
-                      speed
-                    </span>
-                    <h5 className="font-bold">Extreme Speed</h5>
-                    <p className="text-xs text-secondary mt-1">
-                      Powered by AMD Ryzen™ 8000 Series processors.
-                    </p>
-                  </div>
-                  <div className="bg-surface-container rounded-lg p-6 text-center">
-                    <span className="material-symbols-outlined text-4xl text-primary-light mb-2">
-                      display_settings
-                    </span>
-                    <h5 className="font-bold">OLED Nebula</h5>
-                    <p className="text-xs text-secondary mt-1">
-                      Vibrant 3K resolution with 120Hz refresh rate.
-                    </p>
-                  </div>
-                  <div className="bg-surface-container rounded-lg p-6 text-center">
-                    <span className="material-symbols-outlined text-4xl text-primary-light mb-2">
-                      bolt
-                    </span>
-                    <h5 className="font-bold">RTX 4070</h5>
-                    <p className="text-xs text-secondary mt-1">
-                      AI-powered graphics for next-gen gaming.
-                    </p>
-                  </div>
-                </div>
-              </div> */}
             </div>
           )}
           {featureTab === "Full Description" && (

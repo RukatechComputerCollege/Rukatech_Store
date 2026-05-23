@@ -1,13 +1,15 @@
-const { productModel } = require("../model/admin.model");
+const productModel = require("../model/productModel");
 const userModel = require("../model/user.model");
 
 const rateProduct = async (req, res) => {
-    console.log(req.body);
-    
-  try {
+    try {
     const { productId } = req.params;
     const { ratingGrade, feedback } = req.body;
-    const userId = req.user.id;
+    const userId = req.user && req.user.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
 
     // Validate inputs
     if (!ratingGrade || ratingGrade < 1 || ratingGrade > 5) {
@@ -19,15 +21,25 @@ const rateProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    // Ensure user has purchased this product
+    const user = await userModel.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const hasPurchased = user.productOrder.some(order =>
+      order.products.some(p => String(p.productId) === String(productId))
+    );
+
+    if (!hasPurchased) {
+      return res.status(403).json({ message: "You can only rate products you have purchased" });
+    }
+
     // Check if user already rated this product
-    const existingRating = product.rating.find(r => r.user.toString() === userId);
+    const existingRating = product.rating.find(r => String(r.user) === String(userId));
 
     if (existingRating) {
-      // Update existing rating
       existingRating.ratingGrade = ratingGrade;
       existingRating.feedback = feedback;
     } else {
-      // Add new rating
       product.rating.push({
         user: userId,
         ratingGrade,

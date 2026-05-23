@@ -22,6 +22,7 @@ import { CategoryContext } from "../CategoryContext";
 import BestDeals from "../components/BestDeals";
 import FeaturedProducts from "../components/FeaturedProducts";
 import FewProduct from "../components/FewProduct";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import ShowcaseProduct from "../components/ShowcaseProduct";
 import {
@@ -75,6 +76,12 @@ const Landingpage = () => {
   const { allProduct } = useContext(CategoryContext);
   const [chunkSize, setChunkSize] = useState(6);
   const [bestDealsProduct, setbestDealsProduct] = useState([]);
+  const [flashSales, setFlashSales] = useState([]);
+  const [flashSalesLoading, setFlashSalesLoading] = useState(true);
+  const [countdown, setCountdown] = useState({ hours: '00', minutes: '00', seconds: '00' });
+  const API_URL = import.meta.env.VITE_API_URL;
+  const ADMIN_URL = import.meta.env.VITE_ADMIN_ROUTE_NAME;
+  const [productPrices, setProductPrices] = useState({});
 
   useEffect(() => {
     const handleResize = () => {
@@ -130,6 +137,28 @@ const Landingpage = () => {
       .slice(0, 8);
     setbestDealsProduct(eightBestDeals);
   }, [allProduct]);
+
+  useEffect(() => {
+    const loadFlashSales = async () => {
+      try {
+        setFlashSalesLoading(true);
+        const response = await axios.get(`${API_URL}/user/flashsales`);
+        if (response.data?.status) {
+          setFlashSales(response.data.data || []);
+        } else {
+          setFlashSales([]);
+        }
+      } catch (err) {
+        console.warn('Failed to load flash sales', err);
+        setFlashSales([]);
+      } finally {
+        setFlashSalesLoading(false);
+      }
+    };
+
+    loadFlashSales();
+  }, [API_URL]);
+
   // console.log(promoProduct1);
 
   const appleProducts = allProduct
@@ -150,6 +179,91 @@ const Landingpage = () => {
       state: { id: product._id, product: product },
     });
   };
+
+  const flashSaleItems = flashSales.flatMap((sale) =>
+    (sale.products || []).map((product) => ({
+      ...product,
+      discount: sale.discount,
+      saleStartDate: sale.startDate,
+      saleEndDate: sale.endDate,
+    })),
+  );
+
+  const parseDiscountRate = (d) => {
+    if (d == null) return 0;
+    const n = typeof d === 'string' ? (d.includes('%') ? parseFloat(d.replace('%', '')) / 100 : parseFloat(d)) : Number(d);
+    if (Number.isNaN(n)) return 0;
+    return n > 1 ? n / 100 : n;
+  };
+
+  const formatPrice = (v) => (v == null ? '—' : Number(v).toLocaleString());
+
+  useEffect(() => {
+    const fetchPrices = async () => {
+      const ids = Array.from(new Set(flashSaleItems.map((p) => p.productId).filter(Boolean)));
+      for (const id of ids) {
+        if (productPrices[id]) continue;
+        try {
+          const res = await axios.get(`${API_URL}/${ADMIN_URL}/product/${id}`);
+          if (res.data?.status && res.data.data) {
+            setProductPrices((prev) => ({ ...prev, [id]: res.data.data.price }));
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
+    if (flashSaleItems.length > 0) fetchPrices();
+  }, [flashSaleItems]);
+
+  const goToFlashProduct = async (product) => {
+    // try find in allProduct first
+    const found = allProduct?.find((p) => p._id === product.productId || p.name === product.productName);
+    if (found) return productDetails(found);
+    // otherwise fetch by id and navigate
+    try {
+      const res = await axios.get(`${API_URL}/${ADMIN_URL}/product/${product.productId}`);
+      if (res.data?.status && res.data.data) {
+        productDetails(res.data.data);
+      } else {
+        productDetails({ _id: product.productId, name: product.productName });
+      }
+    } catch (err) {
+      productDetails({ _id: product.productId, name: product.productName });
+    }
+  };
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const ends = flashSales
+        .map((sale) => sale.endDate)
+        .filter(Boolean)
+        .map((date) => new Date(date).getTime())
+        .filter((time) => !Number.isNaN(time) && time > Date.now());
+      const target = ends.length > 0 ? Math.min(...ends) : null;
+      if (!target) {
+        setCountdown({ hours: '00', minutes: '00', seconds: '00' });
+        return;
+      }
+      const diff = target - Date.now();
+      if (diff <= 0) {
+        setCountdown({ hours: '00', minutes: '00', seconds: '00' });
+        return;
+      }
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setCountdown({
+        hours: String(hours).padStart(2, '0'),
+        minutes: String(minutes).padStart(2, '0'),
+        seconds: String(seconds).padStart(2, '0'),
+      });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [flashSales]);
 
   const categoryIconMap = {
     monitors: MdMonitor,
@@ -359,21 +473,18 @@ const Landingpage = () => {
       </div>
       {/* <!-- Flash Sales --> */}
       <section className="bg-white rounded-3xl shadow-[12px] overflow-hidden">
-        <div className="bg-red-600 px-4 py-3 flex items-center justify-between text-white">
-          <div className="flex items-center gap-4">
+        <div className="bg-red-600 px-4 py-3 flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-white">
+          <div className="flex flex-wrap items-center gap-4">
             <img src="/chatgptflash.png" className="w-15 -mt-1 h-full" />
-            {/* <span className="material-symbols-outlined fill !text-[34px] text-primary-light font-bold">
-              sell
-            </span> */}
-            {/* <h2 className="text-[32px] font-bold uppercase tracking-tight">
-              Flash Sales
-            </h2> */}
-            <div className="flex items-center gap-2 text-[12px] ml-4">
-              <span className="opacity-80">Time Left:</span>
-              <div className="flex gap-1 font-mono flash-sale-timer">
-                <span className="bg-white/20 px-1 rounded">08</span>:
-                <span className="bg-white/20 px-1 rounded">42</span>:
-                <span className="bg-white/20 px-1 rounded">19</span>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-[20px] font-bold">Flash Sales</h2>
+              <div className="flex flex-wrap items-center gap-2 text-[12px]">
+                <span className="opacity-80">Time Left:</span>
+                <div className="flex gap-1 font-mono flash-sale-timer">
+                  <span className="bg-white/20 px-1 rounded">{countdown.hours}</span>:
+                  <span className="bg-white/20 px-1 rounded">{countdown.minutes}</span>:
+                  <span className="bg-white/20 px-1 rounded">{countdown.seconds}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -387,134 +498,59 @@ const Landingpage = () => {
             </span>
           </a>
         </div>
-        <div className="p-4 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {/* <!-- Product Card --> */}
-          <div className="group cursor-pointer">
-            <div className="relative rounded-3xl overflow-hidden border border-gray-100 p-2 mb-2 bg-white hover:shadow-lg transition-shadow">
-              <img
-                className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
-                data-alt="Minimalist wrist watch with clean dial and white band on a grey studio background, high quality product photography"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB50FrVIlI11PJ0kHBEN-lsingbQAHu-InsU_cx4yo2Yq6L4o0_nEZlDi5BpW38RIIZYoLpbqAa2UPZ8eXOX4CqQapT4OhUxvoHFk5cJCgFLT3I-0Gu2zrgeh96A-epnlH-CvZGUwYoaYyuJ_z0dz9zdMX9WfZ_h9wcctq083hYt8Ue6Nt8JlNfsv1BliOEkvPi2AjxbIqkh_oW0Yosz5FtoVmjGrUkw9DO902NRbxEUeyUwRdkreaWag8K9hWV4D9hSos9mylCFT-0"
-              />
-              <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
-                -45%
-              </span>
+        <div className="p-4">
+          {flashSalesLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="rounded-3xl border border-gray-100 p-4 bg-gray-50 animate-pulse" />
+              ))}
             </div>
-            <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
-              Smart Watch Series 7 - Black Silicon Strap
-            </p>
-            <p className="text-[12px] font-bold">₦ 12,450</p>
-            <p className="text-[10px] text-gray-400 line-through">₦ 22,600</p>
-            <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-red-500 w-3/4"></div>
+          ) : flashSaleItems.length === 0 ? (
+            <div className="rounded-3xl border border-gray-100 p-8 text-center text-sm text-[#475569]">
+              No active flash sale products right now. Check back soon.
             </div>
-            <p className="text-[9px] text-gray-500 mt-1">45 items left</p>
-          </div>
-          <div className="group cursor-pointer">
-            <div className="relative rounded-3xl overflow-hidden border border-gray-100 p-2 mb-2 bg-white hover:shadow-lg transition-shadow">
-              <img
-                className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
-                data-alt="High-end wireless headphones in black on a clean white surface, soft studio lighting"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVHQ9ZOZ46036YVAR-se7I_kVbX_dSVDtJ9ZvAQ7Abl5ihwBa_eVnu-MElOJ3TbdjRq8KuAdBvTvadGFJTBl3ryrDYfPaq_IypeuFBgoRFfrdNbxHHm6k-NIavrAoGzqEIGKeJKg7OgcHd_C5dzc5exIdGZwxmcWCEN9KKglHnAVhPLBFWllgLsYNIoOUGoCKrb2r93lnVZs3MtKjR250-p48NFjdZ72hJNhi_BmlOwFuBH_-K-y7baapu2UTVQx5tW4NewQTPBG2F"
-              />
-              <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
-                -20%
-              </span>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {flashSaleItems.map((product) => (
+                <div key={`${product.productId}-${product.saleEndDate}-${product.productName}`} className="group cursor-pointer" onClick={() => goToFlashProduct(product)}>
+                  <div className="relative rounded-3xl overflow-hidden border border-gray-100 p-2 mb-2 bg-white hover:shadow-lg transition-shadow">
+                    <img
+                      className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
+                      src={product.productImage || ''}
+                      alt={product.productName}
+                    />
+                    <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
+                      {product.discount ? `-${product.discount}` : 'Sale'}
+                    </span>
+                  </div>
+                  <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
+                    {product.productName}
+                  </p>
+                  <div className="flex items-baseline gap-2">
+                    {(() => {
+                      const orig = product.price || productPrices[product.productId] || null;
+                      const rate = parseDiscountRate(product.discount);
+                      if (!orig) return <span className="text-sm font-semibold">—</span>;
+                      const discounted = Math.round(orig * (1 - rate));
+                      return (
+                        <>
+                          <span className="text-[12px] text-gray-500 line-through">₦ {formatPrice(orig)}</span>
+                          <span className="text-sm font-semibold text-[#111827]">₦ {formatPrice(discounted)}</span>
+                        </>
+                      );
+                    })()}
+                  </div>
+                  <p className="text-[12px] font-semibold text-[#111827]">Flash deal</p>
+                  <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-red-500 w-3/4"></div>
+                  </div>
+                  {product.saleEndDate && (
+                    <p className="text-[9px] text-gray-500 mt-1">Ends {new Date(product.saleEndDate).toLocaleDateString()}</p>
+                  )}
+                </div>
+              ))}
             </div>
-            <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
-              Bluetooth Over-ear Stereo Headphones
-            </p>
-            <p className="text-[12px] font-bold">₦ 45,900</p>
-            <p className="text-[10px] text-gray-400 line-through">₦ 57,400</p>
-            <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-red-500 w-1/2"></div>
-            </div>
-            <p className="text-[9px] text-gray-500 mt-1">12 items left</p>
-          </div>
-          <div className="group cursor-pointer">
-            <div className="relative rounded-3xl overflow-hidden border border-gray-100 p-2 mb-2 bg-white hover:shadow-lg transition-shadow">
-              <img
-                className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
-                data-alt="classNameic aviator sunglasses with gold frames on a bright reflective surface"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyqlu_nQQggsjy31K_KzNlBJ5xo81Cl_WLg7WcnF4bmxD7PrOZ8YvuGJK2o02AkLi2URwxkQiHhICTuc0zIDfxiX-b05BdWHyiZidbgLtgiLvWPG7zBouvCkN3JCfLmu1XZvkbeamcKM82FjtMV70Cr8KKnsueCf6xXyisF_6I3apbaHcdtRRLQZjZhirFNzwkJiidsk5qtRpKsF6O5mNl-oECWnbocZCl4WsziW4AL_oeOt5lzxk5wtaqzBdIgtthG9VrjxaMWTga"
-              />
-              <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
-                -60%
-              </span>
-            </div>
-            <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
-              Premium Aviator Polarized Sunglasses
-            </p>
-            <p className="text-[12px] font-bold">₦ 3,200</p>
-            <p className="text-[10px] text-gray-400 line-through">₦ 8,000</p>
-            <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-red-500 w-5/6"></div>
-            </div>
-            <p className="text-[9px] text-gray-500 mt-1">5 items left</p>
-          </div>
-          <div className="group cursor-pointer">
-            <div className="relative rounded-3xl overflow-hidden border border-gray-100 p-2 mb-2 bg-white hover:shadow-lg transition-shadow">
-              <img
-                className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
-                data-alt="Red Nike running shoe in dynamic pose on white background, sharp focus"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkEP6DVVWHgGv82ffUJ8jAx2OGaVEq9nXw8LX-T2z3k-fP79d9o5m3OqO18mUVfAJo4D33qj1bfhwXkFiz_Hp8sIm9XSkeayWNNVK9Ysr1hWH2yGJxTUPXX2SCpO4FLbB-Vr5r7LJy-GqnZlcnBDm8L56cFGumTJfv91ZGUGaqGuSdg_gZufmFiKieDKVmg2U57j43Z09IRRWWXBMulSucnveeYXiXLbVypHM_Ed0XhM4slBN3CKRYqa8ofSayAv7iDvrxUY2Hq85p"
-              />
-              <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
-                -30%
-              </span>
-            </div>
-            <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
-              Sports Running Shoes - Red/White Edition
-            </p>
-            <p className="text-[12px] font-bold">₦ 15,800</p>
-            <p className="text-[10px] text-gray-400 line-through">₦ 22,500</p>
-            <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-red-500 w-1/4"></div>
-            </div>
-            <p className="text-[9px] text-gray-500 mt-1">112 items left</p>
-          </div>
-          <div className="group cursor-pointer">
-            <div className="relative rounded-3xl overflow-hidden border border-gray-100 p-2 mb-2 bg-white hover:shadow-lg transition-shadow">
-              <img
-                className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
-                data-alt="Vintage style polaroid camera on yellow background with clean aesthetic"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4tzP01yrL11j8Sa0ntzpsySsPSiWa7PFgiFZG9h0DbpSr2rjocF4wx7l9vI3Z9NcdMAJVnyNStamLZgauTCbRMS1v6ZUWvkilT5wpkNR8MSasCVs1TjbAj69X9LUHXUk5XTn8T92PFleqyVkTkA6shjaeE4WNvrtttzSz0iB5Pz4Pu9F21wI9wdC3IUAbUR7IWvdoSi3Pui1fwIjEZV1IvGXIimyHUvvhvMjNeeRFbUweizziEW25AxNH8BD_JkmC4s7DSTCxccpR"
-              />
-              <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
-                -15%
-              </span>
-            </div>
-            <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
-              Instant Film Camera - classNameic Blue
-            </p>
-            <p className="text-[12px] font-bold">₦ 38,000</p>
-            <p className="text-[10px] text-gray-400 line-through">₦ 45,000</p>
-            <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-red-500 w-2/3"></div>
-            </div>
-            <p className="text-[9px] text-gray-500 mt-1">21 items left</p>
-          </div>
-          <div className="group cursor-pointer">
-            <div className="relative rounded-3xl overflow-hidden border border-gray-100 p-2 mb-2 bg-white hover:shadow-lg transition-shadow">
-              <img
-                className="w-full aspect-square object-contain mb-2 group-hover:scale-105 transition-transform"
-                data-alt="High performance gaming mouse with RGB lighting on dark sleek pad"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGZHnjXgCmU66iVykh4qIeVQs_OAokj7rNN-Rttd0lXRElMZQre0iAVHW8hsRkJXYjfdcJ3i1Ghmjsr7ciWjrc7mGBuDpV2K3BKQ0qrwCtrXPMyyy2TROBUqnBTiy5w6cY4ATAjtnvv6dYOizuzZwZo2vdtzPWAmPgsns8SH-W9dlmLcy27fB8YjGExE9cT2PmEZ338H1jLy0t2Lu35TK189plIz1XjPvc752ozu6oBwH7a2dTjMK8XrMcdgnnZzj4_IhAow6OFo1E"
-              />
-              <span className="absolute top-2 right-2 bg-orange-100 text-primary-light text-[10px] font-bold px-1.5 py-0.5 rounded">
-                -50%
-              </span>
-            </div>
-            <p className="text-xs line-clamp-2 mb-1 group-hover:text-primary-light">
-              RGB Gaming Mouse 12000 DPI
-            </p>
-            <p className="text-[12px] font-bold">₦ 7,500</p>
-            <p className="text-[10px] text-gray-400 line-through">₦ 15,000</p>
-            <div className="mt-2 w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-red-500 w-1/2"></div>
-            </div>
-            <p className="text-[9px] text-gray-500 mt-1">40 items left</p>
-          </div>
+          )}
         </div>
       </section>
       {/* <!-- New Arrivals --> */}
