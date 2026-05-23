@@ -1,172 +1,288 @@
 const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
-import React, { useContext, useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom';
-import { FaPlus, FaRegTrashCan } from "react-icons/fa6"
+import React, { useState, useEffect } from 'react'
+import { FaRegTrashCan } from "react-icons/fa6"
 import { FiSearch } from 'react-icons/fi'
 import { MdOpenInNew } from "react-icons/md";
-import { AdminContext } from '../admincomponents/AdminContext';
 import { useNavigate } from 'react-router-dom';
+import { FiUsers, FiUserX, FiUserCheck } from 'react-icons/fi';
 import axios from 'axios'
+import { toast, ToastContainer } from 'react-toastify';
 
 const Customer = () => {
-
-  const { id } = useParams()
-  const { customers } = useContext(AdminContext)
-  const { page, setPage, pagination } = useContext(AdminContext)
-  const [AllCustomers, setAllCustomers] = useState([])
-  const navigate = useNavigate()
+  const [customers, setCustomers] = useState([])
+  const [allCustomers, setAllCustomers] = useState([])
+  const [loading, setLoading] = useState(true)
   const [searchItem, setSearchItem] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [page, setPage] = useState(1)
+  const [pagination, setPagination] = useState({ totalPages: 1, currentPage: 1 })
+  const navigate = useNavigate()
   const API_URL = import.meta.env.VITE_API_URL;
-
-  const customer = customers?.data?.find(user => user._id === id)
-
-  useEffect(() => {
-    if(customers){
-      setAllCustomers(customers)
-      console.log(customers);
-    }    
-  }, [customers])
+  const token = localStorage.getItem('adminToken');
+  const limit = 10;
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    fetchCustomers(page);
+    fetchAllCustomersForStats();
   }, [page]);
 
-  const viewUser = (eachCustomers) =>{
-  navigate(`/${ADMIN_ROUTE}/customer/${eachCustomers._id}`, {state: {eachCustomers}})
-  }
-
-  const deleteUser = () =>{
-  let deleteURL = `${API_URL}/${ADMIN_ROUTE}/deleteCustomers`
-    axios.post(deleteURL, customer)
-    .then((res) =>{
-      if(res.data.status){
-        toast.success('Customer Information has been Deleted Successfully')
-        setTimeout(() => {
-          window.location.href = `/${ADMIN_ROUTE}/dashboard/customer`
-        }, 3000);
+  const fetchAllCustomersForStats = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/${ADMIN_ROUTE}/customer/all`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.status) {
+        setAllCustomers(response.data.data);
       }
-    }).catch((err) =>{
-      console.log(err);
-    })
-  }
+    } catch (error) {
+      console.error('Error fetching customers for stats:', error);
+    }
+  };
 
-  const AddNewCustomer = () =>{
-    navigate('add-new-customer')
-  }
-  
+  const fetchCustomers = async (pageNum) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${API_URL}/${ADMIN_ROUTE}/allCustomers?page=${pageNum}&limit=${limit}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.status) {
+        setCustomers(response.data.data);
+        setPagination(response.data.pagination);
+      }
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      toast.error('Failed to load customers');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBanUser = async (userId, currentBanStatus) => {
+    try {
+      const response = await axios.put(
+        `${API_URL}/${ADMIN_ROUTE}/user/${userId}/ban`,
+        { isBanned: !currentBanStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.status) {
+        toast.success(
+          currentBanStatus ? 'User has been unbanned' : 'User has been banned'
+        );
+        fetchCustomers(page);
+      }
+    } catch (error) {
+      console.error('Error updating user ban status:', error);
+      toast.error('Failed to update user status');
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      const response = await axios.post(
+        `${API_URL}/${ADMIN_ROUTE}/deleteCustomers`,
+        { _id: userId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.status) {
+        toast.success('Customer has been deleted');
+        fetchCustomers(page);
+      }
+    } catch (error) {
+      console.error('Error deleting customer:', error);
+      toast.error('Failed to delete customer');
+    }
+  };
+
+  const viewUser = (customerId) => {
+    const customer = customers.find(c => c._id === customerId);
+    if (customer) {
+      sessionStorage.setItem('selectedCustomer', JSON.stringify(customer));
+      navigate(`/${ADMIN_ROUTE}/customer/view`);
+    }
+  };
+
+  const filteredCustomers = customers.filter((customer) => {
+    const fullname = `${customer.firstname} ${customer.lastname}`.toLowerCase();
+    const email = customer.email.toLowerCase();
+    const matchesSearch = fullname.includes(searchItem) || email.includes(searchItem);
+    const matchesStatus = 
+      statusFilter === 'all' ||
+      (statusFilter === 'active' && !customer.isBanned) ||
+      (statusFilter === 'banned' && customer.isBanned);
+    return matchesSearch && matchesStatus;
+  });
+
   return (
-    <div className='w-full h-auto'>
-      <div className='w-full flex flex-col gap-4'>
-        <div className='w-full flex items-center justify-between'>
-          <h1 className='text-black font-bold text-[24px]'>Customers</h1>
-          <div className='flex gap-4'>
-            <div style={{padding: '15px 30px'}} className='cursor-pointer flex items-center rounded-[4px] text-[#1E5EFF] gap-2 bg-white'><span>Export </span></div>
-            <div onClick={AddNewCustomer} style={{padding: '15px 30px'}} className='cursor-pointer flex items-center rounded-[4px] text-white gap-2 bg-[#1E5EFF]'><FaPlus size={24}/><span>Add Customer </span></div>
-          </div>
+    <div className='w-full min-h-screen space-y-8'>
+      <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+        <div>
+          <p className='text-sm uppercase tracking-[0.3em] text-[#0F766E]'>Customer Management</p>
+          <h1 className='text-3xl font-bold text-[#111827]'>Customer Dashboard</h1>
+          <p className='max-w-2xl text-sm text-[#6B7280] mt-2'>Review active users, manage banned accounts, and export customer data with confidence.</p>
         </div>
-
-        {/* list of customers */}
-        <div style={{padding: '20px'}} className='bg-white rounded-[6px] w-full flex flex-col gap-4'>
-          <p className='text-[#5A607F] text-[16px]'>All Customers</p>
-
-          {/* for filter and delete btn */}
-          <div className='w-full grid grid-cols-[5fr_1fr] items-center'>
-            <div className='w-full'>
-              <div style={{padding: '0 20px'}} className='w-full flex items-center gap-3 border-1 border-[#D9E1EC] rounded-[4px]'>
-                <FiSearch className='text-[#979797]' size={24} />
-                <input
-                  style={{padding: '10px 0'}}
-                  type="text"
-                  value={searchItem}
-                  onChange={(e) => setSearchItem(e.target.value.toLowerCase())}
-                  className='border-0 focus:outline-0'
-                  placeholder='Search'
-                />
-              </div>
-            </div>
-            <div className='justify-self-end'>
-              <div className='w-[40px] h-[40px] cursor-pointer hover:text-[#304169] flex flex-col justify-center items-center text-[#1E5EFF] rounded-[4px] shadow-sm'>
-                <FaRegTrashCan size={24}/>
-              </div>
-            </div>
-          </div>
-          {/* end of filter and delete btn */}
-
-          {/* list of registered users */}
-          <div className='w-[100%]'>
-            <table className="w-full">
-              <thead className='w-full'>
-                <tr className='font-bold'>
-                  <td style={{padding: '15px 0'}} className='text-left'>S/N</td>
-                  <td>Name</td>
-                  <td>Email</td>
-                  <td>Reg. Date</td>
-                  <td>Action</td>
-                </tr>
-              </thead>
-              <tbody className='w-full'>
-                {AllCustomers && AllCustomers.length > 0 ? (
-                  AllCustomers
-                    .filter((customer) => {
-                      const fullname = `${customer.firstname} ${customer.lastname}`.toLowerCase();
-                      const email = `${customer.email}`.toLowerCase();
-                      return (
-                        fullname.includes(searchItem) || 
-                        email.includes(searchItem)
-                      )
-                    })
-                    .map((eachCustomers, index) => (
-                      <tr key={eachCustomers._id}>
-                        <td>{(page - 1) * 10 + index + 1}</td>
-                        <td>{`${eachCustomers.firstname} ${eachCustomers.lastname}`}</td>
-                        <td>{eachCustomers.email}</td>
-                        <td>{new Date(eachCustomers.registrationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</td>
-                        <td className='flex gap-2 cursor-pointer'>
-                          <MdOpenInNew onClick={() => viewUser(eachCustomers)} size={24} />
-                          <FaRegTrashCan onClick={deleteUser} size={24} />
-                        </td>
-                      </tr>
-                    ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="text-center py-4 text-gray-500">Loading...</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-
-            {/* Pagination */}
-            <div className='w-full flex gap-2 justify-end mt-6'>
-              <button
-                onClick={() => page > 1 && setPage(page - 1)}
-                disabled={page === 1}
-                className="px-3 py-1 border rounded disabled:opacity-50"
-              >
-                Prev
-              </button>
-              {Array.from({ length: pagination.totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPage(i + 1)}
-                  className={`px-3 py-1 border rounded ${page === i + 1 ? 'bg-[#1E5EFF] text-white' : ''}`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => page < pagination.totalPages && setPage(page + 1)}
-                disabled={page === pagination.totalPages}
-                className="px-3 py-1 border rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-
-          </div>
+        <div className='flex flex-wrap items-center gap-3'>
+          <button
+            onClick={() => fetchAllCustomersForStats()}
+            className='rounded-full bg-white border border-[#D1D5DB] px-5 py-3 text-sm font-semibold text-[#111827] shadow-sm hover:bg-[#F8FAFF] transition'
+          >
+            Refresh
+          </button>
+          <button
+            className='rounded-full bg-[#0F766E] px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-[#115E52] transition'
+          >
+            Export Customers
+          </button>
         </div>
       </div>
-    </div>
-  )
-}
 
-export default Customer
+      <div className='grid gap-4 md:grid-cols-3'>
+        <div className='rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-sm'>
+          <p className='text-xs uppercase tracking-[0.3em] text-[#94A3B8]'>Total Customers</p>
+          <p className='mt-4 text-4xl font-bold text-[#111827]'>{allCustomers.length}</p>
+          <p className='mt-2 text-sm text-[#6B7280]'>All registered customers in your store.</p>
+        </div>
+        <div className='rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-sm'>
+          <p className='text-xs uppercase tracking-[0.3em] text-[#94A3B8]'>Active Customers</p>
+          <p className='mt-4 text-4xl font-bold text-[#047857]'>{allCustomers.filter(c => !c.isBanned).length}</p>
+          <p className='mt-2 text-sm text-[#6B7280]'>Customers who can currently access your storefront.</p>
+        </div>
+        <div className='rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-sm'>
+          <p className='text-xs uppercase tracking-[0.3em] text-[#94A3B8]'>Banned Customers</p>
+          <p className='mt-4 text-4xl font-bold text-[#B91C1C]'>{allCustomers.filter(c => c.isBanned).length}</p>
+          <p className='mt-2 text-sm text-[#6B7280]'>Suspended accounts pending review.</p>
+        </div>
+      </div>
+
+      <div className='rounded-3xl border border-[#E5E7EB] bg-white p-6 shadow-sm'>
+        <div className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
+          <div>
+            <h2 className='text-xl font-semibold text-[#111827]'>Customer list</h2>
+            <p className='text-sm text-[#6B7280]'>Search, filter, and manage your customer base.</p>
+          </div>
+          <div className='grid w-full gap-3 sm:grid-cols-2 md:w-auto'>
+            <div className='relative rounded-3xl border border-[#E5E7EB] bg-[#F8FAFF] px-4 py-3'>
+              <FiSearch className='absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]' size={18} />
+              <input
+                type='text'
+                value={searchItem}
+                onChange={(e) => setSearchItem(e.target.value.toLowerCase())}
+                placeholder='Search by customer or email'
+                className='w-full rounded-3xl border-0 bg-transparent pl-10 text-sm text-[#111827] outline-none'
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className='rounded-3xl border border-[#E5E7EB] bg-white px-4 py-3 text-sm text-[#111827] outline-none'
+            >
+              <option value='all'>All customers</option>
+              <option value='active'>Active</option>
+              <option value='banned'>Banned</option>
+            </select>
+          </div>
+        </div>
+
+        <div className='mt-6 overflow-hidden rounded-3xl border border-[#E5E7EB]'>
+          <table className='w-full min-w-185 border-collapse'>
+            <thead className='bg-[#F8FAFF] text-left text-xs uppercase tracking-[0.2em] text-[#64748B]'>
+              <tr>
+                <th className='px-6 py-4'>#</th>
+                <th className='px-6 py-4'>Customer</th>
+                <th className='px-6 py-4'>Email</th>
+                <th className='px-6 py-4'>Joined</th>
+                <th className='px-6 py-4'>Status</th>
+                <th className='px-6 py-4 text-center'>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr className='bg-white'>
+                  <td colSpan='6' className='px-6 py-8 text-center text-sm text-[#94A3B8]'>Loading customers...</td>
+                </tr>
+              ) : filteredCustomers.length === 0 ? (
+                <tr className='bg-white'>
+                  <td colSpan='6' className='px-6 py-8 text-center text-sm text-[#94A3B8]'>No customers match your criteria.</td>
+                </tr>
+              ) : (
+                filteredCustomers.map((customer, index) => (
+                  <tr key={customer._id} className='border-t border-[#E5E7EB] bg-white hover:bg-[#F8FAFF] transition'>
+                    <td className='px-6 py-5 text-sm text-[#475569]'>{(page - 1) * limit + index + 1}</td>
+                    <td className='px-6 py-5'>
+                      <div className='flex flex-col gap-1'>
+                        <span className='font-semibold text-[#111827]'>{`${customer.firstname} ${customer.lastname}`}</span>
+                        <span className='text-xs text-[#64748B]'>Customer ID: {customer._id.slice(0, 8)}</span>
+                      </div>
+                    </td>
+                    <td className='px-6 py-5 text-sm text-[#475569]'>{customer.email}</td>
+                    <td className='px-6 py-5 text-sm text-[#475569]'>{new Date(customer.registrationDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                    <td className='px-6 py-5'>
+                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${customer.isBanned ? 'bg-[#FEE2E2] text-[#B91C1C]' : 'bg-[#ECFDF5] text-[#047857]'}`}>{customer.isBanned ? 'Banned' : 'Active'}</span>
+                    </td>
+                    <td className='px-6 py-5 text-center'>
+                      <div className='inline-flex flex-wrap items-center justify-center gap-2'>
+                        <button
+                          onClick={() => viewUser(customer._id)}
+                          className='rounded-full bg-[#EFF6FF] px-3 py-2 text-xs font-semibold text-[#1D4ED8] hover:bg-[#DBEAFE] transition'
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleBanUser(customer._id, customer.isBanned)}
+                          className={`rounded-full px-3 py-2 text-xs font-semibold transition ${customer.isBanned ? 'bg-[#ECFDF5] text-[#047857] hover:bg-[#D1FAE5]' : 'bg-[#FEF3C7] text-[#B45309] hover:bg-[#FDE68A]'}`}
+                        >
+                          {customer.isBanned ? 'Unban' : 'Ban'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteUser(customer._id)}
+                          className='rounded-full bg-[#FEF2F2] px-3 py-2 text-xs font-semibold text-[#B91C1C] hover:bg-[#FECACA] transition'
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {pagination.totalPages > 1 && (
+          <div className='flex flex-wrap items-center justify-end gap-3 rounded-[20px] border border-[#E5E7EB] bg-[#F8FAFF] p-4'>
+            <button
+              onClick={() => page > 1 && setPage(page - 1)}
+              disabled={page === 1}
+              className='rounded-full border border-[#D1D5DB] bg-white px-4 py-2 text-sm font-semibold disabled:opacity-50 hover:bg-[#F3F4F6] transition'
+            >
+              Prev
+            </button>
+            {Array.from({ length: pagination.totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setPage(i + 1)}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${page === i + 1 ? 'bg-[#0F766E] text-white' : 'bg-white text-[#475569] hover:bg-[#E2E8F0]'}`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => page < pagination.totalPages && setPage(page + 1)}
+              disabled={page === pagination.totalPages}
+              className='rounded-full border border-[#D1D5DB] bg-white px-4 py-2 text-sm font-semibold disabled:opacity-50 hover:bg-[#F3F4F6] transition'
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </div>
+      <ToastContainer />
+    </div>
+  );
+};
+
+export default Customer;

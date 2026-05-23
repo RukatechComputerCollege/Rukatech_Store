@@ -11,6 +11,8 @@ const CategoryProvider = ({ children }) => {
   const [allCategory, setAllCategory] = useState([])
   const [allBrand, setAllBrand] = useState([])
   const [allBrandForCategory, setAllBrandForCategory] = useState([])
+  const [publishedProduct, setPublishedProduct] = useState([])
+  const [publishedCategory, setPublishedCategory] = useState([])
   const [allProduct, setallProduct] = useState([])
   const [allOrders, setAllOrders] = useState([])
 
@@ -21,46 +23,93 @@ const CategoryProvider = ({ children }) => {
     .then((res) =>{
       if(res.data.status){
         setallProduct(res.data.data)
+        const published = res.data.data.filter((product) => product.status === 'published');
+        setPublishedProduct(published);
+        const publishedCategories = [...new Set(published.map((product) => product.category).filter(Boolean))];
+        setPublishedCategory(publishedCategories);
         const products = res.data.data;
-        // console.log("These are all the products", products);
-        const categoryName = products.filter((product) => product.category);
-        // console.log("These are all the category", categoryName);
-        const uniqueCategory = [...new Set(categoryName.map((product) => product.category).flat().map((cat) => cat))];
-        // console.log("These are unique category", uniqueCategory);
-        setAllCategory(uniqueCategory)
 
-        const brandName = products.filter((product) => product.brand);
-        const uniqueBrand = [...new Set(brandName.map((product) => product.brand).flat().map((brand) => brand))];
-        console.log("These are unique brand", uniqueBrand);
-        setAllBrand(uniqueBrand)
+        const normalizeCategory = (category) => {
+          if (!category) return null;
+          if (Array.isArray(category)) {
+            return category
+              .map((cat) => (typeof cat === 'object' ? cat.name || cat._id : cat))
+              .filter(Boolean);
+          }
+          return typeof category === 'object' ? category.name || category._id : category;
+        };
 
-        const uniqueBrandForCategory = [...new Set(categoryName.map((product) => product.brand).flat().map((brand) => brand))];
-        console.log("These are unique brand for category", uniqueBrandForCategory);
+        const allCategories = [];
+        products.forEach((product) => {
+          const values = normalizeCategory(product.category);
+          if (Array.isArray(values)) {
+            allCategories.push(...values);
+          } else if (values) {
+            allCategories.push(values);
+          }
+        });
+        const uniqueCategory = [...new Set(allCategories)];
+        setAllCategory(uniqueCategory);
+
+        const normalizeBrand = (brand) => {
+          if (!brand) return null;
+          if (Array.isArray(brand)) {
+            return brand.map((item) => (typeof item === 'object' ? item.name || item._id : item)).filter(Boolean);
+          }
+          return typeof brand === 'object' ? brand.name || brand._id : brand;
+        };
+
+        const allBrands = [];
+        products.forEach((product) => {
+          const values = normalizeBrand(product.brand);
+          if (Array.isArray(values)) {
+            allBrands.push(...values);
+          } else if (values) {
+            allBrands.push(values);
+          }
+        });
+        const uniqueBrand = [...new Set(allBrands)];
+        setAllBrand(uniqueBrand);
+
+        const categoryBrands = [];
+        products.forEach((product) => {
+          if (product.brand) {
+            const brandValues = normalizeBrand(product.brand);
+            if (Array.isArray(brandValues)) {
+              categoryBrands.push(...brandValues);
+            } else if (brandValues) {
+              categoryBrands.push(brandValues);
+            }
+          }
+        });
+        const uniqueBrandForCategory = [...new Set(categoryBrands)];
         setAllBrandForCategory(uniqueBrandForCategory);
-
       }
     })
-    .catch((err) =>{
-      console.log("Error Encountered while fetching all product", err);
-    })
+    .catch((err) => {
+      console.log("There is an error fetching products", err);
+    });
 
-  let ordersURL = `${API_URL}/${ADMIN_ROUTE}/orders`
-      axios.get(ordersURL)
-      .then((res) =>{
-        if(res.data.status){
+    const adminToken = localStorage.getItem('adminToken');
+    const ordersURL = `${API_URL}/${ADMIN_ROUTE}/orders`;
+    const orderConfig = adminToken ? { headers: { Authorization: `Bearer ${adminToken}` } } : undefined;
+
+    axios.get(ordersURL, orderConfig)
+      .then((res) => {
+        if (res.data.status) {
           setAllOrders(res.data.data);
         }
       })
-      .catch((err) =>{
+      .catch((err) => {
         console.log("There is an error fetching orders", err);
-      })
-    }, [])
+      });
+  }, []);
 
 
    
 
   return (
-    <CategoryContext.Provider value={{ setAllCategory, allCategory, setallProduct, allProduct, allOrders, setAllOrders, allBrand, setAllBrand, allBrandForCategory, setAllBrandForCategory }}>
+    <CategoryContext.Provider value={{ setAllCategory, allCategory, setallProduct, allProduct, publishedProduct, publishedCategory, allOrders, setAllOrders, allBrand, setAllBrand, allBrandForCategory, setAllBrandForCategory }}>
       {children}
     </CategoryContext.Provider>
   )
