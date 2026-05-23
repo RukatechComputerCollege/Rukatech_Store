@@ -23,7 +23,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://fastcartonlinestore.vercel.app', 'https://www.rukatechstore.com', 'https://rukatechstore.com'],
+  origin: ['http://localhost:5173',  'https://www.rukatechstore.com', 'https://rukatechstore.com'],
   credentials: true
 }));
 app.use(express.json());
