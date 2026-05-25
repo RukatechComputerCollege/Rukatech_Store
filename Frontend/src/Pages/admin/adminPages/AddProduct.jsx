@@ -1,359 +1,446 @@
 const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
-import React, { useState, useContext } from 'react';
-import { MdKeyboardBackspace } from "react-icons/md";
+import React, { useContext, useEffect, useMemo, useState } from 'react';
+import { MdKeyboardBackspace, MdDelete } from 'react-icons/md';
 import { CategoryContext } from '../../../CategoryContext';
-import { useEffect } from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
-import * as yup from 'yup'
+import * as yup from 'yup';
 
 const AddProduct = () => {
-  const { allCategory, allProduct } = useContext(CategoryContext)
-  const [selected, setSelected] = useState([]);
-  const names = allCategory.map((c) => c.name.toLowerCase());
-  const [hasOptions, setHasOptions] = useState(false)
-  const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dimlar6iu/image/upload';
-  const UPLOAD_PRESET = 'Fastcart';
+  const { allCategory = [] } = useContext(CategoryContext);
+  const categories = Array.isArray(allCategory) ? allCategory : [];
+  const [selectedImages, setSelectedImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const API_URL = import.meta.env.VITE_API_URL;
-  // const [previewImage, setPreviewImage] = useState(null);
-  const [imgeURLS, setImgeURLS] = useState([])
+  const token = localStorage.getItem('adminToken');
 
-  useEffect(() => {
-    if(allProduct){
-      console.log(allProduct);
-    }
-    if(allCategory){
-      console.log(allCategory);
-      
-    }
-  }, [allProduct])
-  
-  
-  const handleCheckboxChange = (event) => {
-    const { value, checked } = event.target;
-    let updated = [];
-
-    if (checked) {
-      updated = [...selected, value];
-    } else {
-      updated = selected.filter((item) => item !== value);
-    }
-
-    setSelected(updated);
-    formik.setFieldValue('category', updated);
-  };
-
-  const goBack = () => {
-    window.history.back();
-  }
   const formik = useFormik({
     initialValues: {
       name: '',
       description: '',
-      image: '',
       inventory: '',
       price: '',
-      discountprice: '',
-      category: [],
+      discountPrice: '',
+      category: '',
       weight: '',
-      country: '',
+      region: '',
+      condition: '',
+      processor: '',
+      ram: '',
+      storage: '',
+      storageType: '',
+      displaySize: '',
+      graphicsCardMemory: '',
+      numberOfCores: '',
+      operatingSystem: '',
+      brand: '',
+      model: '',
+      battery: '',
+      openToNegotiation: 'false',
       size: '',
+      color: '',
       productBox: '',
-      keyFeatures: '',
-      discountPercentage: 0
-    },
-    onSubmit: (values) =>{
-      values.category = selected;
-  axios.post(`${API_URL}/${ADMIN_ROUTE}/createProduct`, values)
-      .then((res) =>{
-        console.log(res);
-        if(res.data.status){
-          toast.success("Product Added Successfully")
-          setTimeout(() => {
-            window.history.back()
-          }, 1000);
-        }
-      })
-      .catch((err) =>{
-        console.log(err);
-        if(err){
-          toast.error("Product Cannot be added! please try again")
-        }
-      })
+      features: '',
+      status: 'draft'
     },
     validationSchema: yup.object().shape({
       name: yup.string().required('Product name is required'),
-      description: yup.string().required('Product Description is required'),
-      image: '',
-      inventory: '',
-      price: yup.number().required('Product price is required').typeError('Price must be a number'),
-      discountprice: yup.number().typeError('Discount must be a number').max(yup.ref('price'), 'Discount must be less than the price').nullable(),
-      category: yup.array().min(1, "At least one category is required").required('Product category is required'),
-      weight: '',
-      country: '',
-      size: ''
-    })
-  })
-  useEffect(() => {
-    const { price, discountprice } = formik.values;
-    if (price && discountprice && price > 0 && discountprice > 0) {
-      const discount = price - discountprice;
-      const discountPercentage = ((discount / price) * 100).toFixed(2);
-      formik.setFieldValue('discountPercentage', discountPercentage);
-      console.log(discountPercentage);
-    } else {
-      formik.setFieldValue('discountPercentage', 0);
-    }
-  }, [formik.values.price, formik.values.discountprice]);
+      description: yup.string().required('Product description is required'),
+      inventory: yup.number().typeError('Inventory must be a number').min(0, 'Inventory must be at least 0').required('Inventory is required'),
+      price: yup.number().typeError('Price must be a number').positive('Price must be positive').required('Product price is required'),
+      discountPrice: yup.number().typeError('Discount must be a number').nullable().max(yup.ref('price'), 'Discount must be less than the price'),
+      category: yup.string().required('Product category is required'),
+      condition: yup.string().required('Condition is required'),
+      status: yup.string().oneOf(['published', 'draft']).required('Select publish status')
+    }),
+    onSubmit: async (values) => {
+      if (!selectedImages.length) {
+        toast.error('Please add at least one product image.');
+        return;
+      }
 
+      if (!token) {
+        toast.error('Admin login is required to add products.');
+        return;
+      }
+
+      try {
+        setUploading(true);
+        const payload = new FormData();
+        Object.entries(values).forEach(([key, value]) => {
+          payload.append(key, value);
+        });
+        selectedImages.forEach((file) => {
+          payload.append('images', file);
+        });
+
+        const response = await axios.post(`${API_URL}/${ADMIN_ROUTE}/createProduct`, payload, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (response.data?.status) {
+          toast.success('Product added successfully.');
+          setTimeout(() => window.history.back(), 1000);
+        } else {
+          toast.error(response.data?.message || 'Unable to add product.');
+        }
+      } catch (error) {
+        console.error('Add product error:', error);
+        toast.error('Unable to add product. Please try again.');
+      } finally {
+        setUploading(false);
+      }
+    }
+  });
+
+  useEffect(() => {
+    if (formik.values.price && formik.values.discountPrice) {
+      const discount = Number(formik.values.price) - Number(formik.values.discountPrice);
+      const percentage = Number(formik.values.price) > 0 ? Math.round((discount / Number(formik.values.price)) * 100) : 0;
+      formik.setFieldValue('discountPercentage', percentage, false);
+    }
+  }, [formik.values.price, formik.values.discountPrice]);
+
+  const handleFileSelection = (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+    const combined = [...selectedImages, ...files].slice(0, 10);
+    setSelectedImages(combined);
+  };
+
+  const removeImage = (index) => {
+    setSelectedImages((current) => current.filter((_, i) => i !== index));
+  };
+
+  const activePreview = useMemo(() => {
+    return selectedImages.map((file) => ({
+      url: URL.createObjectURL(file),
+      name: file.name
+    }));
+  }, [selectedImages]);
 
   return (
-    <div className='w-full flex flex-col gap-2'>
-      <div className='w-full flex flex-col gap-0'>
-        <div onClick={goBack} className='text-[#5A607F] cursor-pointer flex gap-2 items-center'>
-          <MdKeyboardBackspace size={10} />
-          <p>Back</p>
-        </div>
-        <div className='w-full flex items-center justify-between'>
+    <div className='w-full min-h-screen bg-[#F8FAFF] py-8'>
+      <div className='mx-auto max-w-[1300px] px-4'>
+        <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
           <div>
-            <h1 className='text-black font-bold text-[24px]'>Add Product</h1>
+            <button onClick={() => window.history.back()} className='inline-flex items-center gap-2 text-[#475569] hover:text-[#0F766E]'>
+              <MdKeyboardBackspace size={20} /> Back
+            </button>
+            <h1 className='mt-4 text-3xl font-semibold text-[#111827]'>Add New Product</h1>
+            <p className='mt-2 max-w-2xl text-sm text-[#6B7280]'>Create a premium product listing with elegant media workflow and draft publishing control.</p>
           </div>
-          <div className='flex gap-4'>
-            <div style={{ padding: '10px 20px' }} className='cursor-pointer flex items-center rounded-[4px] text-[#1E5EFF] gap-2 bg-white'>
-              <span>Cancel</span>
-            </div>
-            <div style={{ padding: '10px 20px' }} className='cursor-pointer flex items-center rounded-[4px] bg-[#1E5EFF] gap-2 text-white'>
-              <button type='submit' className={`${(!formik.isValid || !formik.dirty) ? 'cursor-not-allowed opacity-50 pointer-events-none' : ''}`} disabled={!formik.isValid || !formik.dirty}>Save</button>
-            </div>
+          <div className='rounded-[18px] border border-[#E2E8F0] bg-white px-6 py-4 shadow-sm'>
+            <p className='text-sm text-[#6B7280]'>Current status</p>
+            <p className='mt-1 text-2xl font-semibold text-[#0F766E]'>{formik.values.status === 'published' ? 'Published' : 'Draft'}</p>
           </div>
         </div>
-      </div>
-      {/* for add product section */}
-      <div>
-        <div>
-          <form onSubmit={formik.handleSubmit} action="" className='flex flex-col gap-4'>
-            <div className='w-full grid grid-cols-[3fr_1fr] items-start gap-[2em]'>
-              {/* for product information */}
-              <div style={{padding: '20px'}} className='w-full bg-white rounded-[6px]'>
-                <div className='w-full flex flex-col gap-4'>
-                  {/* for product information */}
-                  <div style={{paddingBottom: '20px'}} className='w-full flex flex-col gap-2 border-b-1 border-[#D9E1EC]'>
-                    <p className='text-[16px] text-[#131523] font-bold'>Information</p>
-                    <div className=''>
-                      <label className='block mb-2 text-[#5A607F]'>Product Name</label>
-                      <input name='name' onChange={formik.handleChange} onBlur={formik.handleBlur} type="text" style={{padding: '10px'}} className='w-full focus:outline-0 border border-[#D9E4FF] rounded' placeholder='Summer T-Shirt' />
-                      {formik.touched.name && formik.errors.name && (
-                        <small className="text-red-500">{formik.errors.name}</small>
-                      )}
-                    </div>
-                    <div className='p-4'>
-                      <label className='block mb-2 text-[#5A607F]'>Description</label>
-                      <textarea name='description' onChange={formik.handleChange} onBlur={formik.handleBlur}  style={{padding: '10px'}} className='w-full p-2 border border-[#D9E4FF] focus:outline-0 rounded resize-none' rows={5} placeholder='Product description'></textarea>
-                      {formik.touched.description && formik.errors.description && (
-                        <small className="text-red-500">{formik.errors.description}</small>
-                      )}
-                    </div>
-                    <div className='p-4'>
-                      <label className='block mb-2 text-[#5A607F]'>Inventory</label>
-                      <input name='inventory' onChange={formik.handleChange} onBlur={formik.handleBlur}  style={{padding: '10px'}} className='w-full p-2 border border-[#D9E4FF] focus:outline-0 rounded resize-none' placeholder='number of items in available' />
-                    </div>
-                  </div>
-                  <div className='w-full relative flex flex-col gap-1'>
-                    <label htmlFor="image">Image</label>
+
+        <form onSubmit={formik.handleSubmit} className='mt-8 grid gap-6 lg:grid-cols-[2fr_1fr]'>
+          <div className='space-y-6'>
+            <section className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm'>
+              <div className='flex flex-col gap-3 border-b border-[#E5E7EB] pb-5'>
+                <span className='text-sm font-semibold uppercase tracking-[0.2em] text-[#0F766E]'>Basics</span>
+                <div className='space-y-4'>
+                  <div>
+                    <label className='mb-2 block text-sm font-medium text-[#111827]'>Product name</label>
                     <input
-                      name="image"
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={async (event) => {
-                        const files = event.currentTarget.files;
-                        if (!files || files.length === 0) return;
-                        setUploading(true);
-                        const urls = [];
-                        for (let file of files) {
-                          const formData = new FormData();
-                          formData.append('file', file);
-                          formData.append('upload_preset', UPLOAD_PRESET);
-                          try {
-                            const res = await axios.post(CLOUDINARY_URL, formData);
-                            urls.push(res.data.secure_url);
-                          } catch (err) {
-                            console.error('Cloudinary Upload Error:', err);
-                            toast.error("One or more image uploads failed");
-                          }
-                        }
-                        setUploading(false);
-                        setImgeURLS(urls);
-                        formik.setFieldValue('image', urls);
-                      }}
-                      style={{padding: '10px'}} className='border-1 border-[#A1A7C4] border-dashed h-[168px] flex flex-col items-center justify-center rounded-[4px]  focus:outline-0'
+                      name='name'
+                      value={formik.values.name}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      type='text'
+                      placeholder='Ultra glass notebook'
+                      className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
                     />
-                    {uploading && <p className="text-sm text-gray-500">Uploading image...</p>}
-                    {imgeURLS.length > 0 && (
-                      <div className="flex gap-2 mt-2">
-                        {imgeURLS.map((url, index) => (
-                          <img key={index} src={url} alt={`Preview ${index}`} className="w-24 h-24 object-cover rounded" />
-                        ))}
-                      </div>
-                    )}
-
+                    {formik.touched.name && formik.errors.name && <p className='mt-2 text-sm text-[#DC2626]'>{formik.errors.name}</p>}
                   </div>
-                  {/* for product price */}
-                  <div style={{paddingBottom: '20px'}} className='border-b-1 border-[#D9E1EC]'>
-                    <p className='text-[16px] text-[#131523] font-bold'>Price</p>
-                    <div className='w-full grid grid-cols-2 gap-2'>
-                      {/* for main price */}
-                      <div>
-                        <label className='block mb-2'>Price</label>
-                        <input name='price' onChange={formik.handleChange} onBlur={formik.handleBlur}  type="number" style={{padding: '10px'}} className='w-full p-2 border border-[#D9E4FF] focus:outline-0' placeholder='Enter product price' />
-                        {formik.touched.price && formik.errors.price && (
-                          <small className="text-red-500">{formik.errors.price}</small>
-                        )}
-                      </div>
-                      {/* for discount price */}
-                      <div>
-                        <label className='block mb-2'>Discount Price</label>
-                        <input name='discountprice' onChange={formik.handleChange} onBlur={formik.handleBlur}  type="number" style={{padding: '10px'}} className='w-full p-2 border border-[#D9E4FF] focus:outline-0' placeholder='Enter product price' />
-                      </div>
-                      {formik.values.price && formik.values.discountprice && (
-                        <div className='text-green-600 font-medium'>
-                          You save: ₦{(formik.values.price - formik.values.discountprice).toLocaleString()}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {/* for different options */}
-                  <div style={{paddingBottom: '15px'}} className='w-full flex flex-col gap-4'>
-                    <p className='text-[16px] text-[#131523] font-bold'>Different Options</p>
-                    {/* for switch */}
-                    <div className='w-full flex gap-4'>
-                      <label className="relative inline items-center cursor-pointer">
-                        <input className="sr-only peer" checked={hasOptions} onChange={(e) => setHasOptions(e.target.checked)}  type="checkbox" />
-                          <div className="peer ring-2 ring-gray-500 bg-gradient-to-r from-rose-400 to-red-900 rounded-full outline-none duration-500 after:duration-300 w-12 h-4  shadow-inner peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-emerald-900 shadow-gray-900 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-500  after:content-[''] after:rounded-full after:absolute after:outline-none after:h-8 after:w-8 after:bg-gray-900 after:-top-2 after:-left-2 after:flex after:justify-center after:items-center after:border-4 after:border-gray-500  peer-checked:after:translate-x-10">
-                        </div>
-                      </label>
-                      <small>This product has multiple options</small>
-                    </div>
-
-                    {/* for size */}
-                    <div className={`w-full flex flex-col gap-4' ${hasOptions ? 'block' : 'hidden'}`}>
-                    <div>
-                      <p className='text-[16px] text-[#131523] font-bold'>Option 1</p>
-                      <div className='w-full grid grid-cols-2 gap-2'>
-                        <div className='w-full'>
-                          <p>Size</p>
-                          <select name="size" onChange={formik.handleChange} onBlur={formik.handleBlur}  className='border-1 border-[#D9E1EC] w-full rounded-[4px] focus:outline-0' style={{padding: '5px'}} id="size">
-                            <option value="small">S</option>
-                            <option value="medium">M</option>
-                            <option value="large">L</option>
-                            <option value="extra-large">XL</option>
-                            <option value="extra-large-x2">XXL</option>
-                          </select>
-                        </div>
-                        {/* for size value */}
-                        <div></div>
-                      </div>
-                    </div>
-                    {/* for shipping */}
-                    <div>
-                      <p className='text-[16px] text-[#131523] font-bold'>Shipping</p>
-                      <div className='w-full grid grid-cols-2 gap-2'>
-                        <div>
-                          <label htmlFor="weight">Weight</label>
-                          <input name='weight' onChange={formik.handleChange} onBlur={formik.handleBlur}  type="text" style={{padding: '5px'}} className='w-full rounded-[4px] border border-[#D9E4FF] focus:outline-0' placeholder='Enter product price' />
-                        </div>
-                        <div>
-                          <p>Country</p>
-                          <select name='country' onChange={formik.handleChange} onBlur={formik.handleBlur} className='border-1 border-[#D9E1EC] w-full rounded-[4px] focus:outline-0' style={{padding: '5px'}}>
-                            <option value="no-option">Country</option>
-                            <option value="small">Nigeria</option>
-                            <option value="medium">Morocco</option>
-                            <option value="large">Canada</option>
-                          </select>
-                        </div>
-
-                      </div>
-                    </div>
-                    {/* end of shipping */}
-                    </div>
+                  <div>
+                    <label className='mb-2 block text-sm font-medium text-[#111827]'>Description</label>
+                    <textarea
+                      name='description'
+                      value={formik.values.description}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      rows={5}
+                      placeholder='Describe the product in one elegant paragraph.'
+                      className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none resize-none'
+                    />
+                    {formik.touched.description && formik.errors.description && <p className='mt-2 text-sm text-[#DC2626]'>{formik.errors.description}</p>}
                   </div>
                 </div>
               </div>
-              {/* for select area */}
-              <div className='w-full flex flex-col gap-4'>
-                {/* for key features */}
-                <div style={{padding: '20px'}} className="w-full flex flex-col gap-4 bg-white rounded-[6px]">
-                  <p className='text-[16px] text-[#131523] font-bold'>Key features</p>
-                  <textarea name='keyFeatures' onChange={formik.handleChange} onBlur={formik.handleBlur}  style={{padding: '10px'}} className='w-full p-2 border border-[#D9E4FF] focus:outline-0 rounded resize-none' rows={5} placeholder='Enter the key features of this product'></textarea>
-                </div>
-                {/* for What's in the box */}
-                <div style={{padding: '20px'}} className="w-full flex flex-col gap-4 bg-white rounded-[6px]">
-                  <p className='text-[16px] text-[#131523] font-bold'>What's in the Box</p>
-                  <textarea name='productBox' onChange={formik.handleChange} onBlur={formik.handleBlur}  style={{padding: '10px'}} className='w-full p-2 border border-[#D9E4FF] focus:outline-0 rounded resize-none' rows={5} placeholder='Enter details of what is in the product box'></textarea>
-                </div>
-                {/* for select category */}
-                <div style={{padding: '20px'}} className="w-full flex flex-col gap-4 bg-white rounded-[6px]">
-                  <p className='text-[16px] text-[#131523] font-bold'>Categories</p>
-                  <div className="flex flex-col gap-2">
-                    {allCategory.map((option) => {
-                      const isParentChecked = selected.includes(option._id);
-                      return (
-                        <div key={option._id} className="flex flex-col gap-1">
-                          
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              value={option._id}
-                              onChange={handleCheckboxChange}
-                              name="category"
-                              onBlur={formik.handleBlur}
-                              checked={isParentChecked}
-                            />
-                            <strong>{option.name}</strong>
-                          </label>   
-                          {isParentChecked && option.subcategories && option.subcategories.length > 0 && (
-                            <div className="ml-6 mt-1 flex flex-col gap-1">
-                              {option.subcategories.map((sub, i) => {
-                                const subValue = `${sub._id}`;
-                                return (
-                                  <label key={i} className="flex items-center gap-2 text-sm text-gray-700">
-                                    <input
-                                      type="checkbox"
-                                      value={subValue}
-                                      checked={selected.includes(subValue)}
-                                      onChange={handleCheckboxChange}
-                                    />
-                                    {sub.name}
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
+
+              <div className='grid gap-4 py-5 md:grid-cols-2'>
+                <div>
+                  <label className='mb-2 block text-sm font-medium text-[#111827]'>Category</label>
+                  <select
+                    name='category'
+                    value={formik.values.category}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
+                  >
+                    <option value=''>Select category</option>
+                    {categories.map((category, idx) => {
+                      const label = typeof category === 'string' ? category : category?.name || category;
+                      return <option key={idx} value={label}>{label}</option>;
                     })}
-
-                    {formik.touched.category && formik.errors.category && (
-                      <small className="text-red-500">{formik.errors.category}</small>
-                    )}
-                  </div>
+                  </select>
+                  {formik.touched.category && formik.errors.category && <p className='mt-2 text-sm text-[#DC2626]'>{formik.errors.category}</p>}
+                </div>
+                <div>
+                  <label className='mb-2 block text-sm font-medium text-[#111827]'>Condition</label>
+                  <select
+                    name='condition'
+                    value={formik.values.condition}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
+                  >
+                    <option value=''>Select condition</option>
+                    <option value='new'>New</option>
+                    <option value='used'>Used</option>
+                    <option value='refurbished'>Refurbished</option>
+                  </select>
+                  {formik.touched.condition && formik.errors.condition && <p className='mt-2 text-sm text-[#DC2626]'>{formik.errors.condition}</p>}
                 </div>
               </div>
-            </div>
-            {/* for submission button */}
-            <div style={{paddingTop: '20px'}} className='w-full justify-end border-t border-[#D9E1EC]'>
-              <button className={`cursor-pointer rounded-[4px] bg-[#1E5EFF] gap-2 text-white ${(!formik.isValid || !formik.dirty) ? 'cursor-not-allowed opacity-50 pointer-events-none' : '' }`} disabled={!formik.isValid || !formik.dirty} style={{ padding: '10px 20px' }} type='submit'>Save</button>
-            </div>
-          </form>
-          
+            </section>
+
+            <section className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm'>
+              <div className='flex flex-col gap-3 border-b border-[#E5E7EB] pb-5'>
+                <span className='text-sm font-semibold uppercase tracking-[0.2em] text-[#0F766E]'>Pricing</span>
+                <div className='grid gap-4 md:grid-cols-3'>
+                  <div>
+                    <label className='mb-2 block text-sm font-medium text-[#111827]'>Price</label>
+                    <input
+                      name='price'
+                      value={formik.values.price}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      type='number'
+                      placeholder='0.00'
+                      className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
+                    />
+                    {formik.touched.price && formik.errors.price && <p className='mt-2 text-sm text-[#DC2626]'>{formik.errors.price}</p>}
+                  </div>
+                  <div>
+                    <label className='mb-2 block text-sm font-medium text-[#111827]'>Discount Price</label>
+                    <input
+                      name='discountPrice'
+                      value={formik.values.discountPrice}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      type='number'
+                      placeholder='0.00'
+                      className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
+                    />
+                    {formik.touched.discountPrice && formik.errors.discountPrice && <p className='mt-2 text-sm text-[#DC2626]'>{formik.errors.discountPrice}</p>}
+                  </div>
+                  <div>
+                    <label className='mb-2 block text-sm font-medium text-[#111827]'>Inventory</label>
+                    <input
+                      name='inventory'
+                      value={formik.values.inventory}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      type='number'
+                      placeholder='Stock amount'
+                      className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
+                    />
+                    {formik.touched.inventory && formik.errors.inventory && <p className='mt-2 text-sm text-[#DC2626]'>{formik.errors.inventory}</p>}
+                  </div>
+                </div>
+                <div className='rounded-[18px] border border-[#D1D5DB] bg-[#F1F5F9] px-4 py-4 text-sm text-[#0F766E]'>
+                  Discount saves: <span className='font-semibold'>₦{formik.values.price && formik.values.discountPrice ? Number(formik.values.price - formik.values.discountPrice).toLocaleString() : '0'}</span>
+                </div>
+              </div>
+            </section>
+
+            <section className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm'>
+              <div className='flex flex-col gap-3 border-b border-[#E5E7EB] pb-5'>
+                <span className='text-sm font-semibold uppercase tracking-[0.2em] text-[#0F766E]'>Imagery</span>
+                <p className='text-sm text-[#6B7280]'>Upload multiple images and manage the gallery before publishing.</p>
+              </div>
+              <div className='mt-5 grid gap-4'>
+                <label className='block text-sm font-medium text-[#111827]'>Product media</label>
+                <input
+                  type='file'
+                  accept='image/*'
+                  multiple
+                  onChange={handleFileSelection}
+                  className='rounded-[18px] border border-dashed border-[#CBD5E1] bg-[#F8FAFF] p-4 text-sm text-[#475569] file:mr-4 file:rounded-full file:border-0 file:bg-[#0F766E] file:px-4 file:py-2 file:text-white'
+                />
+                {uploading ? (
+                  <p className='text-sm text-[#475569]'>Processing images…</p>
+                ) : selectedImages.length > 0 ? (
+                  <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+                    {activePreview.map((preview, index) => (
+                      <div key={index} className='relative overflow-hidden rounded-[20px] border border-[#E5E7EB] bg-[#F8FAFF]'>
+                        <img src={preview.url} alt={`Product preview ${index + 1}`} className='h-32 w-full object-cover' />
+                        <button
+                          type='button'
+                          onClick={() => removeImage(index)}
+                          className='absolute top-2 right-2 rounded-full bg-white p-2 text-[#EA4C46] shadow-sm hover:bg-[#F8F2F2]'
+                        >
+                          <MdDelete size={18} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className='text-sm text-[#9CA3AF]'>No images selected yet.</p>
+                )}
+              </div>
+            </section>
+
+            <section className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm'>
+              <div className='flex flex-col gap-3 border-b border-[#E5E7EB] pb-5'>
+                <span className='text-sm font-semibold uppercase tracking-[0.2em] text-[#0F766E]'>Product story</span>
+              </div>
+              <div className='mt-5 grid gap-4'>
+                <div>
+                  <label className='mb-2 block text-sm font-medium text-[#111827]'>Features</label>
+                  <textarea
+                    name='features'
+                    value={formik.values.features}
+                    onChange={formik.handleChange}
+                    rows={4}
+                    placeholder='List the features that make this product luxurious.'
+                    className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none resize-none'
+                  />
+                </div>
+                <div>
+                  <label className='mb-2 block text-sm font-medium text-[#111827]'>What&apos;s in the box</label>
+                  <textarea
+                    name='productBox'
+                    value={formik.values.productBox}
+                    onChange={formik.handleChange}
+                    rows={4}
+                    placeholder='Describe what the customer receives upon purchase.'
+                    className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none resize-none'
+                  />
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <aside className='space-y-6'>
+            <section className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm'>
+              <div className='flex items-center justify-between gap-4 border-b border-[#E5E7EB] pb-4'>
+                <span className='text-sm font-semibold uppercase tracking-[0.2em] text-[#0F766E]'>Specs</span>
+                <span className='rounded-full bg-[#ECFDF5] px-3 py-1 text-sm text-[#166534]'>Optional</span>
+              </div>
+              <div className='mt-5 space-y-4'>
+                {[
+                  { name: 'brand', label: 'Brand' },
+                  { name: 'model', label: 'Model' },
+                  { name: 'weight', label: 'Weight' },
+                  { name: 'color', label: 'Color' },
+                  { name: 'region', label: 'Region' },
+                  { name: 'size', label: 'Size' },
+                  { name: 'processor', label: 'Processor' },
+                  { name: 'ram', label: 'RAM' },
+                  { name: 'storage', label: 'Storage' },
+                  { name: 'storageType', label: 'Storage type' },
+                  { name: 'displaySize', label: 'Display size' },
+                  { name: 'graphicsCardMemory', label: 'Graphics card memory' },
+                  { name: 'numberOfCores', label: 'Number of cores' },
+                  { name: 'operatingSystem', label: 'Operating system' },
+                  { name: 'battery', label: 'Battery' }
+                ].map((field) => (
+                  <div key={field.name}>
+                    <label className='mb-2 block text-sm font-medium text-[#111827]'>{field.label}</label>
+                    <input
+                      name={field.name}
+                      value={formik.values[field.name]}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      type='text'
+                      placeholder={field.label}
+                      className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
+                    />
+                  </div>
+                ))}
+                <div>
+                  <label className='mb-2 block text-sm font-medium text-[#111827]'>Open to negotiation</label>
+                  <select
+                    name='openToNegotiation'
+                    value={formik.values.openToNegotiation}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
+                  >
+                    <option value='false'>No</option>
+                    <option value='true'>Yes</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm'>
+              <div className='flex flex-col gap-4'>
+                <div>
+                  <label className='mb-2 block text-sm font-medium text-[#111827]'>Publish status</label>
+                  <select
+                    name='status'
+                    value={formik.values.status}
+                    onChange={formik.handleChange}
+                    className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
+                  >
+                    <option value='draft'>Save as draft</option>
+                    <option value='published'>Publish now</option>
+                  </select>
+                </div>
+                <div className='rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-4 text-sm text-[#475569]'>
+                  Published items are visible to shoppers. Drafts remain private until published.
+                </div>
+              </div>
+            </section>
+
+            <section className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm'>
+              <div className='flex items-center justify-between gap-4 border-b border-[#E5E7EB] pb-4'>
+                <span className='text-sm font-semibold uppercase tracking-[0.2em] text-[#0F766E]'>Summary</span>
+                <span className='rounded-full bg-[#ECF2F8] px-3 py-1 text-sm text-[#0F766E]'>Live</span>
+              </div>
+              <div className='mt-5 space-y-3 text-sm text-[#475569]'>
+                <div className='flex items-center justify-between rounded-[18px] border border-[#E5E7EB] bg-[#F8FAFF] px-4 py-3'>
+                  <span>Revenue potential</span>
+                  <strong>₦{formik.values.price ? Number(formik.values.price).toLocaleString() : '0'}</strong>
+                </div>
+                <div className='flex items-center justify-between rounded-[18px] border border-[#E5E7EB] bg-[#F8FAFF] px-4 py-3'>
+                  <span>Inventory</span>
+                  <strong>{formik.values.inventory || '0'}</strong>
+                </div>
+                <div className='flex items-center justify-between rounded-[18px] border border-[#E5E7EB] bg-[#F8FAFF] px-4 py-3'>
+                  <span>Discount</span>
+                  <strong>{formik.values.discountPrice && formik.values.price ? Math.round(((Number(formik.values.price) - Number(formik.values.discountPrice)) / Number(formik.values.price)) * 100) : 0}%</strong>
+                </div>
+              </div>
+            </section>
+          </aside>
+        </form>
+
+        <div className='mt-6 flex flex-col items-end'>
+          <button
+            type='submit'
+            onClick={formik.submitForm}
+            disabled={!formik.isValid || !formik.dirty || uploading}
+            className={`rounded-[20px] px-8 py-4 text-sm font-semibold text-white transition ${!formik.isValid || !formik.dirty || uploading ? 'bg-[#94A3B8] cursor-not-allowed' : 'bg-[#0F766E] hover:bg-[#0e5f53]'}`}
+          >
+            {uploading ? 'Uploading images…' : 'Publish Product'}
+          </button>
         </div>
       </div>
-      {/* end of add product section */}
+
       <ToastContainer />
     </div>
-  )
-}
+  );
+};
 
-export default AddProduct
+export default AddProduct;

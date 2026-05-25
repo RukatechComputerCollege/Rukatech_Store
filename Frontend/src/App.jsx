@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Register from './Pages/user/Register';
 import Home from './Pages/Home';
 import Signin from './Pages/user/Signin';
@@ -12,11 +12,9 @@ import ProtectedRoute from './ProtectedRoute';
 import PublicRoute from './PublicRoute';
 import Customer from './Pages/admin/adminPages/Customer';
 import CustomerDetails from './Pages/admin/adminPages/CustomerDetails'
-import AddNewCustomer from './Pages/admin/adminPages/AddNewCustomer'
-import Categories from './Pages/admin/adminPages/Categories';
 import CategoryProvider from './CategoryContext';
-import CategoriesDetails from './Pages/admin/adminPages/CategoriesDetails';
 import ProductPage from './Pages/admin/adminPages/ProductPage';
+import FlashSales from './Pages/admin/adminPages/FlashSales';
 import AddProduct from './Pages/admin/adminPages/AddProduct';
 import ShopPage from './Pages/ShopPage';
 import Landingpage from './Pages/Landingpage';
@@ -42,18 +40,28 @@ import AboutUs from './Pages/AboutUs';
 import ForgotPassword from './Pages/user/ForgotPassword';
 import ResetPassword from './Pages/user/ResetPassword';
 import BrowsingHistory from './components/BrowsingHistory';
+import Reviews from './Pages/admin/adminPages/Reviews';
+import AdminOrderDetails from './Pages/admin/adminPages/OrderDetails';
 
+const RouteWrapper = ({ children }) => {
+  const location = useLocation();
+  return React.cloneElement(children, { key: location.pathname });
+};
 
 const App = () => {
+  const location = useLocation();
+  
   return (
     <div>
       <ScrollToTop />
-      
+
       <Routes>
           <Route path="/" element={
-            <CategoryProvider>
-              <Home />
-            </CategoryProvider>
+            <RouteWrapper>
+              <CategoryProvider>
+                <Home />
+              </CategoryProvider>
+            </RouteWrapper>
           }>
             <Route index element={<Landingpage />} />
             <Route path='/who-we-are' element={<AboutUs />} />
@@ -65,7 +73,6 @@ const App = () => {
             } />
             <Route path='/account/forgot-password' element={<ForgotPassword />} />
             <Route path='/reset-password/:token' element={<ResetPassword />} />
-
             <Route path='/store/:categoryName' element={<ShopPage />} />
             <Route path='/order-tracking' element={<OrderTrack />} />
             <Route path='/order-tracking/:id' element={<OrderTrackDetails />} />
@@ -77,36 +84,57 @@ const App = () => {
                   <Checkout />
                 </ProtectedRoute>
               </UserProvider>
-            } />
-            <Route path="/shopping-cart/checkout/payment-successful/:orderId" element={<PaymentSuccess />} />
-            <Route path="/dashboard/" element={
+            }
+          />
+          <Route
+            path="/shopping-cart/checkout/payment-successful/:orderId"
+            element={<PaymentSuccess />}
+          />
+          <Route
+            path="/dashboard/"
+            element={
               <UserProvider>
                 <ProtectedRoute role="user">
                   <UserDashboard />
                 </ProtectedRoute>
               </UserProvider>
-            }>
-              <Route path='account' element={
+            }
+          >
+            <Route
+              path="account"
+              element={
                 <UserProvider>
                   <HomeDashboard />
                 </UserProvider>
-              }/>
-              <Route path='browsing-history' element={
+              }
+            />
+            <Route
+              path="browsing-history"
+              element={
                 <UserProvider>
                   <BrowsingHistory />
                 </UserProvider>
-              }/>
-              <Route path='order-history' element={
+              }
+            />
+            <Route
+              path="order-history"
+              element={
                 <UserProvider>
                   <OrderHistory />
                 </UserProvider>
-              }/>
-              <Route path='order-history/:id' element={
+              }
+            />
+            <Route
+              path="order-history/:id"
+              element={
                 <UserProvider>
                   <OrderDetails />
                 </UserProvider>
-              }/>
-              <Route path='setting' element={
+              }
+            />
+            <Route
+              path="setting"
+              element={
                 <UserProvider>
                   <Settings />
                 </UserProvider>
@@ -117,7 +145,6 @@ const App = () => {
               <Route path="register" element={
                 <PublicRoute><Register /></PublicRoute>
               } />
-            
               <Route path="login" element={
                 <PublicRoute><Signin /></PublicRoute>
               } />
@@ -125,12 +152,9 @@ const App = () => {
             <Route path='*' element={<NotFound />} />
         </Route>
 
-
         <Route path={`/${ADMIN_ROUTE}/login`} element={
           <PublicRoute><AdminLogin /></PublicRoute>
         } />
-
-        {/* Protected Routes */}
 
         <Route path={`/${ADMIN_ROUTE}/`} element={
           <ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>
@@ -145,33 +169,41 @@ const App = () => {
               <Order />
             </CategoryProvider>
           }/>
+          <Route path='orders/view' element={
+            <CategoryProvider>
+              <AdminOrderDetails />
+            </CategoryProvider>
+          } />
           <Route path='orders/:id' element={
             <CategoryProvider>
-              <OrderInfo />
+              <AdminOrderDetails />
             </CategoryProvider>
           } />
-          <Route path='customer' element={<Customer />} />
-          <Route path='customer/:id' element={<CustomerDetails />} />
-          <Route path='customer/add-new-customer' element={<AddNewCustomer />} />
-
-          <Route path='categories' element={
+          <Route path='reviews' element={
             <CategoryProvider>
-              <Categories />
+              <Reviews />
             </CategoryProvider>
           }/>
-          <Route path='categories/:name' element={
-            <CategoryProvider>
-              <CategoriesDetails />
-            </CategoryProvider>
-          } />
+          <Route path='customer' element={<Customer />} />
+          <Route path='customer/view' element={<CustomerDetails />} />
           <Route path='products' element={ 
             <CategoryProvider>
               <ProductPage />
             </CategoryProvider>
           } />
+          <Route path='products/add-product' element={ 
+            <CategoryProvider>
+              <AddProduct />
+            </CategoryProvider>
+          } />
           <Route path='product/add-product' element={ 
             <CategoryProvider>
               <AddProduct />
+            </CategoryProvider>
+          } />
+          <Route path='flash-sales' element={
+            <CategoryProvider>
+              <FlashSales />
             </CategoryProvider>
           } />
         </Route>

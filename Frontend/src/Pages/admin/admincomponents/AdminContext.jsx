@@ -1,6 +1,7 @@
 const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
 import React, { createContext, useEffect, useState } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 
 export const AdminContext = createContext()
@@ -14,7 +15,7 @@ const AdminProvider = ({ children }) => {
   const [ordersMontly, setordersMontly] = useState([])
   const [customersMonthly, setcustomersMonthly] = useState([])
   const API_URL = import.meta.env.VITE_API_URL;
-    let token = localStorage.adminToken
+  const token = localStorage.getItem('adminToken');
     useEffect(() => {
   let url = `${API_URL}/${ADMIN_ROUTE}/dashboard`
       axios.get(url, {
@@ -32,9 +33,9 @@ const AdminProvider = ({ children }) => {
       .catch((err) =>{
         console.log(err);
         if (err.response?.status === 401 || err.response?.status === 403) {
-          localStorage.removeItem("token");
+          localStorage.removeItem("adminToken");
           window.location.href = `/${ADMIN_ROUTE}/login`;
-        }else if(err.status===403){
+        } else if (err.status === 403) {
           toast.error('Access Forbidden!')
         }
       })
@@ -42,8 +43,9 @@ const AdminProvider = ({ children }) => {
     }, [])
     
     useEffect(() => {
+  const config = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' } };
   let userUrl = `${API_URL}/${ADMIN_ROUTE}/allCustomers/?page=${page}&limit=10`
-      axios.get(userUrl)
+      axios.get(userUrl, config)
       .then((res) =>{
         if(res.data.status){
           setCustomers(res.data.data)
@@ -56,8 +58,9 @@ const AdminProvider = ({ children }) => {
     }, [page])
 
     useEffect(() => {
+  const config = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' } };
   let allUsersURL = `${API_URL}/${ADMIN_ROUTE}/customer/all`
-      axios.get(allUsersURL)
+      axios.get(allUsersURL, config)
       .then((res) =>{
         if(res.data.status){
           setAllCustomers(res.data.data)
@@ -68,8 +71,9 @@ const AdminProvider = ({ children }) => {
       })
     }, [])
     useEffect(() => {
+  const config = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' } };
   let ordersMonthlyURL = `${API_URL}/${ADMIN_ROUTE}/order/monthly`
-      axios.get(ordersMonthlyURL)
+      axios.get(ordersMonthlyURL, config)
       .then((res) =>{
         if(res.data.status){
           setordersMontly(res.data.data)
@@ -80,8 +84,9 @@ const AdminProvider = ({ children }) => {
       })
     }, [])
     useEffect(() => {
+  const config = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'Accept': 'application/json' } };
   let customersMonthlyURL = `${API_URL}/${ADMIN_ROUTE}/customers/monthly`
-      axios.get(customersMonthlyURL)
+      axios.get(customersMonthlyURL, config)
       .then((res) =>{
         if(res.data.status){
           setcustomersMonthly(res.data.data)

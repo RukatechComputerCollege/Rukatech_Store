@@ -1,5 +1,6 @@
 const express = require('express')
-const { greetingUser, userLogin, userDashboard, editUser, billingDetails, shippingDetails, changePassword, orderDetails, forgotPassword, resetPassword } = require('../controller/user.controller')
+const { greetingUser, userLogin, userDashboard, editUser, billingDetails, shippingDetails, changePassword, orderDetails, forgotPassword, resetPassword, getUserOrders } = require('../controller/user.controller')
+const { getPublicFlashSales } = require('../controller/admin.controller')
 const { authenticate } = require('../auth')
 const router = express.Router()
 
@@ -11,6 +12,8 @@ router.put('/updateBilling/:id', billingDetails)
 router.put('/updateShipping/:id', shippingDetails)
 router.put('/changepassword/:id', changePassword)
 router.post('/orderDetails/:id', orderDetails)
+router.get('/orders/:id', authenticate, getUserOrders)
+router.get('/flashsales', getPublicFlashSales)
 router.post('/account/forgot-password', forgotPassword)
 router.post('/account/reset-password/:token', resetPassword)
 

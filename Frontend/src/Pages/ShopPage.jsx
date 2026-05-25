@@ -1,11 +1,21 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { CategoryContext } from "../CategoryContext";
 // import ProductCard from "../components/ProductCard";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  useParams,
+  useNavigate,
+  useSearchParams,
+  useLocation,
+} from "react-router-dom";
 import Loader from "../components/Loader";
 import StoreProductCard from "../components/StoreProductCard";
 import { IoFilter } from "react-icons/io5";
-import { IoIosArrowRoundForward, IoIosArrowRoundBack } from "react-icons/io";
+import { BiSortAlt2 } from "react-icons/bi";
+import { TiThSmallOutline } from "react-icons/ti";
+import { MdMonitor, MdHeadphonesBattery } from "react-icons/md";
+import { GiProcessor, GiLaptop } from "react-icons/gi";
+import { FcMultipleSmartphones } from "react-icons/fc";
+import { FaTabletAlt } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart, removeFromCart } from "../redux/Cart";
 import {
@@ -16,9 +26,18 @@ import {
 const ShopPage = () => {
   const { allCategory, allProduct, allBrand, allBrandForCategory } =
     useContext(CategoryContext);
+  const categoryIconMap = {
+    monitors: MdMonitor,
+    processors: GiProcessor,
+    phones: FcMultipleSmartphones,
+    accessories: MdHeadphonesBattery,
+    laptops: GiLaptop,
+    tablets: FaTabletAlt,
+  };
   console.log("All brand in shoppage: ", allBrand);
   const cartItem = useSelector((state) => state.cart.cartItem);
   const dispatch = useDispatch();
+  const location = useLocation();
   const [productShowName, setProductShowName] = useState("All Product");
   const [brandShowName, setBrandShowName] = useState([]);
   const [uniqueBrands, setUniqueBrands] = useState("");
@@ -26,9 +45,11 @@ const ShopPage = () => {
   const [selectedRAM, setSelectedRAM] = useState([]);
   const [productPrice, setProductPrice] = useState("all");
   const [priceSlider, setPriceSlider] = useState(10000000);
+  const [productSort, setProductSort] = useState("popularity");
   const [sidebarTopOffset, setSidebarTopOffset] = useState(90);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchParams] = useSearchParams();
   const categoryName = searchParams.get("category");
   console.log(
@@ -37,6 +58,18 @@ const ShopPage = () => {
     "All brand for category: ",
     allBrandForCategory,
   );
+
+  // Reset component state when location changes
+  useEffect(() => {
+    setProductShowName("All Product");
+    setBrandShowName([]);
+    setSelectedOS([]);
+    setSelectedRAM([]);
+    setProductPrice("all");
+    setPriceSlider(10000000);
+    setCurrentPage(1);
+    setSearchQuery("");
+  }, [location.pathname]);
 
   const brandForSelectedCategory = useMemo(() => {
     if (!allProduct) return [];
@@ -55,7 +88,6 @@ const ShopPage = () => {
   }, [allProduct, productShowName]);
 
   const navigate = useNavigate();
-  const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 40;
 
   const maxProductPrice = useMemo(() => {
@@ -159,7 +191,7 @@ const ShopPage = () => {
   };
 
   const filteredProducts = useMemo(() => {
-    return allProduct?.filter((product) => {
+    let products = allProduct?.filter((product) => {
       const matchesCategory =
         productShowName === "All Product" ||
         product.category === productShowName ||
@@ -193,6 +225,15 @@ const ShopPage = () => {
         matchesRAM
       );
     });
+
+    // Apply sorting
+    if (productSort === "low-to-high") {
+      products = products?.sort((a, b) => Number(a.price) - Number(b.price));
+    } else if (productSort === "high-to-low") {
+      products = products?.sort((a, b) => Number(b.price) - Number(a.price));
+    }
+
+    return products;
   }, [
     allProduct,
     productShowName,
@@ -201,6 +242,9 @@ const ShopPage = () => {
     debouncedQuery,
     productPrice,
     priceSlider,
+    selectedOS,
+    selectedRAM,
+    productSort,
   ]);
 
   useEffect(() => {
@@ -257,9 +301,12 @@ const ShopPage = () => {
 
   // Filter panel state
   const [showFilterMobile, setShowFilterMobile] = useState(false);
+  const [showSortMobile, setShowSortMobile] = useState(false);
 
   const openFilterPanel = () => setShowFilterMobile(true);
   const closeFilterPanel = () => setShowFilterMobile(false);
+  const openSortPanel = () => setShowSortMobile(true);
+  const closeSortPanel = () => setShowSortMobile(false);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -273,6 +320,18 @@ const ShopPage = () => {
     }
   }, [totalPages]);
 
+  // Prevent body scroll when filter or sort modal is open
+  useEffect(() => {
+    if (showFilterMobile || showSortMobile) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [showFilterMobile, showSortMobile]);
+
   return (
     <div className="w-full font-inter" style={{ padding: "2% 6%" }}>
       <div className="flex flex-col md:flex-row gap-8">
@@ -281,7 +340,7 @@ const ShopPage = () => {
         <aside className="hidden lg:block w-64 shrink-0 space-y-6">
           <div className="rounded-4xl shadow-sm border border-gray-100 flex flex-col py-2 max-h-[50dvh] overflow-y-scroll">
             <h2 className="px-4 uppercase">Categories</h2>
-            <div className="flex items-center px-4 py-1 text-sm">
+            <div className="flex space-x-1 items-center px-4 py-2 text-sm">
               <input
                 type="radio"
                 id="category-all-aside"
@@ -289,6 +348,7 @@ const ShopPage = () => {
                 checked={productShowName === "All Product"}
                 name="category-aside"
               />
+              <TiThSmallOutline className="text-primary text-xl" />
               <label
                 htmlFor="category-all-aside"
                 className="uppercase cursor-pointer"
@@ -297,26 +357,28 @@ const ShopPage = () => {
               </label>
             </div>
             {allCategory && allCategory.length > 0
-              ? allCategory.map((cat, index) => (
-                  <div
-                    className="flex space-x-1 items-center px-4 py-1 text-sm"
-                    key={index}
-                  >
-                    <input
-                      type="radio"
-                      id={`category-aside-${cat}`}
-                      onChange={() => setProductShowName(cat)}
-                      checked={productShowName === cat}
-                      name="category-aside"
-                    />
-                    <span className="material-symbols-outlined text-primary">
-                      category
-                    </span>
-                    <label htmlFor={`category-aside-${cat}`}>
-                      {cat.toUpperCase()}
-                    </label>
-                  </div>
-                ))
+              ? allCategory.map((cat, index) => {
+                  const Icon =
+                    categoryIconMap[cat.toLowerCase()] || TiThSmallOutline;
+                  return (
+                    <div
+                      className="flex space-x-1 items-center px-4 py-2 text-sm"
+                      key={index}
+                    >
+                      <input
+                        type="radio"
+                        id={`category-aside-${cat}`}
+                        onChange={() => setProductShowName(cat)}
+                        checked={productShowName === cat}
+                        name="category-aside"
+                      />
+                      <Icon className="text-primary text-xl" />
+                      <label htmlFor={`category-aside-${cat}`}>
+                        {cat.toUpperCase()}
+                      </label>
+                    </div>
+                  );
+                })
               : Array.from({ length: 6 }).map((_, index) => (
                   <RowSkeletonLoader key={index} />
                 ))}
@@ -498,12 +560,16 @@ const ShopPage = () => {
                         Products found)
                       </h2>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-white">
+                    <div className="hidden md:flex items-center gap-2 text-sm text-white">
                       <span>Sort by:</span>
-                      <select className="border-none text-white bg-transparent font-bold focus:ring-0 cursor-pointer">
-                        <option className="">Popularity</option>
-                        <option>Price: Low to High</option>
-                        <option>Price: High to Low</option>
+                      <select
+                        value={productSort}
+                        onChange={(e) => setProductSort(e.target.value)}
+                        className="border-none text-white bg-transparent font-bold focus:ring-0 cursor-pointer"
+                      >
+                        <option value="popularity">Popularity</option>
+                        <option value="low-to-high">Price: Low to High</option>
+                        <option value="high-to-low">Price: High to Low</option>
                       </select>
                     </div>
                   </div>
@@ -532,6 +598,31 @@ const ShopPage = () => {
               );
             })}
           </section>
+
+          {/* Mobile sort/filter sticky action bar */}
+          <div className="lg:hidden sticky bottom-0 z-30 mt-4 w-full flex justify-center">
+            <div className="w-46 max-w-xl bg-[#1d1d1d] border border-[#E4E7E9] rounded-full text-white shadow-lg">
+              <div className="flex items-center justify-center gap-2 p-3">
+                <button
+                  type="button"
+                  onClick={openSortPanel}
+                  className="flex items-center justify-center gap-2 text-sm font-semibold"
+                >
+                  <span>Sort by</span>
+                  <BiSortAlt2 size={20} />
+                </button>
+                <div className="h-8 w-px bg-primary" />
+                <button
+                  type="button"
+                  onClick={openFilterPanel}
+                  className="flex items-center justify-center gap-2 text-sm font-semibold"
+                >
+                  <span>Filter</span>
+                  <IoFilter size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -541,12 +632,18 @@ const ShopPage = () => {
         {/* Filter Section Mobile */}
         {showFilterMobile && (
           <div
-            className="fixed inset-0 bg-[#0000003f] bg-opacity-40 z-40 md:hidden"
+            className="fixed bg-[#0000003f] bg-opacity-40 z-40 md:hidden left-0 right-0"
+            style={{
+              top: `${sidebarTopOffset}px`,
+              bottom: 0,
+            }}
             onClick={closeFilterPanel}
           >
             <div
-              style={{ padding: "20px" }}
-              className="absolute top-0 left-0 w-3/4 sm:w-1/2 h-screen bg-white p-5 overflow-y-auto"
+              className="absolute top-8 left-0 w-3/4 sm:w-1/2 bg-white overflow-y-auto h-full"
+              style={{
+                padding: "20px",
+              }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Category filter */}
@@ -560,23 +657,102 @@ const ShopPage = () => {
                     checked={productShowName === "All Product"}
                     name="category"
                   />
+                  <TiThSmallOutline className="text-primary text-xl" />
                   <label htmlFor="category-all-mobile">All Product</label>
                 </div>
-                {allCategory?.map((cat, index) => (
-                  <div className="flex gap-2 items-center" key={index}>
-                    <input
-                      type="radio"
-                      id={`category-mobile-${index}`}
-                      onChange={() => setProductShowName(cat)}
-                      checked={productShowName === cat}
-                      name="category"
-                    />
-                    <label htmlFor={`category-mobile-${categoryName}`}>
-                      {cat}
-                    </label>
-                  </div>
-                ))}
+                {allCategory?.map((cat, index) => {
+                  const Icon =
+                    categoryIconMap[cat.toLowerCase()] || TiThSmallOutline;
+                  return (
+                    <div className="flex gap-2 items-center" key={index}>
+                      <input
+                        type="radio"
+                        id={`category-mobile-${index}`}
+                        onChange={() => setProductShowName(cat)}
+                        checked={productShowName === cat}
+                        name="category"
+                      />
+                      <Icon className="text-primary text-xl" />
+                      <label htmlFor={`category-mobile-${index}`}>{cat}</label>
+                    </div>
+                  );
+                })}
               </div>
+              {/* Brand filter */}
+              {brandForSelectedCategory.length > 0 && (
+                <div className="w-full flex flex-col gap-2 border-b border-[#E4E7E9] pt-5">
+                  <h1 className="font-semibold">BRAND</h1>
+                  {brandForSelectedCategory.map((brand, index) => (
+                    <div className="flex gap-2 items-center" key={index}>
+                      <input
+                        type="checkbox"
+                        id={`brand-mobile-${index}`}
+                        onChange={() => {
+                          setBrandShowName((prev) =>
+                            prev.includes(brand)
+                              ? prev.filter((b) => b !== brand)
+                              : [...prev, brand],
+                          );
+                        }}
+                        checked={brandShowName.includes(brand)}
+                        name="brand-mobile"
+                      />
+                      <label htmlFor={`brand-mobile-${index}`}>{brand}</label>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Operating System filter */}
+              {osForSelectedCategory.length > 0 && (
+                <div className="w-full flex flex-col gap-2 border-b border-[#E4E7E9] pt-5">
+                  <h1 className="font-semibold">OPERATING SYSTEM</h1>
+                  {osForSelectedCategory.map((os, index) => (
+                    <div className="flex gap-2 items-center" key={index}>
+                      <input
+                        type="checkbox"
+                        id={`os-mobile-${index}`}
+                        onChange={() => {
+                          setSelectedOS((prev) =>
+                            prev.includes(os)
+                              ? prev.filter((o) => o !== os)
+                              : [...prev, os],
+                          );
+                        }}
+                        checked={selectedOS.includes(os)}
+                        name="os-mobile"
+                      />
+                      <label htmlFor={`os-mobile-${index}`}>{os}</label>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* RAM filter */}
+              {ramForSelectedCategory.length > 0 && (
+                <div className="w-full flex flex-col gap-2 border-b border-[#E4E7E9] pt-5">
+                  <h1 className="font-semibold">RAM</h1>
+                  {ramForSelectedCategory.map((ram, index) => (
+                    <div className="flex gap-2 items-center" key={index}>
+                      <input
+                        type="checkbox"
+                        id={`ram-mobile-${index}`}
+                        onChange={() => {
+                          setSelectedRAM((prev) =>
+                            prev.includes(ram)
+                              ? prev.filter((r) => r !== ram)
+                              : [...prev, ram],
+                          );
+                        }}
+                        checked={selectedRAM.includes(ram)}
+                        name="ram-mobile"
+                      />
+                      <label htmlFor={`ram-mobile-${index}`}>{ram}</label>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Price filter */}
               <div className="w-full flex flex-col gap-2 border-b border-[#E4E7E9] pt-5">
                 <h1 className="font-semibold">PRICE RANGE</h1>
@@ -677,17 +853,64 @@ const ShopPage = () => {
           </div>
         )}
 
-        {/* Filter button for mobile */}
-        <div
-          onClick={openFilterPanel}
-          className="fixed cursor-pointer bottom-2.5 left-1/2 -translate-x-1/2 md:hidden bg-[#1d1d1d] rounded-[30px] text-white border border-[#E4E7E9]"
-          style={{ padding: "10px 20px" }}
-        >
-          <p className="flex items-center justify-center gap-4">
-            <span>Filter</span>
-            <IoFilter size={18} />
-          </p>
-        </div>
+        {/* Sort Section Mobile */}
+        {showSortMobile && (
+          <div
+            className="fixed bg-[#0000003f] bg-opacity-40 z-40 md:hidden left-0 right-0"
+            style={{
+              top: `${sidebarTopOffset}px`,
+              bottom: 0,
+            }}
+            onClick={closeSortPanel}
+          >
+            <div
+              className="absolute top-8 left-0 w-3/4 sm:w-1/2 bg-white overflow-y-auto h-full"
+              style={{
+                padding: "20px",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Sort options */}
+              <div className="w-full flex flex-col gap-2 border-b border-[#E4E7E9] pb-5">
+                <h1 className="font-semibold">SORT BY</h1>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="radio"
+                    id="sort-popularity-mobile"
+                    onChange={() => setProductSort("popularity")}
+                    checked={productSort === "popularity"}
+                    name="sort"
+                  />
+                  <label htmlFor="sort-popularity-mobile">Popularity</label>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="radio"
+                    id="sort-low-high-mobile"
+                    onChange={() => setProductSort("low-to-high")}
+                    checked={productSort === "low-to-high"}
+                    name="sort"
+                  />
+                  <label htmlFor="sort-low-high-mobile">
+                    Price: Low to High
+                  </label>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="radio"
+                    id="sort-high-low-mobile"
+                    onChange={() => setProductSort("high-to-low")}
+                    checked={productSort === "high-to-low"}
+                    name="sort"
+                  />
+                  <label htmlFor="sort-high-low-mobile">
+                    Price: High to Low
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Page Loader */}

@@ -71,15 +71,15 @@ const Navbar = () => {
           <div className="flex items-center gap-2">
             <RxHamburgerMenu
               onClick={openMenu}
-              className="md:hidden cursor-pointer"
+              className="lg:hidden cursor-pointer"
               size={24}
             />
             <Link
               to="/"
               className="flex items-center gap-2 cursor-pointer"
             >
-              <img src={Fastcart} className="max-[400px]:w-[30px]" alt="logo" />
-              <h1 className="logoTxt max-[400px]:text-[20px] text-primary text-[25px]">
+              <img src={Fastcart} className="max-[400px]:w-7.5" alt="logo" />
+              <h1 className="logoTxt max-[400px]:text-[20px] text-primary text-[20px] lg:text-[25px]">
                 Rukatech Store
               </h1>
             </Link>
@@ -138,7 +138,7 @@ const Navbar = () => {
               {cartItem.length > 0 && (
                 <div
                   style={{ padding: "8px" }}
-                  className="absolute top-[-6px] right-[27px] w-[10px] h-[10px] bg-primary border border-white rounded-full flex items-center justify-center text-white text-[12px]"
+                  className="absolute -top-1.5 -right-1 lg:right-6.75 w-2.5 h-2.5 bg-primary border border-white rounded-full flex items-center justify-center text-white text-[12px]"
                 >
                   <span>{cartItem.length}</span>
                 </div>

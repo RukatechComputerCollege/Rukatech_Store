@@ -1,7 +1,15 @@
 const adminModel = require("../model/admin.model");
 const productModel = require("../model/productModel");
 const userModel = require("../model/user.model")
+const flashSaleModel = require("../model/flashSale.model");
+const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 const jwt = require('jsonwebtoken');
 const AdminOrder = require('../model/adminOrder.model')
 const admin_username = process.env.admin_username;
@@ -172,11 +180,37 @@ const deleteCustomer = (req, res) =>{
 // }
 
 const createProduct = async (req, res) =>{
-  // console.log("Received product data:", req.body);
   try {
-    const { name, price, description, image, inventory, weight, region, condition, processor, ram, storage, storageType, displaySize, graphicsCardMemory, numberOfCores, operatingSystem, openToNegotiation, size, color, category } = req.body;
+    const {
+      name,
+      price,
+      description,
+      inventory,
+      weight,
+      region,
+      condition,
+      processor,
+      ram,
+      storage,
+      storageType,
+      displaySize,
+      graphicsCardMemory,
+      numberOfCores,
+      operatingSystem,
+      openToNegotiation,
+      size,
+      color,
+      category,
+      brand,
+      model,
+      battery,
+      discountPrice,
+      productBox,
+      features,
+      status
+    } = req.body;
 
-    if(!name || !price || !description || !image || !inventory || !region || !condition || !category){
+    if(!name || !price || !description || (!req.body.image && !req.files) || !inventory || !region || !condition || !category){
       return res.status(400).json({
         status: false,
         message: "name, price, description, image, inventory, region, condition and category are required fields"
@@ -189,17 +223,63 @@ const createProduct = async (req, res) =>{
         message: "Invalid category"
       })
     }
-    
-    const newProduct = new productModel(req.body);
+
+    let imageUrls = [];
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map((file) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'rukatech_store/products', resource_type: 'image' },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result.secure_url);
+            }
+          );
+          stream.end(file.buffer);
+        });
+      });
+      imageUrls = await Promise.all(uploadPromises);
+    }
+    if (!imageUrls.length && req.body.image) {
+      imageUrls = Array.isArray(req.body.image) ? req.body.image : [req.body.image];
+    }
+
+    const newProduct = new productModel({
+      name,
+      description,
+      price,
+      discountPrice,
+      inventory,
+      weight,
+      region,
+      condition,
+      processor,
+      ram,
+      storage,
+      storageType,
+      displaySize,
+      graphicsCardMemory,
+      numberOfCores,
+      operatingSystem,
+      brand,
+      model,
+      battery,
+      openToNegotiation: openToNegotiation === 'true' || openToNegotiation === true,
+      size,
+      color,
+      productBox,
+      features,
+      category,
+      status: status || 'draft',
+      image: imageUrls
+    });
     const savedProduct = await newProduct.save()
-    
     res.status(201).json({
       status: true,
       message: 'Product Created Successfully',
       data: savedProduct
     })
   }
-
   catch(err){
     console.error("Product creation failed:", err);
     res.status(500).json({
@@ -254,6 +334,99 @@ const deleteSelectedProduct = async (req, res) =>{
   }
 }
 
+const updateFlashSaleStatuses = async () => {
+  const now = new Date();
+  const flashSales = await flashSaleModel.find();
+  const bulkOps = flashSales.reduce((ops, sale) => {
+    const desiredStatus = sale.endDate < now ? 'expired' : sale.startDate > now ? 'upcoming' : 'active';
+    const desiredActive = desiredStatus === 'active';
+    if (sale.status !== desiredStatus || sale.isActive !== desiredActive) {
+      ops.push({
+        updateOne: {
+          filter: { _id: sale._id },
+          update: { status: desiredStatus, isActive: desiredActive },
+        },
+      });
+    }
+    return ops;
+  }, []);
+
+  if (bulkOps.length > 0) {
+    await flashSaleModel.bulkWrite(bulkOps);
+  }
+};
+
+const getFlashSales = async (req, res) => {
+  try {
+    await updateFlashSaleStatuses();
+    const flashSales = await flashSaleModel.find().sort({ createdAt: -1 });
+    return res.status(200).json({
+      status: true,
+      message: 'Flash sales fetched successfully',
+      data: flashSales,
+    });
+  } catch (error) {
+    console.error('Error fetching flash sales:', error);
+    return res.status(500).json({ status: false, message: 'Failed to fetch flash sales', error: error.message });
+  }
+};
+
+const getPublicFlashSales = async (req, res) => {
+  try {
+    await updateFlashSaleStatuses();
+    const flashSales = await flashSaleModel.find({ status: 'active' }).sort({ createdAt: -1 });
+    return res.status(200).json({
+      status: true,
+      message: 'Active flash sales fetched successfully',
+      data: flashSales,
+    });
+  } catch (error) {
+    console.error('Error fetching public flash sales:', error);
+    return res.status(500).json({ status: false, message: 'Failed to fetch flash sales', error: error.message });
+  }
+};
+
+const createFlashSale = async (req, res) => {
+  try {
+    const { title, products, description, discount, startDate, endDate } = req.body;
+
+    if (!products || !Array.isArray(products) || products.length === 0 || !discount || !startDate || !endDate) {
+      return res.status(400).json({
+        status: false,
+        message: 'products, discount, startDate and endDate are required',
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const now = new Date();
+    const status = end < now ? 'expired' : start > now ? 'upcoming' : 'active';
+    const isActive = status === 'active';
+
+    const newFlashSale = new flashSaleModel({
+      title: title || `Flash Sale (${products.length} item${products.length > 1 ? 's' : ''})`,
+      products,
+      description: description || '',
+      discount,
+      startDate: start,
+      endDate: end,
+      status,
+      isActive,
+    });
+
+    const savedFlashSale = await newFlashSale.save();
+
+    return res.status(201).json({
+      status: true,
+      message: 'Flash sale created successfully',
+      data: savedFlashSale,
+    });
+  } catch (error) {
+    console.error('Error creating flash sale:', error);
+    return res.status(500).json({ status: false, message: 'Failed to create flash sale', error: error.message });
+  }
+};
+
 const getAllProducts = async (req, res) => {
   try {
     const products = await productModel.find().sort({ createdAt: -1 } );
@@ -276,9 +449,92 @@ const editProduct = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const {
+      name,
+      price,
+      description,
+      inventory,
+      weight,
+      region,
+      condition,
+      processor,
+      ram,
+      storage,
+      storageType,
+      displaySize,
+      graphicsCardMemory,
+      numberOfCores,
+      operatingSystem,
+      openToNegotiation,
+      size,
+      color,
+      category,
+      brand,
+      model,
+      battery,
+      discountPrice,
+      productBox,
+      features,
+      status,
+    } = req.body;
+
+    const existingImagesData = req.body.existingImages || [];
+    const existingImages = Array.isArray(existingImagesData)
+      ? existingImagesData
+      : [existingImagesData];
+
+    let uploadedImages = [];
+    if (req.files && req.files.length > 0) {
+      const uploadPromises = req.files.map((file) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'rukatech_store/products', resource_type: 'image' },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result.secure_url);
+            }
+          );
+          stream.end(file.buffer);
+        });
+      });
+      uploadedImages = await Promise.all(uploadPromises);
+    }
+
+    const imageUrls = [...existingImages, ...uploadedImages].filter(Boolean);
+
+    const updateData = {
+      name,
+      price,
+      description,
+      inventory,
+      weight,
+      region,
+      condition,
+      processor,
+      ram,
+      storage,
+      storageType,
+      displaySize,
+      graphicsCardMemory,
+      numberOfCores,
+      operatingSystem,
+      openToNegotiation: openToNegotiation === 'true' || openToNegotiation === true,
+      size,
+      color,
+      category,
+      brand,
+      model,
+      battery,
+      discountPrice,
+      productBox,
+      features,
+      status,
+      image: imageUrls,
+    };
+
     const updatedProduct = await productModel.findByIdAndUpdate(
       id,
-      { ...req.body },
+      updateData,
       { new: true, runValidators: true }
     );
 
@@ -593,6 +849,30 @@ const getOrdersGroupedByHourForDates = async (req, res) => {
 };
 
 
+const getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await productModel.findById(id);
+    if (!product) return res.status(404).json({ status: false, message: 'Product not found' });
+    return res.status(200).json({ status: true, data: product });
+  } catch (err) {
+    console.error('Error fetching product by id:', err);
+    return res.status(500).json({ status: false, message: 'Failed to fetch product' });
+  }
+};
+
+const toggleUserBan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isBanned } = req.body;
+    const updated = await userModel.findByIdAndUpdate(id, { isBanned }, { new: true }).select('-password');
+    if (!updated) return res.status(404).json({ status: false, message: 'User not found' });
+    return res.status(200).json({ status: true, message: 'User updated', data: updated });
+  } catch (err) {
+    console.error('Error updating user ban status:', err);
+    return res.status(500).json({ status: false, message: 'Failed to update user' });
+  }
+};
 
 module.exports = {
   adminRegister, 
@@ -611,7 +891,12 @@ module.exports = {
   fetchAllCustomers,
   getOrdersGroupedByMonth,
   getOrdersGroupedByWeek,
+  getFlashSales,
+  getPublicFlashSales,
+  createFlashSale,
   getCustomersGroupedByMonth,
   getOrdersGroupedByHour,
-  getOrdersGroupedByHourForDates
+  getOrdersGroupedByHourForDates,
+  getProductById,
+  toggleUserBan
 };

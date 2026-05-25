@@ -4,24 +4,62 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { TbCurrencyNaira } from "react-icons/tb";
 import { RxCaretUp } from "react-icons/rx";
 import { PiShoppingCartSimple } from "react-icons/pi";
+import { FiUsers } from "react-icons/fi";
+import { MdInventory2 } from "react-icons/md";
+import { TiStar } from "react-icons/ti";
 import { CategoryContext } from '../../../CategoryContext';
 import { AdminContext } from '../admincomponents/AdminContext';
 import DashboardChart from '../admincomponents/DashboardChart';
 import axios from 'axios';
 
 const Dashboard = () => {
-  const { allOrders } = useContext(CategoryContext);
+  const { allOrders, allProduct } = useContext(CategoryContext);
   const { allCustomers, ordersMontly, customersMonthly } = useContext(AdminContext)
   const [dailyTotals, setDailyTotals] = useState({});
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalCustomers: 0,
+    totalProducts: 0,
+    averageOrderValue: 0,
+    pendingOrders: 0,
+    totalReviews: 0
+  });
 
   useEffect(() => {
-    if (allOrders && allCustomers) {
-      console.log("All Orders in ProductPage", allOrders);
-      console.log("All Customers in ProductPage", allCustomers);
-      console.log("Monthly Orders in ProductPage", ordersMontly);
-      console.log("Monthly Customers in ProductPage", customersMonthly);
+    if (allOrders && allCustomers && allProduct) {
+      console.log("All Orders in Dashboard", allOrders);
+      console.log("All Customers in Dashboard", allCustomers);
+      console.log("Monthly Orders in Dashboard", ordersMontly);
+      console.log("Monthly Customers in Dashboard", customersMonthly);
+      console.log("All Products in Dashboard", allProduct);
     }
-  }, [allOrders, allCustomers, ordersMontly, customersMonthly]);
+  }, [allOrders, allCustomers, ordersMontly, customersMonthly, allProduct]);
+
+  // Calculate comprehensive statistics
+  useEffect(() => {
+    if (allOrders && allCustomers && allProduct) {
+      const totalRev = allOrders.reduce((sum, order) => sum + (order.subtotal || 0), 0);
+      const totalOrd = allOrders.length;
+      const avgOrderVal = totalOrd > 0 ? totalRev / totalOrd : 0;
+      const pendingOrd = allOrders.filter(order => order.orderStatus === 'received' || order.orderStatus === 'packaging').length;
+      
+      // Calculate total reviews from all products
+      const totalReviewsCount = allProduct.reduce((sum, product) => {
+        return sum + (product.rating && Array.isArray(product.rating) ? product.rating.length : 0);
+      }, 0);
+
+      setStats({
+        totalRevenue: totalRev,
+        totalOrders: totalOrd,
+        totalCustomers: allCustomers.length,
+        totalProducts: allProduct.length,
+        averageOrderValue: avgOrderVal,
+        pendingOrders: pendingOrd,
+        totalReviews: totalReviewsCount
+      });
+    }
+  }, [allOrders, allCustomers, allProduct]);
 
   useEffect(() => {
     const today = new Date();
@@ -91,103 +129,130 @@ const Dashboard = () => {
   }
   return (
     <>
-      <div className='w-full flex flex-col gap-4'>
-        {/* for dashboard title */}
-        <div className='w-full flex justify-between items-center'>
-          <div>
-            <h1 className='font-bold text-[#131523] text-[24px]'>Dashboard</h1>
-          </div>
-          {/* for manage button */}
-          <div>
-            <button className='rounded-[4px] border-1 border-[#D7DBEC] flex gap-2 items-center text-[#1E5EFf] curcosr-pointer hover:bg-[#D7DBEC] cursor-pointer' style={{padding: '10px'}}><span><IoSettingsOutline /></span><span>Manage Settings</span></button>
-          </div>
-        </div>
-        <div className='w-full grid grid-cols-5 gap-4'>
-          {/* for total revenue */}
-          <div className='bg-white shadow rounded-[6px] flex items-center justify-center gap-8' style={{ padding: '8px 12px' }}>
-            <div>
-              <p className='text-[16px] text-[#131523] font-bold'>{allOrders && allOrders.length > 0 ?
-              `₦${allOrders.reduce((sum, order) => sum + (order.subtotal || 0), 0).toLocaleString()}` : '₦0'}</p>
-              <p className='text-[14px] text-[#5A607F]'>Total Revenue</p>
-              <p
-                className={`flex items-center gap-2 ${
-                  revenuePercentage >= 0 ? 'text-[#06A561]' : 'text-[#F0142F]'
-                }`}
-              >
-                <span>{revenuePercentage}%</span>
-                <RxCaretUp className={revenuePercentage >= 0 ? '' : 'rotate-180'} />
-              </p>
+      <div className='w-full flex flex-col gap-8'>
+        {/* Header hero */}
+        <div className='relative overflow-hidden rounded-[32px] bg-[#111827] px-8 py-10 shadow-2xl text-white'>
+          <div className='absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.35),_transparent_25%)]'></div>
+          <div className='absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.2),_transparent_30%)]'></div>
+          <div className='relative z-10 grid gap-8 lg:grid-cols-[3fr_2fr]'>
+            <div className='space-y-4'>
+              <p className='text-sm uppercase tracking-[0.3em] text-[#67e8f9]'>Executive Intelligence</p>
+              <h1 className='text-4xl md:text-5xl font-extrabold tracking-tight'>Rukatech Store Dashboard</h1>
+              <p className='max-w-2xl text-sm text-[#cbd5e1]'>Premium insights for revenue, customer growth, inventory velocity, and retail performance.</p>
             </div>
-            <div className='bg-[#ECF2FF] rounded-[50%] flex flex-col items-center justify-center' style={{padding: '10px'}}>
-              <TbCurrencyNaira size={20} className='text-[#1E5EFf]' />
-            </div>
-          </div>
-          {/* for total orders */}
-          <div className='bg-white shadow rounded-[6px] flex items-center justify-center gap-8' style={{ padding: '8px 12px' }}>
-            <div>
-              <p className='text-[16px] text-[#131523] font-bold'>{allOrders && allOrders.length || 0}</p>
-              <p className='text-[14px] text-[#5A607F]'>Orders</p>
-              <p
-                className={`flex items-center gap-2 ${
-                  ordersPercentage >= 0 ? 'text-[#06A561]' : 'text-[#F0142F]'
-                }`}
-              >
-                <span>{ordersPercentage}%</span>
-                <RxCaretUp
-                  className={ordersPercentage >= 0 ? '' : 'rotate-180'}
-                />
-              </p>
-            </div>
-            <div className='bg-[#ECF2FF] rounded-[50%] flex flex-col items-center justify-center' style={{padding: '10px'}}>
-              <PiShoppingCartSimple  size={20} className='text-[#1E5EFf]' />
-            </div>
-          </div>
-          {/* for all users */}
-          <div className='bg-white shadow rounded-[6px] flex items-center justify-center gap-8' style={{ padding: '8px 12px' }}>
-            <div>
-              <p className='text-[16px] text-[#131523] font-bold'>{allCustomers && allCustomers.length || 0}</p>
-              <p className='text-[14px] text-[#5A607F]'>Customers</p>
-              <p
-                className={`flex items-center gap-2 ${
-                  customersPercentage >= 0 ? 'text-[#06A561]' : 'text-[#F0142F]'
-                }`}
-              >
-                <span>{customersPercentage}%</span>
-                <RxCaretUp
-                  className={customersPercentage >= 0 ? '' : 'rotate-180'}
-                />
-              </p>
-            </div>
-            <div className='bg-[#ECF2FF] rounded-[50%] flex flex-col items-center justify-center' style={{padding: '10px'}}>
-              <PiShoppingCartSimple  size={20} className='text-[#1E5EFf]' />
-            </div>
-          </div>
-        </div>
-        {/* for chart and seven days sales */}
-        <div className='w-full grid grid-cols-[3fr_1fr] gap-4'>
-          <div className='w-full flex flex-col gap-4 rounded-[6px] bg-white' style={{padding: '20px'}}>
-            <div className='w-full flex justify-between items-center'>
-              <h1 className='text-[16px] text-[#131523] font-bold'>Orders Over Time</h1>
-              <p className='text-[14px] text-[#5A607F]'>Last 24 hours</p>
-            </div>
-            <div className='w-full flex justify-between items-center'>
-              {/* for total order for previous and current day */}
-              {/* totals display */}
-              <div className='w-full flex gap-6'>
-                {Object.entries(dailyTotals).map(([day, total]) => {
-                  const formattedDay = day.replace(/, \d{4}$/, "");
-                  return (
-                    <div key={day} className="flex flex-col">
-                      <h1 className="font-bold text-[20px] text-[#131523]">{total}</h1>
-                      <p className="text-[14px] text-[#5A607F]">Orders on {formattedDay}</p>
-                    </div>
-                  );
-                })}
+            <div className='grid grid-cols-2 gap-4'>
+              <div className='rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur-xl'>
+                <p className='text-sm text-[#cbd5e1]'>Lifetime revenue</p>
+                <p className='mt-3 text-3xl font-bold'>₦{stats.totalRevenue.toLocaleString()}</p>
+              </div>
+              <div className='rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur-xl'>
+                <p className='text-sm text-[#cbd5e1]'>Customer base</p>
+                <p className='mt-3 text-3xl font-bold'>{stats.totalCustomers}</p>
               </div>
             </div>
-            <div className='w-full'>
-            <DashboardChart />
+          </div>
+        </div>
 
+        {/* Primary metrics */}
+        <div className='grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-6'>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div className='rounded-[28px] bg-gradient-to-br from-white to-[#F8FAFF] p-8 shadow-xl border border-[#E2E8F0]'>
+              <p className='text-sm text-[#6B7280] uppercase tracking-[0.3em] mb-4'>Revenue</p>
+              <h2 className='text-4xl font-bold text-[#111827]'>₦{stats.totalRevenue.toLocaleString()}</h2>
+              <p className='mt-4 text-sm text-[#475569]'>Revenue generated from all completed orders.</p>
+              <div className='mt-8 grid grid-cols-2 gap-4'>
+                <div className='rounded-[20px] bg-[#F8FDFF] p-4'>
+                  <p className='text-xs uppercase tracking-[0.2em] text-[#0F766E]'>Orders</p>
+                  <p className='mt-2 text-2xl font-semibold text-[#111827]'>{stats.totalOrders}</p>
+                </div>
+                <div className='rounded-[20px] bg-[#F8FDFF] p-4'>
+                  <p className='text-xs uppercase tracking-[0.2em] text-[#0F766E]'>AOV</p>
+                  <p className='mt-2 text-2xl font-semibold text-[#111827]'>₦{Math.round(stats.averageOrderValue).toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className='rounded-[28px] bg-[#111827] p-8 shadow-2xl text-white'>
+              <p className='text-sm uppercase tracking-[0.3em] text-[#60a5fa]'>Performance</p>
+              <div className='mt-5 space-y-6'>
+                <div className='rounded-[24px] bg-white/10 p-5'>
+                  <p className='text-sm text-[#cbd5e1]'>Product catalog</p>
+                  <p className='mt-2 text-3xl font-bold'>{stats.totalProducts}</p>
+                </div>
+                <div className='rounded-[24px] bg-white/10 p-5'>
+                  <p className='text-sm text-[#cbd5e1]'>Pending orders</p>
+                  <p className='mt-2 text-3xl font-bold'>{stats.pendingOrders}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className='rounded-[28px] bg-white p-8 shadow-xl border border-[#E2E8F0]'>
+            <div className='flex items-center justify-between gap-4'>
+              <div>
+                <p className='text-sm text-[#6B7280] uppercase tracking-[0.3em]'>Customer & Ratings</p>
+                <h2 className='mt-2 text-3xl font-bold text-[#111827]'>{stats.totalCustomers} customers</h2>
+              </div>
+              <div className='rounded-full bg-[#E0F2F1] p-4 text-[#047857]'>
+                <FiUsers size={28} />
+              </div>
+            </div>
+            <div className='mt-8 grid grid-cols-2 gap-4'>
+              <div className='rounded-[20px] bg-[#F8FAFF] p-5'>
+                <p className='text-xs uppercase tracking-[0.2em] text-[#6B7280]'>Reviews</p>
+                <p className='mt-2 text-2xl font-semibold text-[#111827]'>{stats.totalReviews}</p>
+              </div>
+              <div className='rounded-[20px] bg-[#F8FAFF] p-5'>
+                <p className='text-xs uppercase tracking-[0.2em] text-[#6B7280]'>Inventory</p>
+                <p className='mt-2 text-2xl font-semibold text-[#111827]'>{stats.totalProducts}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart and activity */}
+        <div className='grid grid-cols-1 xl:grid-cols-[3fr_1fr] gap-6'>
+          <div className='rounded-[28px] bg-white border border-[#E2E8F0] shadow-xl p-8'>
+            <div className='flex items-center justify-between gap-4 mb-8'>
+              <div>
+                <p className='text-sm text-[#6B7280] uppercase tracking-[0.3em]'>Revenue Over Time</p>
+                <h3 className='text-2xl font-bold text-[#111827]'>Overall performance</h3>
+              </div>
+              <p className='text-sm text-[#475569]'>Last 30 days</p>
+            </div>
+            <DashboardChart />
+          </div>
+
+          <div className='rounded-[28px] bg-white border border-[#E2E8F0] shadow-xl p-8'>
+            <div className='flex items-center justify-between gap-4 mb-6'>
+              <div>
+                <p className='text-sm text-[#6B7280] uppercase tracking-[0.3em]'>Recent orders</p>
+                <h3 className='text-2xl font-bold text-[#111827]'>Latest activity</h3>
+              </div>
+            </div>
+            <div className='space-y-4 max-h-[520px] overflow-y-auto pr-2'>
+              {allOrders && allOrders.slice(-6).reverse().map((order, index) => (
+                <div key={index} className='rounded-[24px] border border-[#E5E7EB] bg-[#F8FAFF] p-4'>
+                  <div className='flex items-center justify-between gap-3'>
+                    <div>
+                      <p className='text-sm font-semibold text-[#111827]'>Order #{order.transactionId}</p>
+                      <p className='text-xs text-[#6B7280]'>{order.userEmail || (order.userId?.email)}</p>
+                    </div>
+                    <p className='text-sm font-semibold text-[#0F766E]'>₦{order.subtotal?.toLocaleString() || '0'}</p>
+                  </div>
+                  <div className='mt-3 flex items-center justify-between gap-3 text-sm'>
+                    <span className='text-[#475569]'>{new Date(order.createdAt).toLocaleDateString()}</span>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      order.orderStatus === 'delivered' ? 'bg-[#D1FAE5] text-[#047857]' :
+                      order.orderStatus === 'on_the_road' ? 'bg-[#DBEAFE] text-[#1D4ED8]' :
+                      order.orderStatus === 'packaging' ? 'bg-[#FEF3C7] text-[#B45309]' :
+                      'bg-[#EDE9FE] text-[#7C3AED]'
+                    }`}>
+                      {order.orderStatus?.replace('_', ' ').toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

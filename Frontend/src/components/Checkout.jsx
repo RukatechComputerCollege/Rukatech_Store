@@ -8,7 +8,7 @@ import axios from "axios";
 import Loader from "./Loader";
 import { IoWarningOutline } from "react-icons/io5";
 import { TbCurrencyNaira } from "react-icons/tb";
-import { FaCreditCard, FaHashtag } from "react-icons/fa";
+import { FaCreditCard, FaWhatsapp } from "react-icons/fa";
 import { FaMoneyBills } from "react-icons/fa6";
 import { ToastContainer, toast } from "react-toastify";
 
@@ -102,7 +102,7 @@ const Checkout = () => {
                         <IoWarningOutline size={20} />
                         <span>
                           Your shipping address details are empty or not fully
-                          filled. Complete your 
+                          filled. Complete your
                           <Link
                             className="underline cursor-pointer hover:no-underline hover:text-primary transition-all ml-1"
                             to="/dashboard/setting"
@@ -261,6 +261,24 @@ const Checkout = () => {
                       name="paymentmethod"
                     />
                   </div>
+                  {/* WhatsApp */}
+                  <div className="flex flex-col items-center gap-2 p-4 border border-surface-container rounded-lg">
+                    <label className="flex flex-col items-center justify-center cursor-pointer text-center">
+                      {/* <FaHashtag  className=" mb-2" /> */}
+                      <FaWhatsapp size={32} className="text-[#FA8232] mb-2" />
+                      <span className="text-sm text-[#191C1F] font-semibold">
+                        WhatsApp
+                      </span>
+                    </label>
+                    <input
+                      type="radio"
+                      id="whatsapp"
+                      className="cursor-pointer"
+                      onChange={() => setPaymentMethod("WhatsApp")}
+                      checked={paymentMethod === "WhatsApp"}
+                      name="paymentmethod"
+                    />
+                  </div>
                   {/* Bank Transfer */}
                   <div className="flex flex-col items-center gap-2 p-4 border border-surface-container rounded-lg">
                     <label className="flex flex-col items-center justify-center cursor-pointer text-center">
@@ -283,7 +301,7 @@ const Checkout = () => {
                     <label className="flex flex-col items-center justify-center cursor-pointer text-center">
                       <FaCreditCard size={32} className="text-[#FA8232] mb-2" />
                       <span className="text-sm text-[#191C1F] font-semibold">
-                        Debit/Credit Card
+                        Card
                       </span>
                     </label>
                     <input
@@ -292,23 +310,6 @@ const Checkout = () => {
                       className="cursor-pointer"
                       onChange={() => setPaymentMethod("card")}
                       checked={paymentMethod === "card"}
-                      name="paymentmethod"
-                    />
-                  </div>
-                  {/* USSD */}
-                  <div className="flex flex-col items-center gap-2 p-4 border border-surface-container rounded-lg">
-                    <label className="flex flex-col items-center justify-center cursor-pointer text-center">
-                      <FaHashtag size={32} className="text-[#FA8232] mb-2" />
-                      <span className="text-sm text-[#191C1F] font-semibold">
-                        USSD
-                      </span>
-                    </label>
-                    <input
-                      type="radio"
-                      id="ussd"
-                      className="cursor-pointer"
-                      onChange={() => setPaymentMethod("USSD")}
-                      checked={paymentMethod === "USSD"}
                       name="paymentmethod"
                     />
                   </div>

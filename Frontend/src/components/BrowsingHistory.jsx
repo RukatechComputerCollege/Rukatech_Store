@@ -4,38 +4,66 @@ import { useDispatch, useSelector } from "react-redux";
 import { addToCart, removeFromCart } from "../redux/Cart";
 import { getRecentlyViewed } from "./Recentlyview";
 import { CategoryContext } from "../CategoryContext";
-import {CardSkeletonLoader} from "./SkeletonLoader";
+import { CardSkeletonLoader } from "./SkeletonLoader";
 
 const BrowsingHistory = () => {
-  const viewedIds = getRecentlyViewed();
+  const viewedIdsString = getRecentlyViewed().join(",");
   const { allProduct } = useContext(CategoryContext);
   const [recentViewedProducts, setRecentViewedProducts] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const itemsPerView = 5;
+  const [itemsPerView, setItemsPerView] = useState(() => {
+    if (typeof window === "undefined") return 5;
+    if (window.innerWidth < 768) return 2;
+    if (window.innerWidth < 1024) return 4;
+    return 5;
+  });
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cartItem = useSelector((state) => state.cart.cartItem);
 
   useEffect(() => {
-    if (viewedIds.length > 0 && allProduct?.length > 0) {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 768) {
+        setItemsPerView(2);
+      } else if (width < 1024) {
+        setItemsPerView(4);
+      } else {
+        setItemsPerView(5);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (viewedIdsString && allProduct?.length > 0) {
+      const ids = viewedIdsString.split(",");
       const getProducts = allProduct?.filter((product) =>
-        viewedIds.includes(product._id),
+        ids.includes(product._id),
       );
-      // console.log(getProducts);
       setRecentViewedProducts(getProducts);
+    } else {
+      setRecentViewedProducts([]);
     }
-  }, [viewedIds, allProduct]);
+  }, [viewedIdsString, allProduct]);
+
+  useEffect(() => {
+    const maxIndex = Math.max(0, recentViewedProducts.length - itemsPerView);
+    setCurrentIndex((prevIndex) => Math.min(prevIndex, maxIndex));
+  }, [itemsPerView, recentViewedProducts.length]);
 
   const handlePrev = () => {
-    setCurrentIndex((prev) =>
-      prev === 0 ? recentViewedProducts.length - itemsPerView : prev - 1,
-    );
+    const maxIndex = Math.max(0, recentViewedProducts.length - itemsPerView);
+    setCurrentIndex((prev) => (prev === 0 ? maxIndex : Math.max(0, prev - 1)));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) =>
-      prev >= recentViewedProducts.length - itemsPerView ? 0 : prev + 1,
-    );
+    const maxIndex = Math.max(0, recentViewedProducts.length - itemsPerView);
+    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
   };
 
   const visibleProducts = recentViewedProducts.slice(
@@ -43,8 +71,17 @@ const BrowsingHistory = () => {
     currentIndex + itemsPerView,
   );
 
+  const gridColumnsClass =
+    itemsPerView === 2
+      ? "grid-cols-2"
+      : itemsPerView === 4
+        ? "grid-cols-4"
+        : "grid-cols-5";
+
   const handleCardClick = (product) => {
-    navigate(`/store/${encodeURIComponent(product.name)}`, { state: { id: product._id, product: product } });
+    navigate(`/store/${encodeURIComponent(product.name)}`, {
+      state: { id: product._id, product: product },
+    });
   };
 
   const handleCartToggle = (e, product) => {
@@ -76,7 +113,7 @@ const BrowsingHistory = () => {
 
         {/* Carousel Container */}
         <div className="w-full overflow-hidden">
-          <div className="w-full grid grid-cols-5 gap-md px-4">
+          <div className={`w-full grid ${gridColumnsClass} gap-md px-4`}>
             {recentViewedProducts.length > 0
               ? visibleProducts.map((product) => (
                   <div

@@ -472,6 +472,18 @@ const generateEmailHTML = (user, order) => {
   `;
 };
 
+const getUserOrders = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await userModel.findById(id).select('productOrder');
+    if (!user) return res.status(404).json({ status: false, message: 'User not found' });
+    return res.status(200).json({ status: true, orders: user.productOrder });
+  } catch (err) {
+    console.error('Error fetching user orders:', err);
+    return res.status(500).json({ status: false, message: 'Failed to fetch orders' });
+  }
+};
+
 module.exports = {
   greetingUser,
   userLogin,
@@ -482,5 +494,6 @@ module.exports = {
   changePassword,
   orderDetails,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  getUserOrders
 }
