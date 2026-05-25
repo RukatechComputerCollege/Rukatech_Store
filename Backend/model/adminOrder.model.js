@@ -16,6 +16,8 @@ const adminOrderSchema = new mongoose.Schema({
       price: Number,
       quantity: Number,
       image: String,
+      productLink: String,
+      
     }
   ],
 
