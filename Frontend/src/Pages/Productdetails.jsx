@@ -43,22 +43,37 @@ const Productdetails = () => {
       if (!productFromState && name) {
         setLoading(true);
         try {
-          // First try to find in allProduct context
+          const decodedName = decodeURIComponent(name);
+          
+          // First try to find by ID in allProduct context
           let foundProduct = allProduct?.find(
-            (p) => p.name === decodeURIComponent(name)
+            (p) => p._id === decodedName
           );
           
-          // If not found in context, fetch from API
+          // Then try to find by name in allProduct context
           if (!foundProduct) {
-            const response = await axios.get(
-              `${API_URL}/${ADMIN_URL}/product/name/${decodeURIComponent(name)}`
+            foundProduct = allProduct?.find(
+              (p) => p.name === decodedName
             );
-            foundProduct = response.data;
+          }
+          
+          // If not found in context, fetch from API by ID
+          if (!foundProduct) {
+            try {
+              const response = await axios.get(
+                `${API_URL}/${ADMIN_URL}/product/${decodedName}`
+              );
+              // Handle wrapped response format: { status: true, data: product }
+              foundProduct = response.data?.data || response.data;
+            } catch (idError) {
+              console.error("Error fetching product by ID:", idError.message);
+            }
           }
           
           setProduct(foundProduct);
         } catch (error) {
           console.error("Error fetching product:", error);
+          setProduct(null);
         } finally {
           setLoading(false);
         }
@@ -93,6 +108,14 @@ const Productdetails = () => {
     }
   }, [product]);
 
+  useEffect(() => {
+    if (cartProduct) {
+      setLocalQuantity(cartProduct.quantity);
+    } else {
+      setLocalQuantity(1);
+    }
+  }, [cartProduct]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -111,7 +134,7 @@ const Productdetails = () => {
       </div>
     );
   }
-
+  
   const isAddedToCart =
     product && cartItem.some((item) => item._id === product._id);
 
@@ -122,14 +145,6 @@ const Productdetails = () => {
       dispatch(addToCart(product));
     }
   };
-  
-  useEffect(() => {
-    if (cartProduct) {
-      setLocalQuantity(cartProduct.quantity);
-    } else {
-      setLocalQuantity(1);
-    }
-  }, [cartProduct]);
   
   const handleQuantityChange = (e) => {
     const value = e.target.value;

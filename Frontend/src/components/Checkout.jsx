@@ -11,12 +11,15 @@ import { TbCurrencyNaira } from "react-icons/tb";
 import { FaCreditCard, FaWhatsapp } from "react-icons/fa";
 import { FaMoneyBills } from "react-icons/fa6";
 import { ToastContainer, toast } from "react-toastify";
+import { jwtDecode } from "jwt-decode";
+import { clearCart } from "../redux/Cart";
 
 const Checkout = () => {
   const cartItem = useSelector((state) => state.cart.cartItem);
   const API_URL = import.meta.env.VITE_API_URL;
   const dispatch = useDispatch();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("");
   const subtotal = cartItem.reduce((acc, item) => {
     const price =
       typeof item.discountprice === "number" ? item.discountprice : item.price;
@@ -26,10 +29,26 @@ const Checkout = () => {
   const { userData } = useContext(UserAccountContext);
 
   useEffect(() => {
-    console.log(userData);
-  }, [userData]);
+    console.log("userData:", userData);
+    console.log("paymentMethod:", paymentMethod);
+    
+    // Check which fields are empty
+    if (userData) {
+      const emptyFields = [
+        { name: 'firstname', value: userData?.shippingfirstname },
+        { name: 'lastname', value: userData?.shippinglastname },
+        { name: 'email', value: userData?.shippingemail },
+        { name: 'address', value: userData?.shippingaddress },
+        { name: 'phone', value: userData?.shippingphonenumber },
+        { name: 'country', value: userData?.shippingcountry },
+        { name: 'state', value: userData?.shippingstate },
+        { name: 'city', value: userData?.shippingcity },
+      ].filter(field => !field.value || field.value.trim() === "");
+      
+      console.log("Empty fields:", emptyFields);
+    }
+  }, [userData, paymentMethod]);
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState("");
   const public_key = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY;
   const config = {
     public_key: public_key,
@@ -60,6 +79,74 @@ const Checkout = () => {
     month: "long",
     year: "numeric",
   });
+
+  const handleWhatsAppOrder = async () => {
+    try {
+      setIsProcessing(true);
+      
+      // Get userId from JWT token
+      const token = localStorage.getItem("userToken");
+      let userId = null;
+
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          userId = decoded.id || decoded._id;
+        } catch (err) {
+          console.log("Token decode error, proceeding without userId");
+        }
+      }
+
+      // Format cart items with product links and customer info
+      const cartData = cartItem.map((item) => ({
+        productId: item._id,
+        name: item.name,
+        price: typeof item.discountprice === "number" ? item.discountprice : item.price,
+        quantity: item.quantity || 1,
+        image: item.image?.[0] || "",
+        productLink: `/store/${encodeURIComponent(item.name)}`,
+      }));
+
+      // Call WhatsApp order endpoint
+      const response = await axios.post(
+        `${API_URL}/user/order/order-whatsapp`,
+        {
+          cart: cartData,
+          userId: userId || userData?._id,
+          customerInfo: {
+            name: `${userData?.shippingfirstname} ${userData?.shippinglastname}`,
+            email: userData?.shippingemail,
+            phone: userData?.shippingphonenumber,
+            address: userData?.shippingaddress,
+            country: userData?.shippingcountry,
+            state: userData?.shippingstate,
+            city: userData?.shippingcity,
+            zipCode: userData?.shippingzipcode,
+          },
+        }
+      );
+
+      if (response.data.success && response.data.whatsappLink) {
+        // Clear cart after successful order
+        dispatch(clearCart());
+        
+        // Open WhatsApp link
+        window.open(response.data.whatsappLink, "_blank");
+        toast.success("Opening WhatsApp... Cart cleared!");
+        // Navigate to order success page
+        setTimeout(() => {
+          navigate(`/shopping-cart/checkout/payment-successful/${response.data.orderSummary.orderId}`);
+        }, 1500);
+      } else {
+        toast.error(response.data.message || "Failed to create WhatsApp order");
+      }
+    } catch (error) {
+      console.error("WhatsApp order error:", error);
+      toast.error(error.response?.data?.message || "Failed to process WhatsApp order");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <div style={{ padding: "30px 6%" }} className="w-full flex flex-col">
@@ -349,6 +436,28 @@ const Checkout = () => {
                     </div>
                   </div>
 
+                  {/* Shipping Details Check */}
+                  {paymentMethod && userData && (
+                    <div className="text-center text-xs text-secondary mb-2">
+                      {[
+                        userData?.shippingfirstname,
+                        userData?.shippinglastname,
+                        userData?.shippingemail,
+                        userData?.shippingaddress,
+                        userData?.shippingphonenumber,
+                        userData?.shippingcountry,
+                        userData?.shippingstate,
+                        userData?.shippingcity,
+                      ].some((field) => !field || field.trim() === "") ? (
+                        <span className="text-red-500">
+                          ⚠️ Please complete all shipping details to proceed
+                        </span>
+                      ) : (
+                        <span className="text-green-600">✓ Ready to confirm order</span>
+                      )}
+                    </div>
+                  )}
+
                   <button
                     disabled={
                       paymentMethod === "" ||
@@ -365,58 +474,64 @@ const Checkout = () => {
                       ].some((field) => !field || field.trim() === "")
                     }
                     onClick={() => {
-                      setIsProcessing(true);
-                      handleFlutterPayment({
-                        callback: (response) => {
-                          if (response) {
-                            axios
-                              .post(
-                                `${API_URL}/user/orderDetails/${userData._id}`,
-                                {
-                                  flutterwaveResponse: response,
-                                  cartItems: cartItem,
-                                  shipping: {
-                                    firstname: userData?.shippingfirstname,
-                                    lastname: userData?.shippinglastname,
-                                    address: userData?.shippingaddress,
-                                    country: userData?.shippingcountry,
-                                    state: userData?.shippingstate,
-                                    city: userData?.shippingcity,
-                                    zipcode: userData?.shippingzipcode,
-                                    email: userData?.shippingemail,
-                                    phone: userData?.shippingphonenumber,
+                      if (paymentMethod === "WhatsApp") {
+                        // Handle WhatsApp order
+                        handleWhatsAppOrder();
+                      } else {
+                        // Handle Flutterwave payment
+                        setIsProcessing(true);
+                        handleFlutterPayment({
+                          callback: (response) => {
+                            if (response) {
+                              axios
+                                .post(
+                                  `${API_URL}/user/orderDetails/${userData._id}`,
+                                  {
+                                    flutterwaveResponse: response,
+                                    cartItems: cartItem,
+                                    shipping: {
+                                      firstname: userData?.shippingfirstname,
+                                      lastname: userData?.shippinglastname,
+                                      address: userData?.shippingaddress,
+                                      country: userData?.shippingcountry,
+                                      state: userData?.shippingstate,
+                                      city: userData?.shippingcity,
+                                      zipcode: userData?.shippingzipcode,
+                                      email: userData?.shippingemail,
+                                      phone: userData?.shippingphonenumber,
+                                    },
+                                    subtotal,
                                   },
-                                  subtotal,
-                                },
-                              )
-                              .then((res) => {
-                                console.log("order Completed", res);
-                                if (res.status) {
-                                  navigate(
-                                    `/shopping-cart/checkout/payment-successful/${res.data.orderId}`,
-                                  );
+                                )
+                                .then((res) => {
+                                  console.log("order Completed", res);
+                                  if (res.status) {
+                                    navigate(
+                                      `/shopping-cart/checkout/payment-successful/${res.data.orderId}`,
+                                    );
+                                    setIsProcessing(false);
+                                  }
+                                })
+                                .catch((err) => {
+                                  console.log(err);
                                   setIsProcessing(false);
-                                }
-                              })
-                              .catch((err) => {
-                                console.log(err);
-                                setIsProcessing(false);
-                                toast.error(
-                                  "There is an error with the payment gateway",
-                                  err,
-                                );
-                              })
-                              .finally(() => {
-                                setIsProcessing(false);
-                              });
-                          }
-                          closePaymentModal();
-                        },
-                        onClose: () => {
-                          setIsProcessing(false);
-                          console.log("payment was not made");
-                        },
-                      });
+                                  toast.error(
+                                    "There is an error with the payment gateway",
+                                    err,
+                                  );
+                                })
+                                .finally(() => {
+                                  setIsProcessing(false);
+                                });
+                            }
+                            closePaymentModal();
+                          },
+                          onClose: () => {
+                            setIsProcessing(false);
+                            console.log("payment was not made");
+                          },
+                        });
+                      }
                     }}
                     className={`w-full py-4 rounded shadow-md uppercase text-sm font-bold transition-all ${
                       paymentMethod === "" ||

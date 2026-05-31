@@ -28,7 +28,9 @@ const ProductCard = ({ product }) => {
   }
 
   const productDetails = (product) =>{
-    window.location.href = `/store/${product._id}`
+    navigate(`/store/${encodeURIComponent(product.name)}`, {
+      state: { id: product._id, product: product }
+    });
   }
   useEffect(() => {
     if (product?._id) {

@@ -14,8 +14,11 @@ const OrderHistory = () => {
   useEffect(() => {
     if(userData){
       const sorted = [...userData.productOrder].sort(
-        (a, b) =>
-          new Date(b.flutterwaveResponse.created_at) - new Date(a.flutterwaveResponse.created_at)
+        (a, b) => {
+          const dateA = new Date(a.flutterwaveResponse?.created_at || a.createdAt);
+          const dateB = new Date(b.flutterwaveResponse?.created_at || b.createdAt);
+          return dateB - dateA;
+        }
       );
       setUserOrder(sorted)
     }
@@ -61,7 +64,7 @@ const OrderHistory = () => {
               {/* Order ID */}
               <div className="flex md:block">
                 <span className="font-medium text-gray-500 w-28 md:hidden">Order ID:</span>
-                <p className="text-[#191C1F]">#{order.flutterwaveResponse.transaction_id}</p>
+                <p className="text-[#191C1F]">#{order.flutterwaveResponse?.transaction_id || order.transactionId}</p>
               </div>
 
               {/* Status */}
@@ -88,7 +91,7 @@ const OrderHistory = () => {
               <div className="flex md:block">
                 <span className="font-medium text-gray-500 w-28 md:hidden">Date:</span>
                 <p className="text-[#5F6C72]">
-                  {new Date(order.flutterwaveResponse.created_at)
+                  {new Date(order.flutterwaveResponse?.created_at || order.createdAt || new Date())
                     .toLocaleString("en-US", {
                       year: "numeric",
                       month: "short",
@@ -115,7 +118,7 @@ const OrderHistory = () => {
                 <p
                   onClick={() =>
                     navigate(
-                      `/dashboard/order-history/${order.flutterwaveResponse.transaction_id}`
+                      `/dashboard/order-history/${order.flutterwaveResponse?.transaction_id || order.transactionId}`
                     )
                   }
                   className="text-[#2DA5F3] flex items-center gap-2 cursor-pointer"

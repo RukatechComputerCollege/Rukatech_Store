@@ -93,7 +93,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                   </p>
                   <div>
                     <button
-                      onClick={()=>navigate(`/store/${promoProduct1._id}`)}
+                      onClick={()=>navigate(`/store/${encodeURIComponent(promoProduct1.name)}`, { state: { id: promoProduct1._id, product: promoProduct1 } })}
                       className="flex gap-4 cursor-pointer text-white bg-[#FA8232] rounded-[3px]"
                       style={{ padding: "20px 32px" }}
                     >
@@ -167,7 +167,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                   </p>
                   <div>
                     <button
-                      onClick={()=>navigate(`/store/${promoProduct2._id}`)}
+                      onClick={()=>navigate(`/store/${encodeURIComponent(promoProduct2.name)}`, { state: { id: promoProduct2._id, product: promoProduct2 } })}
                       className="flex gap-4 cursor-pointer text-white bg-[#FA8232] rounded-[3px]"
                       style={{ padding: "20px 32px" }}
                     >
@@ -241,7 +241,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                   </p>
                   <div>
                     <button
-                      onClick={()=>navigate(`/store/${promoProduct3._id}`)}
+                      onClick={()=>navigate(`/store/${encodeURIComponent(promoProduct3.name)}`, { state: { id: promoProduct3._id, product: promoProduct3 } })}
                       className="flex gap-4 cursor-pointer text-white bg-[#FA8232] rounded-[3px]"
                       style={{ padding: "20px 32px" }}
                     >

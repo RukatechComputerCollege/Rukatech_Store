@@ -90,19 +90,22 @@ const CategoryProvider = ({ children }) => {
       console.log("There is an error fetching products", err);
     });
 
+    // Only fetch orders if admin is logged in
     const adminToken = localStorage.getItem('adminToken');
-    const ordersURL = `${API_URL}/${ADMIN_ROUTE}/orders`;
-    const orderConfig = adminToken ? { headers: { Authorization: `Bearer ${adminToken}` } } : undefined;
+    if (adminToken) {
+      const ordersURL = `${API_URL}/${ADMIN_ROUTE}/orders`;
+      const orderConfig = { headers: { Authorization: `Bearer ${adminToken}` } };
 
-    axios.get(ordersURL, orderConfig)
-      .then((res) => {
-        if (res.data.status) {
-          setAllOrders(res.data.data);
-        }
-      })
-      .catch((err) => {
-        console.log("There is an error fetching orders", err);
-      });
+      axios.get(ordersURL, orderConfig)
+        .then((res) => {
+          if (res.data.status) {
+            setAllOrders(res.data.data);
+          }
+        })
+        .catch((err) => {
+          console.log("Error fetching orders (may require admin access):", err.message);
+        });
+    }
   }, []);
 
 
