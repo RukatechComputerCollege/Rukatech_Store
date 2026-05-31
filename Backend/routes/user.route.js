@@ -1,6 +1,7 @@
 const express = require('express')
 const { greetingUser, userLogin, userDashboard, editUser, billingDetails, shippingDetails, changePassword, orderDetails, forgotPassword, resetPassword, getUserOrders } = require('../controller/user.controller')
 const { getPublicFlashSales } = require('../controller/admin.controller')
+const whatsAppOrderRouter = require('../controller/whatsAppOrder')
 const { authenticate } = require('../auth')
 const router = express.Router()
 
@@ -16,5 +17,6 @@ router.get('/orders/:id', authenticate, getUserOrders)
 router.get('/flashsales', getPublicFlashSales)
 router.post('/account/forgot-password', forgotPassword)
 router.post('/account/reset-password/:token', resetPassword)
+router.use('/order', whatsAppOrderRouter)
 
 module.exports = router

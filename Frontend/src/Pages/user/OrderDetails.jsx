@@ -16,21 +16,44 @@ const OrderDetails = () => {
   const { id } = useParams()
   const {userData } = useContext(UserAccountContext)
   const [order, setOrder] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
   const { allProduct } = useContext(CategoryContext)
   const API_URL = import.meta.env.VITE_API_URL
   const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
 
   useEffect(() => {
     if(userData && userData.productOrder) {
+      console.log('Searching for order with ID:', id);
+      console.log('Available orders:', userData.productOrder.map(o => ({
+        transactionId: o.transactionId,
+        flutterwaveId: o.flutterwaveResponse?.transaction_id
+      })));
+      
       const foundOrder = userData.productOrder.find(
-        (order) => order.flutterwaveResponse.transaction_id.toString() === id
+        (order) => {
+          const match = order.flutterwaveResponse?.transaction_id?.toString() === id || order.transactionId === id;
+          console.log('Checking order:', { transactionId: order.transactionId, id, match });
+          return match;
+        }
       )
-      setOrder(foundOrder)
-      console.log(order);
+      
+      if (foundOrder) {
+        console.log('Found order:', foundOrder);
+        setOrder(foundOrder);
+        setLoading(false);
+      } else {
+        console.log('Order not found');
+        setNotFound(true);
+        setLoading(false);
+      }
+    } else {
+      // userData still loading
+      setLoading(true);
     }
   }, [userData, id])
   const expectedDate = order
-  ? new Date(order.flutterwaveResponse.created_at)
+  ? new Date(order.flutterwaveResponse?.created_at || order.createdAt || new Date())
   : null;
   if (expectedDate) expectedDate.setDate(expectedDate.getDate() + 5);
   
@@ -59,15 +82,16 @@ const OrderDetails = () => {
       <div style={{padding:"15px 20px"}} className='w-full flex justify-between items-center border-b border-[#E4E7E9]'>
         <p onClick={() => window.history.back()} className='flex cursor-pointer gap-1 items-center text-[14px] text-[#191C1F]'><IoIosArrowRoundBack size={24}/><span>ORDER DETAILS</span></p>
       </div>
-      {order ? (
-        <div className='w-full flex flex-col gap-4'>
+      {!loading ? (
+        order ? (
+          <div className='w-full flex flex-col gap-4'>
           <div style={{padding: '20px'}}>
             <div className='w-full flex items-center justify-between border border-[#F7E99E] bg-[#FDFAE7] rounded-[4px]' style={{padding: '20px'}}>
               <div className='flex flex-col gap-2'>
-                <h1 className='text-[20px] text-[#191C1F] font-bold'>#{id}</h1>
+                <h1 className='text-[20px] text-[#191C1F] font-bold'>#{order.flutterwaveResponse?.transaction_id || order.transactionId}</h1>
                 <p>
                   {order.products.length} Products • Order Placed in <span>
-                  {new Date(order.flutterwaveResponse.created_at)
+                  {new Date(order.flutterwaveResponse?.created_at || order.createdAt || new Date())
                     .toLocaleString("en-US", {
                       year: "numeric",
                       month: "short",
@@ -86,7 +110,7 @@ const OrderDetails = () => {
           </div>
           {/* for order tracker */}
           <div className='w-full flex flex-col gap-4 items-center justify-center' style={{padding: '0px 20px'}}>
-            <p>Order expected arrival <strong>{expectedDate.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" })}</strong></p>
+            {expectedDate && <p>Order expected arrival <strong>{expectedDate.toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" })}</strong></p>}
             <div className='w-3/4 grid grid-cols-4'>
               {/* for order placed tracker */}
               <div className='flex flex-col gap-6'>
@@ -155,7 +179,19 @@ const OrderDetails = () => {
                       <img src={product.image} alt="" />
                     </div>
                     <div>
-                      <p className='font-semibold text-[12px] text-[#2DA5F3]'>{allProduct.find(item => item._id === product.id)?.category?.map(cat => cat.name).join(', ').toUpperCase()}</p>
+                      {(() => {
+                        const foundProduct = allProduct.find(item => item._id === product.productId);
+                        const category = foundProduct?.category;
+                        let categoryText = '';
+                        
+                        if (Array.isArray(category)) {
+                          categoryText = category.map(cat => typeof cat === 'string' ? cat : cat.name).join(', ').toUpperCase();
+                        } else if (typeof category === 'string') {
+                          categoryText = category.toUpperCase();
+                        }
+                        
+                        return <p className='font-semibold text-[12px] text-[#2DA5F3]'>{categoryText}</p>;
+                      })()}
                       <p className='text-[14px] text-[#191C1F]'>{product.name}</p>
                     </div>
                   </div>
@@ -185,7 +221,13 @@ const OrderDetails = () => {
 
             </div>
           </div>
-        </div>
+          </div>
+        ) : (
+          <div style={{padding: '20px'}} className='text-red-600'>
+            <p className='text-[16px] font-semibold'>Order Not Found</p>
+            <p className='text-[14px]'>Order ID: {id}</p>
+          </div>
+        )
       ) : (
         <div style={{padding: '20px'}}>Loading Order details...</div>
       )}
@@ -194,7 +236,7 @@ const OrderDetails = () => {
           <DialogBackdrop transition className="fixed inset-0 bg-black/30 duration-300 ease-out data-closed:opacity-0" />
             <div className="fixed inset-0 flex w-screen items-center justify-center">
               <DialogPanel transition className="w-[90%] md:w-2/4 lg:w-[40%] space-y-4 bg-white shadow-lg flex flex-col gap-[1em]" style={{padding: '20px', borderRadius: '4px'}}>
-                <DialogTitle className="font-bold text-[#131523] text-[16px">Ratings</DialogTitle>
+                <DialogTitle className="font-bold text-[#131523] text-[16px]">Ratings</DialogTitle>
                 <form onSubmit={formik.handleSubmit} className='w-full flex flex-col gap-3'>
                   <div className='w-full flex flex-col gap-2'>
                     <label htmlFor="name">Rating</label>

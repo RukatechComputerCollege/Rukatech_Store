@@ -1,15 +1,20 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RxCross2 } from "react-icons/rx";
-import { removeFromCart, updateQuantity } from "../redux/Cart";
+import { removeFromCart, updateQuantity, clearCart } from "../redux/Cart";
 import { CgArrowRight } from "react-icons/cg";
 import { useNavigate } from "react-router-dom";
 import { FaPlus, FaMinus } from "react-icons/fa6";
 import { FiShoppingCart } from "react-icons/fi";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
+import { toast } from "react-toastify";
 
 const CartCard = () => {
   const cartItem = useSelector((state) => state.cart.cartItem);
   const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const subtotal = cartItem.reduce((acc, item) => {
     const price =
@@ -19,6 +24,61 @@ const CartCard = () => {
   }, 0);
 
   const navigate = useNavigate();
+
+  const getUserId = () => {
+    try {
+      const token = localStorage.getItem('userToken');
+      if (token) {
+        const decoded = jwtDecode(token);
+        return decoded.id || decoded._id;
+      }
+    } catch (error) {
+      console.error('Error decoding token:', error);
+    }
+    return null;
+  };
+
+  const handleWhatsAppOrder = async () => {
+    try {
+      setLoading(true);
+      const userId = getUserId();
+      
+      // Prepare cart data - use product name for links
+      const cart = cartItem.map((item) => ({
+        productId: item._id,
+        name: item.name,
+        price: typeof item.discountprice === "number" ? item.discountprice : item.price,
+        quantity: item.quantity || 1,
+        image: item.image?.[0],
+        productLink: `/store/${encodeURIComponent(item.name)}`, // Frontend product link using name
+      }));
+
+      // Make request to backend
+      const response = await axios.post(
+        `${API_URL}/user/order/order-whatsapp`,
+        {
+          userId,
+          cart,
+        }
+      );
+
+      if (response.data.success && response.data.whatsappLink) {
+        // Clear cart after successful order
+        dispatch(clearCart());
+        
+        // Open WhatsApp link
+        window.open(response.data.whatsappLink, '_blank');
+        toast.success("Opening WhatsApp... Cart cleared!");
+      } else {
+        toast.error(response.data.message || 'Failed to generate WhatsApp link');
+      }
+    } catch (error) {
+      console.error('WhatsApp order error:', error);
+      toast.error(error.response?.data?.message || 'Error processing order: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="">
       <div className="bg-surface-container-lowest rounded-xl shadow-[32px] border border-surface-variant overflow-hidden">
@@ -39,7 +99,8 @@ const CartCard = () => {
             {cartItem.map((cartProduct) => (
               <div
                 key={cartProduct._id}
-                className="p-[16px] flex gap-[12px] items-center hover:bg-surface-container-low transition-colors"
+                onClick={() => navigate(`/store/${cartProduct.name}`)}
+                className="p-[16px] flex gap-[12px] items-center hover:bg-surface-container-low transition-colors cursor-pointer"
               >
                 <img
                   alt={cartProduct?.name}
@@ -149,7 +210,11 @@ const CartCard = () => {
                 shopping_cart_checkout
               </span>
             </button>
-            <button className="w-full bg-[#25D366] text-white font-inter text-[14px] py-2 rounded-lg hover:brightness-95 transition-all flex items-center justify-center gap-[8px]">
+            <button
+              className="w-full bg-[#25D366] text-white font-inter text-[14px] py-2 rounded-lg hover:brightness-95 transition-all flex items-center justify-center gap-[8px] disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleWhatsAppOrder}
+              disabled={loading}
+            >
               <svg
                 className="w-4 h-4 fill-current"
                 viewbox="0 0 24 24"
@@ -157,7 +222,7 @@ const CartCard = () => {
               >
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"></path>
               </svg>
-              Order via WhatsApp
+              {loading ? "Processing..." : "Order via WhatsApp"}
             </button>
           </div>
         )}

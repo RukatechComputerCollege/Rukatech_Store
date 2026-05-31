@@ -852,7 +852,19 @@ const getOrdersGroupedByHourForDates = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await productModel.findById(id);
+    let product;
+
+    // Check if id is a valid MongoDB ObjectId (24-character hex string)
+    const isValidObjectId = /^[0-9a-f]{24}$/i.test(id);
+    
+    if (isValidObjectId) {
+      // Query by _id
+      product = await productModel.findById(id);
+    } else {
+      // Query by product name (fallback for product name-based routing)
+      product = await productModel.findOne({ name: id });
+    }
+
     if (!product) return res.status(404).json({ status: false, message: 'Product not found' });
     return res.status(200).json({ status: true, data: product });
   } catch (err) {

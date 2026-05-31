@@ -55,7 +55,9 @@ const BestDeals = () => {
   };
   const navigate = useNavigate();
   const productDetails = (productWithHighestDiscount) => {
-    navigate(`/store/${productWithHighestDiscount._id}`);
+    navigate(`/store/${encodeURIComponent(productWithHighestDiscount.name)}`, {
+      state: { id: productWithHighestDiscount._id, product: productWithHighestDiscount }
+    });
   };
   return (
     <div className="w-full gap-4 md:gap-0 grid items-start lg:grid-cols-[24%_76%] lg:border lg:border-[#E4E7E9]">
