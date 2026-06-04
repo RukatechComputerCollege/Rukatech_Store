@@ -89,11 +89,11 @@ router.post('/order-whatsapp', async (req, res) => {
 
     // Calculate subtotal
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const orderId = generateOrderId();
+    const transactionId = generateOrderId();
 
     // Save to AdminOrder collection (for admin tracking)
     const adminOrder = new AdminOrder({
-      transactionId: orderId,
+      transactionId: transactionId,
       userId: userId || null,
       userEmail: customerInfo.email,
       userName: customerInfo.name,
@@ -123,7 +123,7 @@ router.post('/order-whatsapp', async (req, res) => {
     await adminOrder.save();
 
     // Build the WhatsApp message
-    const message = buildOrderMessage(cart, customerInfo, orderId, subtotal);
+    const message = buildOrderMessage(cart, customerInfo, transactionId, subtotal);
     
     // Encode message for WhatsApp URL
     const whatsappLink = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(message)}`;
@@ -133,7 +133,6 @@ router.post('/order-whatsapp', async (req, res) => {
       await User.findByIdAndUpdate(userId, {
         $push: {
           productOrder: {
-            transactionId: orderId,
             products: cart.map(item => ({
               productId: item.productId,
               name: item.name,
@@ -145,7 +144,10 @@ router.post('/order-whatsapp', async (req, res) => {
             subtotal: subtotal,
             orderStatus: 'received',
             createdAt: new Date(),
-            flutterwaveResponse: { paymentMethod: 'whatsapp_order' }
+            flutterwaveResponse: { 
+              transaction_id: transactionId,
+              paymentMethod: 'whatsapp_order'
+            }
           }
         }
       });
@@ -158,7 +160,7 @@ router.post('/order-whatsapp', async (req, res) => {
         itemCount: cart.reduce((sum, item) => sum + item.quantity, 0),
         subtotal: subtotal,
         total: subtotal + (subtotal * 0.1), // including 10% tax
-        orderId: orderId
+        orderId: transactionId
       }
     });
 

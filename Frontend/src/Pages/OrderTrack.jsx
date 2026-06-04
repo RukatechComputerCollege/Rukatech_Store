@@ -10,7 +10,7 @@ const OrderTrack = () => {
   const navigate = useNavigate()
   const handleOrderIdChange = () => {
     if(orderId && billingEmail) {
-      navigate(`/order-tracking/${orderId}`);
+      navigate(`/order-tracking/${orderId}`, { state: { email: billingEmail } });
     }else{
       console.log('make sure both fields are provided');
       toast.warning('Make sure both fields are provided');

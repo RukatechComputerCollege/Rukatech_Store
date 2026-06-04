@@ -17,7 +17,6 @@ const OrderDetails = () => {
   const {userData } = useContext(UserAccountContext)
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [notFound, setNotFound] = useState(false)
   const { allProduct } = useContext(CategoryContext)
   const API_URL = import.meta.env.VITE_API_URL
   const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
@@ -26,14 +25,13 @@ const OrderDetails = () => {
     if(userData && userData.productOrder) {
       console.log('Searching for order with ID:', id);
       console.log('Available orders:', userData.productOrder.map(o => ({
-        transactionId: o.transactionId,
-        flutterwaveId: o.flutterwaveResponse?.transaction_id
+        transactionId: o.transactionId
       })));
       
       const foundOrder = userData.productOrder.find(
         (order) => {
-          const match = order.flutterwaveResponse?.transaction_id?.toString() === id || order.transactionId === id;
-          console.log('Checking order:', { transactionId: order.transactionId, id, match });
+          const match = order.flutterwaveResponse?.transaction_id?.toString() === id;
+          console.log('Checking order:', { transactionId: order.flutterwaveResponse?.transaction_id, id, match });
           return match;
         }
       )
@@ -44,7 +42,6 @@ const OrderDetails = () => {
         setLoading(false);
       } else {
         console.log('Order not found');
-        setNotFound(true);
         setLoading(false);
       }
     } else {
@@ -70,7 +67,7 @@ const OrderDetails = () => {
         feedback: values.feedback
       },{
         headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` }
-      }).then(res => {
+      }).then(() => {
         toast.success('Your feedback has been received!')
         setIsOpen(false);
       })
@@ -88,7 +85,7 @@ const OrderDetails = () => {
           <div style={{padding: '20px'}}>
             <div className='w-full flex items-center justify-between border border-[#F7E99E] bg-[#FDFAE7] rounded-[4px]' style={{padding: '20px'}}>
               <div className='flex flex-col gap-2'>
-                <h1 className='text-[20px] text-[#191C1F] font-bold'>#{order.flutterwaveResponse?.transaction_id || order.transactionId}</h1>
+                <h1 className='text-[20px] text-[#191C1F] font-bold'>#{order.flutterwaveResponse?.transaction_id}</h1>
                 <p>
                   {order.products.length} Products • Order Placed in <span>
                   {new Date(order.flutterwaveResponse?.created_at || order.createdAt || new Date())
