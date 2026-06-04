@@ -64,7 +64,7 @@ const OrderHistory = () => {
               {/* Order ID */}
               <div className="flex md:block">
                 <span className="font-medium text-gray-500 w-28 md:hidden">Order ID:</span>
-                <p className="text-[#191C1F]">#{order.flutterwaveResponse?.transaction_id || order.transactionId}</p>
+                <p className="text-[#191C1F]">#{order.flutterwaveResponse?.transaction_id}</p>
               </div>
 
               {/* Status */}
@@ -118,7 +118,7 @@ const OrderHistory = () => {
                 <p
                   onClick={() =>
                     navigate(
-                      `/dashboard/order-history/${order.flutterwaveResponse?.transaction_id || order.transactionId}`
+                      `/dashboard/order-history/${order.flutterwaveResponse?.transaction_id}`
                     )
                   }
                   className="text-[#2DA5F3] flex items-center gap-2 cursor-pointer"

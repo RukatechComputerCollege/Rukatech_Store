@@ -506,6 +506,9 @@ const Checkout = () => {
                                 .then((res) => {
                                   console.log("order Completed", res);
                                   if (res.status) {
+                                    // Clear cart after successful payment
+                                    dispatch(clearCart());
+                                    toast.success("Order placed successfully! Cart cleared.");
                                     navigate(
                                       `/shopping-cart/checkout/payment-successful/${res.data.orderId}`,
                                     );

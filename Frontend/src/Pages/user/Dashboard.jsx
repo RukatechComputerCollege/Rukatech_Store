@@ -22,9 +22,9 @@ const Dashboard = () => {
 
       {/* Sidebar as a drawer */}
       <div
-        className={`fixed top-0 left-0 h-full w-[264px] bg-white shadow-lg z-40 transform transition-transform duration-300
+        className={`fixed top-[100px] left-0 h-[calc(100vh-80px)] w-[264px] bg-white shadow-lg z-40 transform transition-transform duration-300
         ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-        lg:static lg:translate-x-0`}
+        lg:static lg:translate-x-0 lg:h-auto lg:top-auto`}
       >
         <DashboardSidenav />
       </div>
