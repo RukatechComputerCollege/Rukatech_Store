@@ -822,8 +822,7 @@ const Productdetails = () => {
                   <button
                     onClick={() =>
                       navigate(`/store/${encodeURIComponent(product.name)}/reviews`, {
-                        state: { productId: product._id
-                        },
+                        state: { productId: product._id},
                       })
                     }
                     className="w-full py-4 mt-8 bg-surface-container text-primary font-bold rounded-lg hover:bg-orange-50 transition-all text-sm cursor-pointer"

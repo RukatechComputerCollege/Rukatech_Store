@@ -5,7 +5,7 @@ import { AiFillStar } from "react-icons/ai";
 import Loader from "../components/Loader";
 
 const AllReviews = () => {
-  const { productName } = useParams();
+  const { name } = useParams();
   const location = useLocation();
   const productId = location.state?.productId;
 
@@ -17,7 +17,7 @@ const AllReviews = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
   const reviewsPerPage = 10;
-  const decodedProductName = productName ? decodeURIComponent(productName) : "Product";
+  const decodedProductName = name ? decodeURIComponent(name) : "Product";
 
   useEffect(() => {
     if (!productId) {
