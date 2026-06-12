@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const ratingSchema = new mongoose.Schema({
-  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true},
+  user: {type: mongoose.Schema.Types.ObjectId, ref: 'User_Registration', required: true},
   ratingGrade: { type: Number, min: 1, max: 5, required: true },
   feedback: { type: String },
   createdAt: { type: Date, default: Date.now }

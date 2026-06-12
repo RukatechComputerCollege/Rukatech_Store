@@ -238,7 +238,9 @@ const HomeDashboard = () => {
                 userOrder
                   ?.sort(
                     (a, b) =>
-                      new Date(b.flutterwaveResponse.created_at || b.createdAt) -
+                      new Date(
+                        b.flutterwaveResponse.created_at || b.createdAt,
+                      ) -
                       new Date(a.flutterwaveResponse.created_at || a.createdAt),
                   )
                   .slice(0, 7)

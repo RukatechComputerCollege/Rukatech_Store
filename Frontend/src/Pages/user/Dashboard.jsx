@@ -1,23 +1,25 @@
-import React, { useContext, useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import { UserAccountContext } from './UserContext';
-import DashboardSidenav from './UserComponents/DashboardSidenav';
+import React, { useContext, useState } from "react";
+import { Outlet } from "react-router-dom";
+import { UserAccountContext } from "./UserContext";
+import DashboardSidenav from "./UserComponents/DashboardSidenav";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { IoIosClose } from "react-icons/io";
 
 const Dashboard = () => {
   const { userData } = useContext(UserAccountContext);
   const [isOpen, setIsOpen] = useState(false);
-  document.title = 'Dashboard | RukatechStore'
+  document.title = "Dashboard | RukatechStore";
   return (
-    <div style={{ padding: "40px 6%" }} className="w-full h-auto items-start flex flex-col lg:flex-row gap-5 overflow-x-hidden relative">
-      
+    <div
+      style={{ padding: "40px 6%" }}
+      className="w-full h-auto items-start flex flex-col lg:flex-row gap-5 overflow-x-hidden relative"
+    >
       {/* Hamburger button (only on small screens) */}
-      <button 
+      <button
         className="lg:hidden z-50 text-[#FA8232]"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {!isOpen && <GiHamburgerMenu size={28}/>}
+        {!isOpen && <GiHamburgerMenu size={28} />}
       </button>
 
       {/* Sidebar as a drawer */}

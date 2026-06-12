@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { PiStorefrontLight, PiMapPinLineLight, PiShoppingCartSimple, PiArrowsCounterClockwise, PiNotebookLight, PiClockClockwise, PiSignOutLight } from "react-icons/pi";
+import { PiStorefrontLight, PiMapPinLineLight, PiShoppingCartSimple, PiArrowsCounterClockwise, PiNotebookLight, PiClockClockwise, PiSignOutLight, PiStar } from "react-icons/pi";
 import { CiHeart } from "react-icons/ci";
 import { RiStackLine } from "react-icons/ri";
 import { GoGear } from "react-icons/go";
@@ -59,6 +59,13 @@ const DashboardSidenav = () => {
             <NavLink style={{padding: '10px'}} to='/dashboard/compare' className={({ isActive }) => `w-full flex items-center gap-2 transition-all duration-300 ${ isActive ? 'bg-[#FA8232] text-[#white] shadow-md scale-[1.03]' : 'text-[#5F6C72] hover:bg-[#FFF3EB]' }` }>
              <PiArrowsCounterClockwise  size={24} />
              <span className='text-[14px]'>Compare</span>
+            </NavLink>
+          </div>
+          {/* for reviews */}
+          <div className='w-full '>
+            <NavLink style={{padding: '10px'}} to='/dashboard/reviews' className={({ isActive }) => `w-full flex items-center gap-2 transition-all duration-300 ${ isActive ? 'bg-[#FA8232] text-[#white] shadow-md scale-[1.03]' : 'text-[#5F6C72] hover:bg-[#FFF3EB]' }` }>
+             <PiStar  size={24} />
+             <span className='text-[14px]'>Reviews & Ratings</span>
             </NavLink>
           </div>
           {/* for coupons */}

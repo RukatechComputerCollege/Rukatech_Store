@@ -42,6 +42,7 @@ import ResetPassword from './Pages/user/ResetPassword';
 import BrowsingHistory from './components/BrowsingHistory';
 import Reviews from './Pages/admin/adminPages/Reviews';
 import AdminOrderDetails from './Pages/admin/adminPages/OrderDetails';
+import ReviewPage from './Pages/user/ReviewPage';
 
 const RouteWrapper = ({ children }) => {
   const location = useLocation();
@@ -129,6 +130,14 @@ const App = () => {
               element={
                 <UserProvider>
                   <OrderDetails />
+                </UserProvider>
+              }
+            />
+            <Route
+              path="reviews"
+              element={
+                <UserProvider>
+                  <ReviewPage />
                 </UserProvider>
               }
             />

@@ -62,15 +62,15 @@ const rateProduct = async (req, res) => {
 
 const getAverageRating = async (req, res) => {
   try {
-    const { id } = req.params;
-    const product = await productModel.findById(id).select("rating");
+    const { productId } = req.params;
+    const product = await productModel.findById(productId).select("rating");
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
     if (product.rating.length === 0) {
-      return res.json({ averageRating: 0, totalrating: 0 });
+      return res.json({ averageRating: 0, totalRating: 0 });
     }
 
     const total = product.rating.reduce((sum, r) => sum + r.ratingGrade, 0);
@@ -78,7 +78,7 @@ const getAverageRating = async (req, res) => {
 
     res.json({
       averageRating: average.toFixed(1),
-      totalrating: product.rating.length,
+      totalRating: product.rating.length,
     });
   } catch (err) {
     console.error("Error fetching average rating:", err);
@@ -86,4 +86,97 @@ const getAverageRating = async (req, res) => {
   }
 };
 
-module.exports = { rateProduct, getAverageRating };
+const getProductReviews = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    const product = await productModel.findById(productId).select("rating name").populate({
+      path: "rating.user",
+      select: "firstname lastname email",
+      model: "User_Registration"
+    });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Sort reviews by date (newest first)
+    const sortedReviews = product.rating.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    res.json({
+      productName: product.name,
+      totalReviews: sortedReviews.length,
+      reviews: sortedReviews.map(review => {
+        const userData = review.user || {};
+        const firstName = userData.firstname || "";
+        const lastName = userData.lastname || "";
+        const fullName = (firstName || lastName) ? `${firstName} ${lastName}`.trim() : "Anonymous";
+        
+        return {
+          id: review._id,
+          user: {
+            id: userData._id,
+            name: fullName,
+            email: userData.email || "No email"
+          },
+          rating: review.ratingGrade,
+          feedback: review.feedback,
+          createdAt: review.createdAt
+        };
+      })
+    });
+  } catch (err) {
+    console.error("Error fetching reviews:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getUserReviews = async (req, res) => {
+  try {
+    const userId = req.user && req.user.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    // Find all products that this user has rated
+    const products = await productModel
+      .find({ "rating.user": userId })
+      .select("_id name image rating");
+
+    const userReviews = [];
+    
+    products.forEach(product => {
+      const userRatings = product.rating.filter(
+        r => String(r.user) === String(userId)
+      );
+      
+      userRatings.forEach(rating => {
+        userReviews.push({
+          productId: product._id,
+          productName: product.name,
+          productImage: product.image[0],
+          rating: rating.ratingGrade,
+          feedback: rating.feedback,
+          createdAt: rating.createdAt,
+
+        });
+      });
+    });
+
+    // Sort by date (newest first)
+    userReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json({
+      totalReviews: userReviews.length,
+      reviews: userReviews
+    });
+  } catch (err) {
+    console.error("Error fetching user reviews:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = { rateProduct, getAverageRating, getProductReviews, getUserReviews };
