@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useContext, useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { CategoryContext } from "../CategoryContext";
 import { FiShoppingCart } from "react-icons/fi";
 import { FaStar, FaMinus, FaPlus, FaRegStar } from "react-icons/fa6";
@@ -17,9 +17,10 @@ import BrowsingHistory from "../components/BrowsingHistory";
 const Productdetails = () => {
   const { name } = useParams(); // Get product name from URL params
   const location = useLocation();
+  const navigate = useNavigate();
   const id = location.state?.id;
   const productFromState = location.state?.product;
-  
+
   const API_URL = import.meta.env.VITE_API_URL;
   const ADMIN_URL = import.meta.env.VITE_ADMIN_ROUTE_NAME;
   const { allProduct } = useContext(CategoryContext);
@@ -36,6 +37,7 @@ const Productdetails = () => {
   const [isReading, setIsReading] = useState("description");
   const [averageRating, setAverageRating] = useState("");
   const [totalRating, setTotalRating] = useState("");
+  const [reviews, setReviews] = useState([]);
 
   // Fetch product from API if not available from state
   useEffect(() => {
@@ -44,24 +46,20 @@ const Productdetails = () => {
         setLoading(true);
         try {
           const decodedName = decodeURIComponent(name);
-          
+
           // First try to find by ID in allProduct context
-          let foundProduct = allProduct?.find(
-            (p) => p._id === decodedName
-          );
-          
+          let foundProduct = allProduct?.find((p) => p._id === decodedName);
+
           // Then try to find by name in allProduct context
           if (!foundProduct) {
-            foundProduct = allProduct?.find(
-              (p) => p.name === decodedName
-            );
+            foundProduct = allProduct?.find((p) => p.name === decodedName);
           }
-          
+
           // If not found in context, fetch from API by ID
           if (!foundProduct) {
             try {
               const response = await axios.get(
-                `${API_URL}/${ADMIN_URL}/product/${decodedName}`
+                `${API_URL}/${ADMIN_URL}/product/${decodedName}`,
               );
               // Handle wrapped response format: { status: true, data: product }
               foundProduct = response.data?.data || response.data;
@@ -69,7 +67,7 @@ const Productdetails = () => {
               console.error("Error fetching product by ID:", idError.message);
             }
           }
-          
+
           setProduct(foundProduct);
         } catch (error) {
           console.error("Error fetching product:", error);
@@ -97,16 +95,26 @@ const Productdetails = () => {
       console.log("Product.id from line 43: ", product._id);
       addToRecentlyViewed(product._id);
 
+      // Fetch average rating
       axios
-        .get(`${API_URL}/${ADMIN_URL}/${product._id}/average-rating`)
+        .get(`${API_URL}/user/product/${product._id}/average-rating`)
         .then((res) => {
           console.log("Average Rating:", res.data);
           setAverageRating(res.data.averageRating);
-          setTotalRating(res.data.totalrating);
+          setTotalRating(res.data.totalRating);
         })
-        .catch((err) => console.error(err));
+        .catch((err) => console.error("Error fetching rating:", err));
+
+      // Fetch reviews with populated user data
+      axios
+        .get(`${API_URL}/user/product/${product._id}/reviews`)
+        .then((res) => {
+          console.log("Reviews:", res.data);
+          setReviews(res.data.reviews || []);
+        })
+        .catch((err) => console.error("Error fetching reviews:", err));
     }
-  }, [product]);
+  }, [product, API_URL]);
 
   useEffect(() => {
     if (cartProduct) {
@@ -134,7 +142,7 @@ const Productdetails = () => {
       </div>
     );
   }
-  
+
   const isAddedToCart =
     product && cartItem.some((item) => item._id === product._id);
 
@@ -145,7 +153,7 @@ const Productdetails = () => {
       dispatch(addToCart(product));
     }
   };
-  
+
   const handleQuantityChange = (e) => {
     const value = e.target.value;
     if (value === "") {
@@ -158,7 +166,7 @@ const Productdetails = () => {
       setLocalQuantity(parsed);
     }
   };
-  
+
   const commitQuantity = () => {
     const finalQuantity =
       localQuantity === "" ? 1 : Math.max(1, parseInt(localQuantity, 10));
@@ -171,7 +179,7 @@ const Productdetails = () => {
       }),
     );
   };
-  
+
   const today = new Date();
   today.setDate(today.getDate() + 5);
   const deliveryDate = today.toLocaleDateString("en-GB", {
@@ -179,7 +187,7 @@ const Productdetails = () => {
     month: "long",
     year: "numeric",
   });
-  
+
   return (
     <div className="w-full flex flex-col gap-4" style={{ padding: "3% 6%" }}>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-xl">
@@ -630,15 +638,19 @@ const Productdetails = () => {
                 <h2 className="font-bold text-primary">
                   Verified Customer Feedback
                 </h2>
-                <a
-                  className="text-primary-light font-bold text-sm flex items-center gap-1 hover:underline"
-                  href="#"
+                <button
+                  onClick={() =>
+                    navigate(`/store/${encodeURIComponent(product.name)}/reviews`, {
+                      state: { productId: product._id },
+                    })
+                  }
+                  className="text-primary-light font-bold text-sm flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   SEE ALL
                   <span className="material-symbols-outlined text-sm">
                     chevron_right
                   </span>
-                </a>
+                </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
                 {/* <!-- Rating Summary --> */}
@@ -747,8 +759,8 @@ const Productdetails = () => {
                     </h3>
                   </div>
                   <div className="space-y-8">
-                    {product?.rating && product.rating.length > 0 ? (
-                      product.rating.map((rates, index) => (
+                    {reviews && reviews.length > 0 ? (
+                      reviews.map((rates, index) => (
                         <div
                           key={index}
                           className="pb-8 border-b border-gray-50"
@@ -756,7 +768,7 @@ const Productdetails = () => {
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex text-primary-light scale-75 -ml-2">
                               {[...Array(5)].map((_, i) =>
-                                i < rates.ratingGrade ? (
+                                i < rates.rating ? (
                                   <span
                                     key={i}
                                     className="material-symbols-outlined fill"
@@ -774,7 +786,14 @@ const Productdetails = () => {
                               )}
                             </div>
                             <span className="text-xs text-gray-400">
-                              {rates.createdAt.split("T")[0]}
+                              {new Date(rates.createdAt).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                },
+                              )}
                             </span>
                           </div>
                           <h4 className="font-bold text-on-background mb-1">
@@ -785,7 +804,7 @@ const Productdetails = () => {
                           </p>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-500">
-                              by Chigozie
+                              {rates.user?.name || "Anonymous"}
                             </span>
                             <div className="flex items-center gap-1 text-tertiary font-bold text-[10px]">
                               <span className="material-symbols-outlined text-xs">
@@ -800,7 +819,14 @@ const Productdetails = () => {
                       <div>no rating</div>
                     )}
                   </div>
-                  <button className="w-full py-4 mt-8 bg-surface-container text-primary font-bold rounded-lg hover:bg-orange-50 transition-all text-sm">
+                  <button
+                    onClick={() =>
+                      navigate(`/store/${encodeURIComponent(product.name)}/reviews`, {
+                        state: { productId: product._id},
+                      })
+                    }
+                    className="w-full py-4 mt-8 bg-surface-container text-primary font-bold rounded-lg hover:bg-orange-50 transition-all text-sm cursor-pointer"
+                  >
                     LOAD MORE REVIEWS
                   </button>
                 </div>

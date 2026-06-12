@@ -4,7 +4,7 @@ const { adminLogin, adminDashboard, adminCustomer, deleteCustomer, createProduct
 const { authenticate } = require('../auth')
 const { authorizeRoles } = require('../authorizesRole')
 const authMiddleware = require('../middlewareAuth')
-const { rateProduct, getAverageRating } = require('../controller/rating.controller')
+
 const router = express.Router()
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -27,12 +27,10 @@ router.get('/customers/monthly', authenticate, authorizeRoles, getCustomersGroup
 router.get('/orders/hourly/', authenticate, authorizeRoles, getOrdersGroupedByHourForDates)
 router.get('/flashsales', authenticate, authorizeRoles, getFlashSales)
 router.post('/flashsales', authenticate, authorizeRoles, createFlashSale)
+
+// Generic product route
 router.get('/product/:id', getProductById)
 router.put('/user/:id/ban', authenticate, authorizeRoles, toggleUserBan)
-
-// rating endpoint for authenticated users
-router.put('/product/:productId', authMiddleware, rateProduct)
-router.get('/:id/average-rating', getAverageRating)
 
 module.exports = router
 
