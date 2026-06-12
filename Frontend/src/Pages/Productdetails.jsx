@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useContext, useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { CategoryContext } from "../CategoryContext";
 import { FiShoppingCart } from "react-icons/fi";
 import { FaStar, FaMinus, FaPlus, FaRegStar } from "react-icons/fa6";
@@ -17,6 +17,7 @@ import BrowsingHistory from "../components/BrowsingHistory";
 const Productdetails = () => {
   const { name } = useParams(); // Get product name from URL params
   const location = useLocation();
+  const navigate = useNavigate();
   const id = location.state?.id;
   const productFromState = location.state?.product;
 
@@ -637,15 +638,19 @@ const Productdetails = () => {
                 <h2 className="font-bold text-primary">
                   Verified Customer Feedback
                 </h2>
-                <a
-                  className="text-primary-light font-bold text-sm flex items-center gap-1 hover:underline"
-                  href="#"
+                <button
+                  onClick={() =>
+                    navigate(`/store/${encodeURIComponent(product.name)}/reviews`, {
+                      state: { productId: product._id },
+                    })
+                  }
+                  className="text-primary-light font-bold text-sm flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   SEE ALL
                   <span className="material-symbols-outlined text-sm">
                     chevron_right
                   </span>
-                </a>
+                </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
                 {/* <!-- Rating Summary --> */}
@@ -814,7 +819,15 @@ const Productdetails = () => {
                       <div>no rating</div>
                     )}
                   </div>
-                  <button className="w-full py-4 mt-8 bg-surface-container text-primary font-bold rounded-lg hover:bg-orange-50 transition-all text-sm">
+                  <button
+                    onClick={() =>
+                      navigate(`/store/${encodeURIComponent(product.name)}/reviews`, {
+                        state: { productId: product._id
+                        },
+                      })
+                    }
+                    className="w-full py-4 mt-8 bg-surface-container text-primary font-bold rounded-lg hover:bg-orange-50 transition-all text-sm cursor-pointer"
+                  >
                     LOAD MORE REVIEWS
                   </button>
                 </div>

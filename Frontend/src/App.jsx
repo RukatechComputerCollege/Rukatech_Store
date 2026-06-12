@@ -43,6 +43,7 @@ import BrowsingHistory from './components/BrowsingHistory';
 import Reviews from './Pages/admin/adminPages/Reviews';
 import AdminOrderDetails from './Pages/admin/adminPages/OrderDetails';
 import ReviewPage from './Pages/user/ReviewPage';
+import AllReviews from './Pages/AllReviews';
 
 const RouteWrapper = ({ children }) => {
   const location = useLocation();
@@ -72,6 +73,7 @@ const App = () => {
                 <Productdetails />
               </CategoryProvider>
             } />
+            <Route path='/store/:name/reviews' element={<AllReviews />} />
             <Route path='/account/forgot-password' element={<ForgotPassword />} />
             <Route path='/reset-password/:token' element={<ResetPassword />} />
             <Route path='/store/:categoryName' element={<ShopPage />} />
