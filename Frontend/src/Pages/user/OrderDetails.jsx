@@ -82,7 +82,7 @@ const OrderDetails = () => {
       console.log(values);
       axios
         .put(
-          `${API_URL}/${ADMIN_ROUTE}/product/${values.productId}`,
+          `${API_URL}/user/product/${values.productId}/rate`,
           {
             ratingGrade: values.ratingGrade,
             feedback: values.feedback,
