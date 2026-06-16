@@ -21,6 +21,21 @@ const limiter = rateLimit({
   max: 100,
   keyGenerator: ipKeyGenerator
 });
+
+// Dynamically import the keepalive-server package
+(async () => {
+    // Checks if the script is not running in a serverless environment
+    if (process.env.NODE_ENV !== 'production' || process.env.IS_SERVERLESS) return;
+    try {
+        const { ping } = await import('keepalive-server');
+        // Ping your app's health endpoint every 14 minutes (840,000 milliseconds)
+        ping(14 * 60 * 1000, 'https://rukatech-store.onrender.com/health');
+        console.log('✅ Keep-alive pinger started.');
+    } catch (err) {
+        console.error('Failed to start keepalive-server:', err.message);
+    }
+})();
+
 app.use(limiter);
 app.use(cors({
   origin: ['http://localhost:5173', 'https://rukatechstore.vercel.app', 'https://www.rukatechstore.com', 'https://rukatechstore.com'],
