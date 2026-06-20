@@ -16,8 +16,8 @@ const DashboardSidenav = () => {
   }
 
   return (
-    <div style={{padding: '16px 0px'}} className='md:w-[264px] bg-white flex flex-col overflow-y-auto shadow-md max-h-[calc(100vh-80px)] z-50'>
-      <div className='w-full text-white flex flex-col gap-[1.3em] h-full'>
+    <div style={{padding: '16px 0px'}} className='md:w-[264px] bg-white flex flex-col overflow-y-auto shadow-md h-screen z-50 top-0 left-0'>
+      <div className='w-full text-white flex flex-col gap-[1.3em] h-screen px-4 py-6'>
         <div className='w-full flex flex-col'>
           {/* for dashboard */}
           <div className='w-full '>
@@ -102,7 +102,7 @@ const DashboardSidenav = () => {
         <DialogBackdrop transition className="fixed inset-0 bg-black/30 duration-300 ease-out data-closed:opacity-0" />
           <div className="fixed inset-0 flex w-screen items-center justify-center">
             <DialogPanel transition className="w-[90%] md:w-2/4 lg:w-[40%] space-y-4 bg-white shadow-lg flex flex-col gap-[1em]" style={{padding: '20px', borderRadius: '4px'}}>
-              <DialogTitle className="font-bold text-[#131523] text-[16px">Log Out</DialogTitle>
+              <DialogTitle className="font-bold text-[#131523] text-[16px]">Log Out</DialogTitle>
               <div className='w-full flex flex-col gap-4 items-center justify-center'>
                 <h1 className='text-[#191C1F] text-[25px]'>Are you logging out?</h1>
                 <p>You can always log in at anytime, click the log out button to confirm or cancel if you're not sure.</p>

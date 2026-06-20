@@ -339,7 +339,7 @@ const Landingpage = () => {
               <div>
                 <p className="text-xs font-bold uppercase">Call to order</p>
                 <p className="text-[10px] text-gray-500">
-                  08133 333 333, 08133 333 334
+                 09032520353
                 </p>
               </div>
             </div>
@@ -632,7 +632,7 @@ const Landingpage = () => {
             <img
               alt="Apple Store Promo"
               className="w-full h-full object-cover rounded-3xl"
-              src="https://pcplaceng.com/laxgts/2025/08/apple-deal-1.jpg"
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRANB9fHkGQ8hMAKrinNHrGxha7MyQPdaeI5g&s"
             />
           </div>
           {/* <!-- Product Grid --> */}

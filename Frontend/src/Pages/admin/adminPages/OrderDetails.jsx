@@ -1,8 +1,8 @@
 ﻿const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { IoArrowBack } from 'react-icons/io5';
-import { FiCheck, FiTruck, FiBox } from 'react-icons/fi';
+import { FiCheck, FiTruck, FiBox, FiAlertCircle } from 'react-icons/fi';
 import { MdCancel } from 'react-icons/md';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -21,7 +21,7 @@ const OrderDetails = () => {
     fetchOrderDetails();
   }, [orderId, id, location]);
 
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     const storedOrder = sessionStorage.getItem('selectedOrder');
     if (storedOrder) {
       setOrder(JSON.parse(storedOrder));
@@ -58,9 +58,9 @@ const OrderDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [orderId, id, API_URL, token, navigate]);
 
-  const updateOrderStatus = async (newStatus) => {
+  const updateOrderStatus = useCallback(async (newStatus) => {
     if (!order?._id) {
       toast.error('Order ID is missing');
       return;
@@ -76,6 +76,7 @@ const OrderDetails = () => {
 
       if (response.data.status) {
         setOrder({ ...order, orderStatus: newStatus });
+        sessionStorage.setItem('selectedOrder', JSON.stringify({ ...order, orderStatus: newStatus }));
         toast.success('Order status updated successfully');
       }
     } catch (error) {
@@ -84,9 +85,9 @@ const OrderDetails = () => {
     } finally {
       setUpdatingStatus(false);
     }
-  };
+  }, [order, API_URL, token]);
 
-  const getStatusColor = (status) => {
+  const getStatusColor = useCallback((status) => {
     switch (status) {
       case 'delivered':
         return { bg: '#E8F5E9', text: '#047857', icon: FiCheck };
@@ -99,9 +100,13 @@ const OrderDetails = () => {
       default:
         return { bg: '#EDE9FE', text: '#7C3AED', icon: FiBox };
     }
-  };
+  }, []);
 
-  const statusFlow = ['received', 'packaging', 'on_the_road', 'delivered', 'cancelled'];
+  const statusFlow = useMemo(() => ['received', 'packaging', 'on_the_road', 'delivered', 'cancelled'], []);
+
+  const hasOutOfStock = useMemo(() => {
+    return order?.products?.some((product) => !product.inStock || product.inventory <= 0);
+  }, [order?.products]);
 
   if (loading) {
     return (
@@ -161,6 +166,52 @@ const OrderDetails = () => {
               </div>
             </div>
 
+            {/* Order Status Update Section */}
+            <div className='rounded-[28px] border border-[#E5E7EB] bg-white p-6 shadow-sm'>
+              <h3 className='text-lg font-bold text-[#111827] mb-4'>Update Order Status</h3>
+              <div className='space-y-4'>
+                <p className='text-sm text-[#6B7280]'>Current status: <span className='font-semibold text-[#111827]'>{order.orderStatus.replace('_', ' ').toUpperCase()}</span></p>
+                
+                <div className='grid gap-2 sm:grid-cols-2 md:grid-cols-3'>
+                  {statusFlow.map((status) => {
+                    const isCurrentStatus = order.orderStatus === status;
+                    const colors = getStatusColor(status);
+                    const Icon = colors.icon;
+                    
+                    return (
+                      <button
+                        key={status}
+                        onClick={() => updateOrderStatus(status)}
+                        disabled={updatingStatus || isCurrentStatus}
+                        className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold transition ${
+                          isCurrentStatus
+                            ? `text-white cursor-default opacity-70`
+                            : `text-white hover:shadow-md active:scale-95`
+                        }`}
+                        style={{
+                          backgroundColor: isCurrentStatus ? colors.text : colors.bg,
+                          color: isCurrentStatus ? 'white' : colors.text
+                        }}
+                      >
+                        <Icon size={18} />
+                        <span>{status.replace('_', ' ')}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {order.orderStatus === 'cancelled' && (
+                  <div className='rounded-lg bg-[#FEE2E2] border border-[#FECACA] p-4 flex gap-3'>
+                    <FiAlertCircle size={20} className='text-[#B91C1C] flex-shrink-0 mt-0.5' />
+                    <div>
+                      <p className='text-sm font-semibold text-[#991B1B]'>Order Cancelled</p>
+                      <p className='text-xs text-[#7C2D12] mt-1'>This order has been cancelled and cannot be reactivated.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className='rounded-[28px] border border-[#E5E7EB] bg-white p-6 shadow-sm'>
               <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
                 <div>
@@ -170,19 +221,28 @@ const OrderDetails = () => {
                 <div className='rounded-full bg-[#F8FAFF] px-4 py-2 text-sm font-semibold text-[#111827]'>Summary</div>
               </div>
               <div className='mt-6 space-y-4'>
-                {order.products?.map((product, index) => (
-                  <div key={index} className='grid gap-4 md:grid-cols-[auto_1fr_auto] items-center rounded-[20px] bg-[#F8FAFF] p-4'>
-                    <div className='h-20 w-20 rounded-[16px] overflow-hidden bg-[#E5E7EB]'>
-                      {product.image ? <img src={product.image} alt={product.name} className='h-full w-full object-cover' /> : null}
+                {order.products?.map((product, index) => {
+                  const isOutOfStock = !product.inStock || product.inventory <= 0;
+                  return (
+                    <div key={index} className='grid gap-4 md:grid-cols-[auto_1fr_auto] items-center rounded-[20px] bg-[#F8FAFF] p-4 relative'>
+                      {isOutOfStock && (
+                        <div className='absolute top-3 right-3 flex items-center gap-1 rounded-lg bg-[#FEE2E2] px-2 py-1'>
+                          <FiAlertCircle size={14} className='text-[#B91C1C]' />
+                          <span className='text-xs font-semibold text-[#B91C1C]'>Out of Stock</span>
+                        </div>
+                      )}
+                      <div className={`h-20 w-20 rounded-[16px] overflow-hidden bg-[#E5E7EB] ${isOutOfStock ? 'opacity-50' : ''}`}>
+                        {product.image ? <img src={product.image} alt={product.name} className='h-full w-full object-cover' /> : null}
+                      </div>
+                      <div className={isOutOfStock ? 'opacity-60' : ''}>
+                        <p className='text-[15px] font-semibold text-[#111827]'>{product.name}</p>
+                        <p className='text-sm text-[#6B7280] mt-1'>Qty: {product.quantity || 1}</p>
+                        <p className='text-sm text-[#6B7280]'>Unit: ₦{product.price?.toLocaleString() || '0'}</p>
+                      </div>
+                      <p className={`text-right text-lg font-bold ${isOutOfStock ? 'text-[#94A3B8]' : 'text-[#111827]'}`}>₦{((product.price || 0) * (product.quantity || 1)).toLocaleString()}</p>
                     </div>
-                    <div>
-                      <p className='text-[15px] font-semibold text-[#111827]'>{product.name}</p>
-                      <p className='text-sm text-[#6B7280] mt-1'>Qty: {product.quantity || 1}</p>
-                      <p className='text-sm text-[#6B7280]'>Unit: ₦{product.price?.toLocaleString() || '0'}</p>
-                    </div>
-                    <p className='text-right text-lg font-bold text-[#111827]'>₦{((product.price || 0) * (product.quantity || 1)).toLocaleString()}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -273,4 +333,4 @@ const OrderDetails = () => {
   );
 };
 
-export default OrderDetails;
+export default React.memo(OrderDetails);

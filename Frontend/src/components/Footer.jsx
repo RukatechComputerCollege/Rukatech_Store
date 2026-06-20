@@ -172,6 +172,25 @@ const Footer = () => {
               </li>
             </ul>
           </div>
+          <h4 className="text-white text-center md:text-left font-bold text-sm mb-4 pt-4 uppercase">
+            Vist Our Store
+          </h4>
+          <div className="flex flex-col gap-2">
+           <li className="text-gray-400 text-xs hover:text-white transition-colors">
+             No 189, Ibadan road, Ijebu-ode, Ogun State
+            </li>
+            <li className="text-gray-400 text-xs hover:text-white transition-colors">
+             No 21, Simbiat Abiola Way, Opp new Terminal Bus, Ikeja Lagos
+            </li>
+           </div>
+           <h4 className="text-white text-center md:text-left font-bold text-sm mb-4 pt-4 uppercase">
+             Working Hours
+          </h4>
+          <div className="flex flex-col gap-2">
+             <li className="text-gray-400 text-xs hover:text-white transition-colors">
+              Mon - Fri: 8:00am - 6:00pm
+            </li>
+          </div>
         </div>
       </div>
       {/* <!-- Social & App Download --> */}
