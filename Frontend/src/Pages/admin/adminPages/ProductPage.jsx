@@ -1,9 +1,9 @@
 const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { CategoryContext } from '../../../CategoryContext';
 import { FaRegTrashCan } from "react-icons/fa6";
 import { MdOpenInNew } from "react-icons/md";
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch, FiAlertCircle } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogPanel, DialogTitle, DialogBackdrop } from '@headlessui/react';
 import { useFormik } from 'formik';
@@ -36,7 +36,7 @@ const ProductPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const normalizeCategory = (category) => {
+  const normalizeCategory = useCallback((category) => {
     if (!category) return '-';
     if (Array.isArray(category)) {
       const values = category
@@ -46,7 +46,7 @@ const ProductPage = () => {
     }
     if (typeof category === 'object') return category.name || category._id || '-';
     return category || '-';
-  };
+  }, []);
 
   const filteredProducts = React.useMemo(() => {
     if (!Array.isArray(allProduct)) return [];
@@ -64,7 +64,7 @@ const ProductPage = () => {
 
       return matchesSearch && matchesStatus;
     });
-  }, [allProduct, searchQuery, statusFilter]);
+  }, [allProduct, searchQuery, statusFilter, normalizeCategory]);
 
   const totalProducts = allProduct?.length || 0;
   const publishedCount = allProduct?.filter((item) => item.status === 'published').length || 0;
@@ -117,29 +117,28 @@ const ProductPage = () => {
     setIsOpen(true);
   };
 
-  const handleNewImages = (event) => {
+  const removeExistingImage = useCallback((index) => {
+    setExistingImages((current) => current.filter((_, idx) => idx !== index));
+  }, []);
+
+  const removeNewImage = useCallback((index) => {
+    setNewImages((current) => current.filter((_, idx) => idx !== index));
+  }, []);
+
+  const handleNewImages = useCallback((event) => {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
     setNewImages((current) => [...current, ...files].slice(0, 10));
-  };
+  }, []);
 
-  const handleCheckboxChange = (event) => {
-    const { value, checked } = event.target;
-    setSelected((current) => {
-      const next = checked ? [...current, value] : current.filter((item) => item !== value);
-      formik.setFieldValue('category', next.length > 0 ? next[next.length - 1] : '');
-      return next;
-    });
-  };
+  const statusBadge = useCallback((status) => {
+    const base = 'inline-flex rounded-full px-3 py-1 text-xs font-semibold';
+    if (status === 'published') return <span className={`${base} bg-[#D1FAE5] text-[#047857]`}>Published</span>;
+    if (status === 'draft') return <span className={`${base} bg-[#E5E7EB] text-[#475569]`}>Draft</span>;
+    return <span className={`${base} bg-[#F8FAFF] text-[#0F766E]`}>{status || 'Unknown'}</span>;
+  }, []);
 
-  const removeExistingImage = (index) => {
-    setExistingImages((current) => current.filter((_, idx) => idx !== index));
-  };
-
-  const removeNewImage = (index) => {
-    setNewImages((current) => current.filter((_, idx) => idx !== index));
-  };
-
+  // Declare formik first before callbacks that depend on it
   const formik = useFormik({
     initialValues: {
       name: '',
@@ -226,22 +225,34 @@ const ProductPage = () => {
       }
     }
   });
-  const deleteProduct = (id) =>{
-    if(window.confirm("Are you sure you want to delete this category?")){
-  axios.delete(`${API_URL}/${ADMIN_ROUTE}/deleteproduct/${id}`)
-      .then((res) =>{
-        console.log(res);
-        if(res.data.status){
-          toast.success("Product Deleted Successfully")
-          window.location.reload()
-        }
-      })
-      .catch((err) =>{
-        console.log(err);
-      })
+
+  // Callbacks that depend on formik, declared after formik
+  const handleCheckboxChange = useCallback((event) => {
+    const { value, checked } = event.target;
+    setSelected((current) => {
+      const next = checked ? [...current, value] : current.filter((item) => item !== value);
+      formik.setFieldValue('category', next.length > 0 ? next[next.length - 1] : '');
+      return next;
+    });
+  }, [formik]);
+
+  const deleteProduct = useCallback((id) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      axios.delete(`${API_URL}/${ADMIN_ROUTE}/deleteproduct/${id}`)
+        .then((res) => {
+          if (res.data.status) {
+            toast.success("Product Deleted Successfully");
+            window.location.reload();
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          toast.error("Failed to delete product");
+        });
     }
-  }
-  const selectAllProduct = (event) => {
+  }, [API_URL, token]);
+
+  const selectAllProduct = useCallback((event) => {
     const { checked } = event.target;
     if (checked) {
       const allIds = allProduct.map(product => product._id);
@@ -249,34 +260,29 @@ const ProductPage = () => {
     } else {
       setSelectedProductIds([]);
     }
-  };
-  const deleteAllProduct = () =>{
-    console.log(selectedProductIds);
-  axios.delete(`${API_URL}/${ADMIN_ROUTE}/deleteSelectedProduct`, {data: selectedProductIds} )
-    .then((res) =>{
-      console.log(res);
-      if(res.status){
-        toast.success('Selected Product Deleted Successfully')
-        window.location.reload()
-      }
-    }).catch((err) =>{
-      console.log('selected product cannot be deleted', err);
-    })
-  }
-  const openDeleteOption = () =>{
-    if(selectedProductIds.length > 0){
-      setDeleteOpen(true)
-    }else{
-      toast.warning('Select at least 1 item to delete')
-    }
-  }
+  }, [allProduct]);
 
-  const statusBadge = (status) => {
-    const base = 'inline-flex rounded-full px-3 py-1 text-xs font-semibold';
-    if (status === 'published') return <span className={`${base} bg-[#D1FAE5] text-[#047857]`}>Published</span>;
-    if (status === 'draft') return <span className={`${base} bg-[#E5E7EB] text-[#475569]`}>Draft</span>;
-    return <span className={`${base} bg-[#F8FAFF] text-[#0F766E]`}>{status || 'Unknown'}</span>;
-  };
+  const deleteAllProduct = useCallback(() => {
+    axios.delete(`${API_URL}/${ADMIN_ROUTE}/deleteSelectedProduct`, { data: selectedProductIds })
+      .then((res) => {
+        if (res.status) {
+          toast.success('Selected Product Deleted Successfully');
+          window.location.reload();
+        }
+      })
+      .catch((err) => {
+        console.error('selected product cannot be deleted', err);
+        toast.error('Failed to delete selected products');
+      });
+  }, [selectedProductIds, API_URL, token]);
+
+  const openDeleteOption = useCallback(() => {
+    if (selectedProductIds.length > 0) {
+      setDeleteOpen(true);
+    } else {
+      toast.warning('Select at least 1 item to delete');
+    }
+  }, [selectedProductIds]);
 
   return (
     <div className='w-full min-h-screen flex flex-col gap-8'>
@@ -358,7 +364,19 @@ const ProductPage = () => {
         <div className='mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3'>
           {filteredProducts.length > 0 ? (
             filteredProducts.map((product) => (
-              <div key={product._id} className='rounded-[28px] border border-[#E5E7EB] bg-[#F8FAFF] p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg'>
+              <div key={product._id} className='rounded-[28px] border border-[#E5E7EB] bg-[#F8FAFF] p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg relative'>
+                {product.inventory <= 0 && (
+                  <div className='absolute top-4 right-4 flex items-center gap-2 rounded-lg bg-[#FEE2E2] px-3 py-1.5'>
+                    <FiAlertCircle size={16} className='text-[#B91C1C]' />
+                    <span className='text-xs font-semibold text-[#B91C1C]'>Out of Stock</span>
+                  </div>
+                )}
+                {product.inventory > 0 && product.inventory <= 5 && (
+                  <div className='absolute top-4 right-4 flex items-center gap-2 rounded-lg bg-[#FEF3C7] px-3 py-1.5'>
+                    <FiAlertCircle size={16} className='text-[#C2410C]' />
+                    <span className='text-xs font-semibold text-[#C2410C]'>Low Stock</span>
+                  </div>
+                )}
                 <div className='flex items-start justify-between gap-4'>
                   <div className='flex items-center gap-3'>
                     <input
@@ -390,7 +408,21 @@ const ProductPage = () => {
                   <div className='grid gap-3 sm:grid-cols-2'>
                     <div className='rounded-[20px] bg-white p-4 border border-[#E5E7EB]'>
                       <p className='text-xs uppercase tracking-[0.25em] text-[#94A3B8]'>Inventory</p>
-                      <p className='mt-2 text-lg font-semibold text-[#111827]'>{product.inventory || 0}</p>
+                      <div className='mt-2 flex items-end justify-between'>
+                        <p className='text-lg font-semibold text-[#111827]'>{product.inventory || 0}</p>
+                        {product.inventory <= 0 && (
+                          <span className='inline-flex gap-1 items-center rounded px-2 py-1 bg-[#FEE2E2] text-[#B91C1C]'>
+                            <FiAlertCircle size={12} />
+                            <span className='text-xs font-semibold'>Out</span>
+                          </span>
+                        )}
+                        {product.inventory > 0 && product.inventory <= 5 && (
+                          <span className='inline-flex gap-1 items-center rounded px-2 py-1 bg-[#FEF3C7] text-[#C2410C]'>
+                            <FiAlertCircle size={12} />
+                            <span className='text-xs font-semibold'>Low</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className='rounded-[20px] bg-white p-4 border border-[#E5E7EB]'>
                       <p className='text-xs uppercase tracking-[0.25em] text-[#94A3B8]'>Price</p>
@@ -945,4 +977,4 @@ const ProductPage = () => {
   );
 };
 
-export default ProductPage;
+export default React.memo(ProductPage);

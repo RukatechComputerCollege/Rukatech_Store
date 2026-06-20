@@ -1,5 +1,5 @@
 const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { MdKeyboardBackspace, MdDelete } from 'react-icons/md';
 import { CategoryContext } from '../../../CategoryContext';
 import { useFormik } from 'formik';
@@ -105,16 +105,16 @@ const AddProduct = () => {
     }
   }, [formik.values.price, formik.values.discountPrice]);
 
-  const handleFileSelection = (event) => {
+  const handleFileSelection = useCallback((event) => {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
     const combined = [...selectedImages, ...files].slice(0, 10);
     setSelectedImages(combined);
-  };
+  }, [selectedImages]);
 
-  const removeImage = (index) => {
+  const removeImage = useCallback((index) => {
     setSelectedImages((current) => current.filter((_, i) => i !== index));
-  };
+  }, []);
 
   const activePreview = useMemo(() => {
     return selectedImages.map((file) => ({
@@ -140,8 +140,8 @@ const AddProduct = () => {
           </div>
         </div>
 
-        <form onSubmit={formik.handleSubmit} className='mt-8 grid gap-6 lg:grid-cols-[2fr_1fr]'>
-          <div className='space-y-6'>
+        <form onSubmit={formik.handleSubmit} className='mt-8 grid gap-6 grid-cols-1 lg:grid-cols-[2fr_1fr]'>
+          <div className='space-y-6 w-full'>
             <section className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm'>
               <div className='flex flex-col gap-3 border-b border-[#E5E7EB] pb-5'>
                 <span className='text-sm font-semibold uppercase tracking-[0.2em] text-[#0F766E]'>Basics</span>
@@ -175,8 +175,8 @@ const AddProduct = () => {
                 </div>
               </div>
 
-              <div className='grid gap-4 py-5 md:grid-cols-2'>
-                <div>
+              <div className='grid gap-4 py-5 grid-cols-1 md:grid-cols-2'>
+                <div className='w-full'>
                   <label className='mb-2 block text-sm font-medium text-[#111827]'>Category</label>
                   <select
                     name='category'
@@ -279,7 +279,7 @@ const AddProduct = () => {
                 {uploading ? (
                   <p className='text-sm text-[#475569]'>Processing images…</p>
                 ) : selectedImages.length > 0 ? (
-                  <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-4'>
+                  <div className='grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'>
                     {activePreview.map((preview, index) => (
                       <div key={index} className='relative overflow-hidden rounded-[20px] border border-[#E5E7EB] bg-[#F8FAFF]'>
                         <img src={preview.url} alt={`Product preview ${index + 1}`} className='h-32 w-full object-cover' />
@@ -330,7 +330,7 @@ const AddProduct = () => {
             </section>
           </div>
 
-          <aside className='space-y-6'>
+          <aside className='space-y-6 w-full'>
             <section className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm'>
               <div className='flex items-center justify-between gap-4 border-b border-[#E5E7EB] pb-4'>
                 <span className='text-sm font-semibold uppercase tracking-[0.2em] text-[#0F766E]'>Specs</span>
@@ -426,12 +426,19 @@ const AddProduct = () => {
           </aside>
         </form>
 
-        <div className='mt-6 flex flex-col items-end'>
+        <div className='mt-8 flex flex-col sm:flex-row sm:justify-end gap-3 sm:gap-4'>
+          <button
+            type='button'
+            onClick={() => window.history.back()}
+            className='w-full sm:w-auto rounded-[20px] px-6 sm:px-8 py-3 sm:py-4 text-sm font-semibold text-[#111827] border border-[#D1D5DB] hover:bg-[#F8FAFF] transition'
+          >
+            Cancel
+          </button>
           <button
             type='submit'
             onClick={formik.submitForm}
             disabled={!formik.isValid || !formik.dirty || uploading}
-            className={`rounded-[20px] px-8 py-4 text-sm font-semibold text-white transition ${!formik.isValid || !formik.dirty || uploading ? 'bg-[#94A3B8] cursor-not-allowed' : 'bg-[#0F766E] hover:bg-[#0e5f53]'}`}
+            className={`w-full sm:w-auto rounded-[20px] px-6 sm:px-8 py-3 sm:py-4 text-sm font-semibold text-white transition ${!formik.isValid || !formik.dirty || uploading ? 'bg-[#94A3B8] cursor-not-allowed' : 'bg-[#0F766E] hover:bg-[#0e5f53]'}`}
           >
             {uploading ? 'Uploading images…' : 'Publish Product'}
           </button>
@@ -443,4 +450,4 @@ const AddProduct = () => {
   );
 };
 
-export default AddProduct;
+export default React.memo(AddProduct);

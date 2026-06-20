@@ -22,6 +22,19 @@ const limiter = rateLimit({
   keyGenerator: ipKeyGenerator
 });
 
+app.use(limiter);
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://rukatechstore.vercel.app', 'https://www.rukatechstore.com', 'https://rukatechstore.com'],
+  credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// healthCheck
+app.get('/health', (req, res) => {
+  res.status(200).json({ message: 'Server is healthy' });
+});
+
 // Dynamically import the keepalive-server package
 (async () => {
     // Checks if the script is not running in a serverless environment
@@ -35,19 +48,6 @@ const limiter = rateLimit({
         console.error('Failed to start keepalive-server:', err.message);
     }
 })();
-
-app.use(limiter);
-app.use(cors({
-  origin: ['http://localhost:5173', 'https://rukatechstore.vercel.app', 'https://www.rukatechstore.com', 'https://rukatechstore.com'],
-  credentials: true
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// healthCheck
-app.get('/health', (req, res) => {
-  res.status(200).json({ message: 'Server is healthy' });
-});
 
 // Routes
 app.use("/user", userRouter);
