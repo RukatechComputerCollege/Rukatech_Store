@@ -16,17 +16,21 @@ const admin_username = process.env.admin_username;
 const admin_password = process.env.admin_password;
 
 const adminRegister = async (req, res) => {
-  let admin = await adminModel.findOne({username: 'admin'});
-  if(admin){
-    console.log('Admin already exist');
-  }else{
-    const form = new adminModel();
-    form.save()
-    .then((response)=>{
-      console.log('admin saved');
-    }).catch((err) => {
-        console.log('admin not saved', err);
-    })
+  try {
+    const admin = await adminModel.findOne({ username: admin_username });
+    if (admin) {
+      console.log('Admin already exists');
+      if (res) return res.status(200).json({ status: true, message: 'Admin already exists' });
+      return;
+    }
+
+    const form = new adminModel({ username: admin_username, password: admin_password });
+    await form.save();
+    console.log('admin saved');
+    if (res) return res.status(201).json({ status: true, message: 'Admin saved' });
+  } catch (err) {
+    console.log('admin not saved', err);
+    if (res) return res.status(500).json({ status: false, message: 'Admin registration failed', error: err.message });
   }
 }
 
