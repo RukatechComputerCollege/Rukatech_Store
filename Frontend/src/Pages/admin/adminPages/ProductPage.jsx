@@ -12,7 +12,7 @@ import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 
 const ProductPage = () => {
-  const { allProduct, allCategory } = useContext(CategoryContext);
+  const { allProduct, allCategory, setallProduct } = useContext(CategoryContext);
   const [isOpen, setIsOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteTargetId, setDeleteTargetId] = useState(null);
@@ -22,6 +22,8 @@ const ProductPage = () => {
   const [existingImages, setExistingImages] = useState([]);
   const [newImages, setNewImages] = useState([]);
   const [savingProduct, setSavingProduct] = useState(false);
+  const [restockProduct, setRestockProduct] = useState(null);
+  const [restockQuantity, setRestockQuantity] = useState('');
   const [isconfirmDelete, setIsConfirmDelete] = useState(false)
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
@@ -250,7 +252,83 @@ const ProductPage = () => {
           toast.error("Failed to delete product");
         });
     }
-  }, [API_URL, token]);
+  }, [API_URL]);
+
+  const markOutOfStock = useCallback(async (id) => {
+    if (!token) {
+      toast.error('Admin login is required');
+      return;
+    }
+    setSavingProduct(true);
+    try {
+      const res = await axios.put(`${API_URL}/${ADMIN_ROUTE}/product/${id}/stock`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data?.status) {
+        toast.success(res.data.message || 'Product updated');
+        if (setallProduct) {
+          setallProduct((prev) => prev.map((p) => (p._id === id ? res.data.data : p)));
+        } else {
+          window.location.reload();
+        }
+      } else {
+        toast.error(res.data?.message || 'Failed to update product');
+      }
+    } catch (err) {
+      console.error('Mark out of stock error:', err);
+      toast.error('Failed to update product');
+    } finally {
+      setSavingProduct(false);
+    }
+  }, [API_URL, token, setallProduct]);
+
+  const openRestockModal = useCallback((product) => {
+    setRestockProduct(product);
+    setRestockQuantity('');
+  }, []);
+
+  const closeRestockModal = useCallback(() => {
+    setRestockProduct(null);
+    setRestockQuantity('');
+  }, []);
+
+  const restockProductById = useCallback(async () => {
+    if (!token) {
+      toast.error('Admin login is required');
+      return;
+    }
+    if (!restockProduct) return;
+    const quantity = Number(restockQuantity);
+    if (Number.isNaN(quantity) || quantity < 0) {
+      toast.error('Enter a valid restock quantity');
+      return;
+    }
+    setSavingProduct(true);
+    try {
+      const res = await axios.put(
+        `${API_URL}/${ADMIN_ROUTE}/product/${restockProduct._id}/stock`,
+        { restockQuantity: quantity },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      if (res.data?.status) {
+        toast.success(res.data.message || 'Product restocked');
+        if (setallProduct) {
+          setallProduct((prev) => prev.map((p) => (p._id === restockProduct._id ? res.data.data : p)));
+        } else {
+          window.location.reload();
+        }
+        closeRestockModal();
+      } else {
+        toast.error(res.data?.message || 'Failed to restock product');
+      }
+    } catch (err) {
+      console.error('Restock product error:', err);
+      toast.error('Failed to restock product');
+    } finally {
+      setSavingProduct(false);
+    }
+  }, [API_URL, ADMIN_ROUTE, token, restockProduct, restockQuantity, setallProduct, closeRestockModal]);
 
   const selectAllProduct = useCallback((event) => {
     const { checked } = event.target;
@@ -450,6 +528,22 @@ const ProductPage = () => {
                   >
                     Delete
                   </button>
+                  {product.inventory > 0 && (
+                    <button
+                      onClick={() => markOutOfStock(product._id)}
+                      disabled={savingProduct}
+                      className='rounded-[18px] border border-[#111827] bg-white px-4 py-3 text-sm font-semibold text-[#111827] transition hover:bg-[#F3F4F6]'
+                    >
+                      Mark Out of Stock
+                    </button>
+                  )}
+                  <button
+                    onClick={() => openRestockModal(product)}
+                    disabled={savingProduct}
+                    className='rounded-[18px] border border-[#0F766E] bg-white px-4 py-3 text-sm font-semibold text-[#0F766E] transition hover:bg-[#ECFDF5]'
+                  >
+                    Restock
+                  </button>
                 </div>
               </div>
             ))
@@ -461,6 +555,53 @@ const ProductPage = () => {
           )}
         </div>
       </section>
+
+      <Dialog open={!!restockProduct} onClose={closeRestockModal} className="relative z-50">
+        <DialogBackdrop className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+        <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+          <DialogPanel className="w-full max-w-lg rounded-[24px] bg-white shadow-2xl border border-[#E2E8F0] overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-[#0F766E] via-[#14B8A6] to-[#06B6D4]"></div>
+            <div className="p-8">
+              <DialogTitle className="text-2xl font-bold text-[#111827] mb-2">Restock Product</DialogTitle>
+              <p className="text-[#6B7280] text-sm mb-6">Enter the quantity to restock and update the product inventory.</p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-[#111827] mb-2">Product</p>
+                  <div className="rounded-[18px] border border-[#E5E7EB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827]">
+                    {restockProduct?.name || 'Selected product'}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#111827] mb-2">Quantity</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={restockQuantity}
+                    onChange={(e) => setRestockQuantity(e.target.value)}
+                    className="w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none"
+                    placeholder="Enter quantity"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-3 pt-4">
+                  <button
+                    onClick={restockProductById}
+                    disabled={savingProduct}
+                    className="rounded-[18px] bg-[#0F766E] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#115e52]"
+                  >
+                    {savingProduct ? 'Saving...' : 'Save Restock'}
+                  </button>
+                  <button
+                    onClick={closeRestockModal}
+                    className="rounded-[18px] border border-[#E5E7EB] bg-white px-5 py-3 text-sm font-semibold text-[#111827] transition hover:bg-[#F8FAFF]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
 
       <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
         <DialogBackdrop className="fixed inset-0 bg-black/40 backdrop-blur-sm" />

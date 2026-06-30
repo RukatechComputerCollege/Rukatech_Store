@@ -79,7 +79,6 @@ const AddProduct = () => {
 
         const response = await axios.post(`${API_URL}/${ADMIN_ROUTE}/createProduct`, payload, {
           headers: {
-            'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`
           }
         });

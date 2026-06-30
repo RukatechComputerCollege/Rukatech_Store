@@ -40,7 +40,7 @@ const OrderInfo = () => {
       setUpdatingStatus(true);
       const response = await axios.put(
         `${API_URL}/${ADMIN_ROUTE}/orders/${id}/status`,
-        { status: newStatus },
+        { orderStatus: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.data) {

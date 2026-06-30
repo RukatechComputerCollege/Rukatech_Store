@@ -338,6 +338,34 @@ const deleteSelectedProduct = async (req, res) =>{
   }
 }
 
+const toggleProductStock = async (req, res) => {
+  const { id } = req.params;
+  const { restockQuantity } = req.body;
+  try {
+    const product = await productModel.findById(id);
+    if (!product) {
+      return res.status(404).json({ status: false, message: 'Product not found' });
+    }
+
+    if (restockQuantity !== undefined && restockQuantity !== null) {
+      const qty = Number(restockQuantity) || 0;
+      product.inventory = qty;
+      if (qty > 0) product.status = 'published';
+      await product.save();
+      return res.status(200).json({ status: true, message: 'Product restocked', data: product });
+    }
+
+    // default action: mark out of stock
+    product.inventory = 0;
+    product.status = 'draft';
+    await product.save();
+    return res.status(200).json({ status: true, message: 'Product marked out of stock', data: product });
+  } catch (err) {
+    console.error('Error toggling product stock:', err);
+    return res.status(500).json({ status: false, message: 'Failed to update product stock', error: err.message });
+  }
+}
+
 const updateFlashSaleStatuses = async () => {
   const now = new Date();
   const flashSales = await flashSaleModel.find();
@@ -611,37 +639,41 @@ const getAllOrdersForAdmin = async (req, res) =>{
 
 const updateOrderStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, orderStatus } = req.body;
+    const newStatus = orderStatus || status;
     const { id } = req.params;
+
+    if (!newStatus) {
+      return res.status(400).json({ status: false, message: "Order status is required" });
+    }
 
     const order = await AdminOrder.findByIdAndUpdate(
       id,
-      { orderStatus: status },
+      { orderStatus: newStatus },
       { new: true }
     );
 
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res.status(404).json({ status: false, message: "Order not found" });
     }
     
     if (order.userId && order.flutterwaveResponse?.transaction_id) {
       const txnId = String(order.flutterwaveResponse.transaction_id);
 
-      const result = await userModel.updateOne(
+      await userModel.updateOne(
         { _id: order.userId },
-        { $set: { "productOrder.$[elem].orderStatus": status } },
+        { $set: { "productOrder.$[elem].orderStatus": newStatus } },
         {
           arrayFilters: [
             { "elem.flutterwaveResponse.transaction_id": txnId }
           ]
         }
       );
-
     }
 
-    res.status(200).json({ message: "Order status updated", data: order });
+    res.status(200).json({ status: true, message: "Order status updated", data: order });
   } catch (err) {
-    res.status(500).json({ message: "Failed to update order", error: err.message });
+    res.status(500).json({ status: false, message: "Failed to update order", error: err.message });
   }
 };
 
@@ -914,5 +946,6 @@ module.exports = {
   getOrdersGroupedByHour,
   getOrdersGroupedByHourForDates,
   getProductById,
-  toggleUserBan
+  toggleUserBan,
+  toggleProductStock
 };

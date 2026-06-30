@@ -1,6 +1,6 @@
 ﻿const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
 import { FiCheck, FiTruck, FiBox, FiAlertCircle } from "react-icons/fi";
 import { MdCancel } from "react-icons/md";
@@ -9,17 +9,13 @@ import { toast, ToastContainer } from "react-toastify";
 
 const OrderDetails = () => {
   const { orderId, id } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('received');
   const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("adminToken");
-
-  useEffect(() => {
-    fetchOrderDetails();
-  }, [orderId, id, location]);
 
   const fetchOrderDetails = useCallback(async () => {
     const storedOrder = sessionStorage.getItem("selectedOrder");
@@ -47,6 +43,7 @@ const OrderDetails = () => {
         );
         if (foundOrder) {
           setOrder(foundOrder);
+          setSelectedStatus(foundOrder.orderStatus || 'received');
           sessionStorage.setItem("selectedOrder", JSON.stringify(foundOrder));
         } else {
           toast.error("Order not found");
@@ -61,6 +58,10 @@ const OrderDetails = () => {
       setLoading(false);
     }
   }, [orderId, id, API_URL, token, navigate]);
+
+  useEffect(() => {
+    fetchOrderDetails();
+  }, [fetchOrderDetails]);
 
   const updateOrderStatus = useCallback(
     async (newStatus) => {
@@ -77,13 +78,17 @@ const OrderDetails = () => {
           { headers: { Authorization: `Bearer ${token}` } },
         );
 
-        if (response.data.status) {
-          setOrder({ ...order, orderStatus: newStatus });
+        if (response.status === 200 && (response.data.status || response.data.message)) {
+          const updated = response.data.data || { ...order, orderStatus: newStatus };
+          setOrder(updated);
+          setSelectedStatus(newStatus);
           sessionStorage.setItem(
             "selectedOrder",
-            JSON.stringify({ ...order, orderStatus: newStatus }),
+            JSON.stringify(updated),
           );
           toast.success("Order status updated successfully");
+        } else {
+          toast.error(response.data?.message || "Failed to update order status");
         }
       } catch (error) {
         console.error("Error updating order status:", error);
@@ -214,6 +219,30 @@ const OrderDetails = () => {
                     {order.orderStatus.replace("_", " ").toUpperCase()}
                   </span>
                 </p>
+
+                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-[#111827] mb-2">Change order status</label>
+                    <select
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
+                      className="w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none"
+                    >
+                      {statusFlow.map((status) => (
+                        <option key={status} value={status}>
+                          {status.replace("_", " ")}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    onClick={() => updateOrderStatus(selectedStatus)}
+                    disabled={updatingStatus || order.orderStatus === selectedStatus}
+                    className="rounded-[18px] bg-[#0F766E] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#115e52]"
+                  >
+                    Update Status
+                  </button>
+                </div>
 
                 <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
                   {statusFlow.map((status) => {

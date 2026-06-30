@@ -1,5 +1,5 @@
 const ADMIN_ROUTE = import.meta.env.VITE_ADMIN_ROUTE_NAME;
-import React, { useContext, useEffect, useState, useCallback, useMemo } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { FiUsers } from "react-icons/fi";
 import { CategoryContext } from '../../../CategoryContext';
 import { AdminContext } from '../admincomponents/AdminContext';
@@ -8,8 +8,7 @@ import axios from 'axios';
 
 const Dashboard = () => {
   const { allOrders, allProduct } = useContext(CategoryContext);
-  const { allCustomers, ordersMontly, customersMonthly } = useContext(AdminContext)
-  const [dailyTotals, setDailyTotals] = useState({});
+  const { allCustomers } = useContext(AdminContext)
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalOrders: 0,
@@ -43,6 +42,8 @@ const Dashboard = () => {
     }
   }, [allOrders, allCustomers, allProduct]);
 
+  const token = localStorage.getItem('adminToken');
+
   useEffect(() => {
     const today = new Date();
     const yesterday = new Date();
@@ -55,54 +56,31 @@ const Dashboard = () => {
 
     const dailyURL = `${API_URL}/${ADMIN_ROUTE}/orders/hourly?dates=${yesterdayStr},${todayStr}`;
 
-    axios.get(dailyURL).then((res) => {
-      if (res.status === 200 && res.data?.data) {
-        const rawData = res.data.data;
-        const keys = Object.keys(rawData[0] || {});
-        const orderKeys = keys.filter(k => k.includes("Orders"));
-
-        const totals = orderKeys.reduce((acc, key) => {
-          const total = rawData.reduce((sum, row) => sum + (row[key] || 0), 0);
-          acc[key.replace(" Orders", "")] = total;
-          return acc;
-        }, {});
-
-        setDailyTotals(totals);
-      }
-    }).catch(err => console.error("Error fetching daily totals:", err));
-  }, []);
-
-
-  const calculatePercentageChange = useCallback((current, previous) => {
-    if (!previous || previous === 0) return 100;
-    return (((current - previous) / previous) * 100).toFixed(2);
-  }, []);
-
-  const percentages = useMemo(() => {
-    let ordersPercentage = 0;
-    let customersPercentage = 0;
-    let revenuePercentage = 0;
-
-    if (ordersMontly && ordersMontly.length > 1) {
-      const sorted = [...ordersMontly].sort((a, b) => a._id.localeCompare(b._id));
-      const lastMonth = sorted[sorted.length - 2]?.totalOrders || 0;
-      const thisMonth = sorted[sorted.length - 1]?.totalOrders || 0;
-      ordersPercentage = calculatePercentageChange(thisMonth, lastMonth);
+    if (!token) {
+      console.error("Admin token missing, cannot fetch daily totals.");
+      return;
     }
-    if (customersMonthly && customersMonthly.length > 1) {
-      const sorted = [...customersMonthly].sort((a, b) => a._id.localeCompare(b._id));
-      const lastMonth = sorted[sorted.length - 2]?.totalCustomers || 0;
-      const thisMonth = sorted[sorted.length - 1]?.totalCustomers || 0;
-      customersPercentage = calculatePercentageChange(thisMonth, lastMonth);
-    }
-    if (ordersMontly && ordersMontly.length > 1) {
-      const sorted = [...ordersMontly].sort((a, b) => a._id.localeCompare(b._id));
-      const lastMonthRevenue = sorted[sorted.length - 2]?.totalRevenue || 0;
-      const thisMonthRevenue = sorted[sorted.length - 1]?.totalRevenue || 0;
-      revenuePercentage = calculatePercentageChange(thisMonthRevenue, lastMonthRevenue);
-    }
-    return { ordersPercentage, customersPercentage, revenuePercentage };
-  }, [ordersMontly, customersMonthly, calculatePercentageChange]);
+
+    axios.get(dailyURL, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+        if (res.status === 200 && res.data?.data) {
+          const rawData = res.data.data;
+          const keys = Object.keys(rawData[0] || {});
+          const orderKeys = keys.filter(k => k.includes("Orders"));
+
+          const totals = orderKeys.reduce((acc, key) => {
+            const total = rawData.reduce((sum, row) => sum + (row[key] || 0), 0);
+            acc[key.replace(" Orders", "")] = total;
+            return acc;
+          }, {});
+
+          setDailyTotals(totals);
+        }
+      })
+      .catch(err => console.error("Error fetching daily totals:", err));
+  }, [token]);
+
+
   return (
     <>
       <div className='w-full min-h-screen flex flex-col gap-4 sm:gap-6 md:gap-8'>
