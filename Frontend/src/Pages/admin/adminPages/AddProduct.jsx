@@ -10,6 +10,8 @@ import * as yup from 'yup';
 const AddProduct = () => {
   const { allCategory = [] } = useContext(CategoryContext);
   const categories = Array.isArray(allCategory) ? allCategory : [];
+  const enumCategories = ['laptops', 'monitors', 'phones', 'tablets', 'accessories', 'processors'];
+  const effectiveCategories = categories && categories.length ? categories : enumCategories;
   const [selectedImages, setSelectedImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const API_URL = import.meta.env.VITE_API_URL;
@@ -186,9 +188,10 @@ const AddProduct = () => {
                     className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
                   >
                     <option value=''>Select category</option>
-                    {categories.map((category, idx) => {
+                    {effectiveCategories.map((category, idx) => {
                       const label = typeof category === 'string' ? category : category?.name || category;
-                      return <option key={idx} value={label}>{label}</option>;
+                      const displayLabel = typeof label === 'string' ? label.charAt(0).toUpperCase() + label.slice(1) : label;
+                      return <option key={idx} value={label}>{displayLabel}</option>;
                     })}
                   </select>
                   {formik.touched.category && formik.errors.category && <p className='mt-2 text-sm text-[#DC2626]'>{formik.errors.category}</p>}

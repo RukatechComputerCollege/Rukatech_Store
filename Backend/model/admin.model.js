@@ -14,7 +14,7 @@ const adminSchema = mongoose.Schema({
 
 let saltRounds = 10
 adminSchema.pre('save', function(next){
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') && !this.isNew) return next();
   bcrypt.hash(this.password, saltRounds, (err, hashedPassword) => {
     if(err){
       return next(err);

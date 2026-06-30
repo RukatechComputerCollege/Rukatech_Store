@@ -7,6 +7,7 @@ const orderRouter = require('./routes/trackOrder.route');
 const cors = require('cors');
 require('dotenv').config();
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const { adminRegister, fetchPaginatedCustomers } = require('./controller/admin.controller');
 const PORT = process.env.PORT
 const helmet = require('helmet')
@@ -64,6 +65,14 @@ mongoose.connect(process.env.URI)
     const existingAdmin = await adminModel.findOne({ username: process.env.admin_username });
     if (!existingAdmin) {
       await adminRegister();
+    } else {
+      const passwordValue = existingAdmin.password || '';
+      const alreadyHashed = typeof passwordValue === 'string' && passwordValue.startsWith('$2') && passwordValue.length >= 60;
+      if (!alreadyHashed) {
+        existingAdmin.password = process.env.admin_password;
+        await existingAdmin.save();
+        console.log('Admin password rehashed');
+      }
     }
     await fetchPaginatedCustomers();
   })
