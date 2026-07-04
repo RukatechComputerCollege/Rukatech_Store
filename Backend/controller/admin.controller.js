@@ -214,17 +214,13 @@ const createProduct = async (req, res) =>{
       status
     } = req.body;
 
-    if(!name || !price || !description || (!req.body.image && !req.files) || !inventory || !region || !condition || !category){
+    const normalizedCategory = typeof category === 'string' ? category.trim() : '';
+    const normalizedCondition = condition === 'Brand new' ? 'new' : condition === 'Used' ? 'used' : condition === 'Refurbished' ? 'refurbished' : condition;
+
+    if(!name || !price || !description || (!req.body.image && !req.files) || !inventory || !region || !condition || !normalizedCategory){
       return res.status(400).json({
         status: false,
         message: "name, price, description, image, inventory, region, condition and category are required fields"
-      })
-    }
-
-    if(!['laptops', 'monitors', 'phones', 'tablets', 'accessories', 'processors'].includes(category)){
-      return res.status(400).json({
-        status: false,
-        message: "Invalid category"
       })
     }
 
@@ -256,7 +252,7 @@ const createProduct = async (req, res) =>{
       inventory,
       weight,
       region,
-      condition,
+      condition: normalizedCondition,
       processor,
       ram,
       storage,
@@ -273,7 +269,7 @@ const createProduct = async (req, res) =>{
       color,
       productBox,
       features,
-      category,
+      category: normalizedCategory,
       status: status || 'draft',
       image: imageUrls
     });

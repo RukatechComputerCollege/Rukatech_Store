@@ -18,6 +18,7 @@ const Dashboard = () => {
     pendingOrders: 0,
     totalReviews: 0
   });
+  const [dailyTotals, setDailyTotals] = useState({});
 
   useEffect(() => {
     if (allOrders && allCustomers && allProduct) {
