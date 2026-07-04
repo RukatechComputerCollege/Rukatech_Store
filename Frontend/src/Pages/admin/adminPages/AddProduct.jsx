@@ -16,7 +16,7 @@ const AddProduct = () => {
   const token = localStorage.getItem('adminToken');
 
   const categoryOptions = useMemo(() => {
-    const baseOptions = ['Job', 'Electronics', 'Property'];
+    const baseOptions = ['Job', 'Electronics', 'Property',"Processors","Laptops", 'Phones', "Tablets", 'Accessories',"Monitors"  ];
     const contextCategories = Array.isArray(categories)
       ? categories
           .map((category) => (typeof category === 'string' ? category : category?.name || category))
