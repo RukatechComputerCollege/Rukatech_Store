@@ -9,13 +9,86 @@ import * as yup from 'yup';
 
 const AddProduct = () => {
   const { allCategory = [] } = useContext(CategoryContext);
-  const categories = Array.isArray(allCategory) ? allCategory : [];
-  const enumCategories = ['laptops', 'monitors', 'phones', 'tablets', 'accessories', 'processors'];
-  const effectiveCategories = categories && categories.length ? categories : enumCategories;
+  const categories = useMemo(() => (Array.isArray(allCategory) ? allCategory : []), [allCategory]);
   const [selectedImages, setSelectedImages] = useState([]);
   const [uploading, setUploading] = useState(false);
   const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem('adminToken');
+
+  const categoryOptions = useMemo(() => {
+    const baseOptions = ['Job', 'Electronics', 'Property'];
+    const contextCategories = Array.isArray(categories)
+      ? categories
+          .map((category) => (typeof category === 'string' ? category : category?.name || category))
+          .filter(Boolean)
+      : [];
+
+    return [...new Set([...baseOptions, ...contextCategories])];
+  }, [categories]);
+
+  const optionFieldChoices = {
+    category: [...categoryOptions, 'other'],
+    brand: ['Dell', 'Apple', 'HP', 'Lenovo', 'Asus', 'LG', 'Acer', 'Fujitsu', 'Gateway', 'Google', 'Huawei', 'Microsoft', 'MSI', 'Samsung', 'Sony', 'Toshiba', 'Yoga', 'other'],
+    processor: ['intel Core i9', 'intel Core i7', 'intel Core i5', 'intel Core i3', 'intel Core ultra 7', 'intel pentium', 'intel Core ultra 9', 'intel Core ultra 5', 'intel Core m5', 'intel Core m3', 'intel Core m2', 'intel Core m', 'intel Core 2 duo', 'intel', 'Amd', 'Amd Ryzen 9', 'Amd Ryzen 8', 'Amd Ryzen 7', 'Amd Ryzen 6', 'Amd Ryzen 5', 'Amd Ryzen 4', 'Amd Ryzen 3', 'Amd A8', 'Amd A6', 'Amd A4', 'Amd A10', 'other'],
+    condition: ['Brand new', 'Refurbished', 'Used', 'other'],
+    region: ['Lagos State', 'Ogun State', 'Oyo State', 'Osun State', 'other'],
+    ram: ['128GB', '64GB', '32GB', '24GB', '20GB', '18GB', '16GB', '12GB', '8GB', '6GB', '4GB', '3GB', '2GB', '1GB', 'other'],
+    storageType: ['HDD + SSD', 'HDD', 'SSD', 'SSHD + SSD', 'other'],
+    storage: ['3TB', '2TB', '750GB', '700GB', '640GB', '500GB', '512GB', '320GB', '256GB', '250GB', '200GB', '180GB', '160GB', '128GB', '64GB', '32GB', 'other'],
+    displaySize: ['21"', '19"', '17"/17.3"', '15.6"', '14"', '13"/13.3"', '12"/12.3"', '11"/11.6"', '10.1"', 'other'],
+    graphicsCardMemory: ['512mb', '1GB', '2GB', '3GB', '4GB', '6GB', '8GB', '12GB', 'other'],
+    operatingSystem: ['windows 11', 'windows 10', 'windows 8.1', 'windows 8', 'windows 7', 'mac OS', 'other'],
+    color: ['Black', 'Blue', 'Gold', 'Gray', 'Green', 'Pink', 'Red', 'Silver', 'White', 'Yellow', 'other']
+  };
+
+  const handleOptionFieldChange = (fieldName, value) => {
+    formik.setFieldValue(fieldName, value);
+    if (value !== 'other') {
+      formik.setFieldTouched(fieldName, true, false);
+    }
+  };
+
+  const handleCustomOptionChange = (fieldName, value) => {
+    formik.setFieldValue(fieldName, value);
+    formik.setFieldTouched(fieldName, true, false);
+  };
+
+  const renderOptionField = (fieldName, label) => {
+    const options = optionFieldChoices[fieldName] || [];
+    const currentValue = formik.values[fieldName] || '';
+    const isCustomValue = currentValue === 'other' || (typeof currentValue === 'string' && currentValue.trim() !== '' && !options.includes(currentValue));
+    const selectValue = isCustomValue ? 'other' : currentValue;
+
+    return (
+      <div key={fieldName}>
+        <label className='mb-2 block text-sm font-medium text-[#111827]'>{label}</label>
+        <select
+          name={fieldName}
+          value={selectValue}
+          onChange={(event) => handleOptionFieldChange(fieldName, event.target.value)}
+          onBlur={formik.handleBlur}
+          className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
+        >
+          <option value=''>Select {label.toLowerCase()}</option>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option === 'other' ? 'Other' : option}
+            </option>
+          ))}
+        </select>
+        {isCustomValue && (
+          <input
+            type='text'
+            value={currentValue === 'other' ? '' : currentValue}
+            onChange={(event) => handleCustomOptionChange(fieldName, event.target.value)}
+            onBlur={formik.handleBlur}
+            placeholder={`Enter custom ${label.toLowerCase()}`}
+            className='mt-2 w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
+          />
+        )}
+      </div>
+    );
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -79,7 +152,6 @@ const AddProduct = () => {
 
         const response = await axios.post(`${API_URL}/${ADMIN_ROUTE}/createProduct`, payload, {
           headers: {
-            'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`
           }
         });
@@ -105,7 +177,7 @@ const AddProduct = () => {
       const percentage = Number(formik.values.price) > 0 ? Math.round((discount / Number(formik.values.price)) * 100) : 0;
       formik.setFieldValue('discountPercentage', percentage, false);
     }
-  }, [formik.values.price, formik.values.discountPrice]);
+  }, [formik, formik.values.price, formik.values.discountPrice]);
 
   const handleFileSelection = useCallback((event) => {
     const files = Array.from(event.target.files || []);
@@ -179,37 +251,11 @@ const AddProduct = () => {
 
               <div className='grid gap-4 py-5 grid-cols-1 md:grid-cols-2'>
                 <div className='w-full'>
-                  <label className='mb-2 block text-sm font-medium text-[#111827]'>Category</label>
-                  <select
-                    name='category'
-                    value={formik.values.category}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
-                  >
-                    <option value=''>Select category</option>
-                    {effectiveCategories.map((category, idx) => {
-                      const label = typeof category === 'string' ? category : category?.name || category;
-                      const displayLabel = typeof label === 'string' ? label.charAt(0).toUpperCase() + label.slice(1) : label;
-                      return <option key={idx} value={label}>{displayLabel}</option>;
-                    })}
-                  </select>
+                  {renderOptionField('category', 'Category')}
                   {formik.touched.category && formik.errors.category && <p className='mt-2 text-sm text-[#DC2626]'>{formik.errors.category}</p>}
                 </div>
                 <div>
-                  <label className='mb-2 block text-sm font-medium text-[#111827]'>Condition</label>
-                  <select
-                    name='condition'
-                    value={formik.values.condition}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
-                  >
-                    <option value=''>Select condition</option>
-                    <option value='new'>New</option>
-                    <option value='used'>Used</option>
-                    <option value='refurbished'>Refurbished</option>
-                  </select>
+                  {renderOptionField('condition', 'Condition')}
                   {formik.touched.condition && formik.errors.condition && <p className='mt-2 text-sm text-[#DC2626]'>{formik.errors.condition}</p>}
                 </div>
               </div>
@@ -277,7 +323,7 @@ const AddProduct = () => {
                   accept='image/*'
                   multiple
                   onChange={handleFileSelection}
-                  className='rounded-[18px] border border-dashed border-[#CBD5E1] bg-[#F8FAFF] p-4 text-sm text-[#475569] file:mr-4 file:rounded-full file:border-0 file:bg-[#0F766E] file:px-4 file:py-2 file:text-white'
+                  className='w-full rounded-[18px] border border-dashed border-[#CBD5E1] bg-[#F8FAFF] p-4  text-sm text-[#475569] file:mr-4 file:rounded-full file:border-0 file:bg-[#0F766E] file:px-4 file:py-2 file:text-white'
                 />
                 {uploading ? (
                   <p className='text-sm text-[#475569]'>Processing images…</p>
@@ -356,20 +402,26 @@ const AddProduct = () => {
                   { name: 'numberOfCores', label: 'Number of cores' },
                   { name: 'operatingSystem', label: 'Operating system' },
                   { name: 'battery', label: 'Battery' }
-                ].map((field) => (
-                  <div key={field.name}>
-                    <label className='mb-2 block text-sm font-medium text-[#111827]'>{field.label}</label>
-                    <input
-                      name={field.name}
-                      value={formik.values[field.name]}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      type='text'
-                      placeholder={field.label}
-                      className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
-                    />
-                  </div>
-                ))}
+                ].map((field) => {
+                  if (['brand', 'region', 'processor', 'ram', 'storage', 'storageType', 'displaySize', 'graphicsCardMemory', 'operatingSystem', 'color'].includes(field.name)) {
+                    return renderOptionField(field.name, field.label);
+                  }
+
+                  return (
+                    <div key={field.name}>
+                      <label className='mb-2 block text-sm font-medium text-[#111827]'>{field.label}</label>
+                      <input
+                        name={field.name}
+                        value={formik.values[field.name]}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        type='text'
+                        placeholder={field.label}
+                        className='w-full rounded-[18px] border border-[#D1D5DB] bg-[#F8FAFF] px-4 py-3 text-sm text-[#111827] focus:border-[#0F766E] focus:outline-none'
+                      />
+                    </div>
+                  );
+                })}
                 <div>
                   <label className='mb-2 block text-sm font-medium text-[#111827]'>Open to negotiation</label>
                   <select

@@ -1,6 +1,6 @@
 const express = require('express')
 const multer = require('multer');
-const { adminLogin, adminDashboard, adminCustomer, deleteCustomer, createProduct, getAllProducts, editProduct, deleteProduct, deleteSelectedProduct, getAllOrdersForAdmin, updateOrderStatus, fetchAllCustomers, getOrdersGroupedByMonth, getCustomersGroupedByMonth, getOrdersGroupedByHour, getOrdersGroupedByHourForDates, getProductById, toggleUserBan, getFlashSales, createFlashSale } = require('../controller/admin.controller')
+const { adminLogin, adminDashboard, adminCustomer, deleteCustomer, createProduct, getAllProducts, editProduct, deleteProduct, deleteSelectedProduct, getAllOrdersForAdmin, updateOrderStatus, fetchAllCustomers, getOrdersGroupedByMonth, getCustomersGroupedByMonth, getOrdersGroupedByHour, getOrdersGroupedByHourForDates, getProductById, toggleUserBan, getFlashSales, createFlashSale, toggleProductStock } = require('../controller/admin.controller')
 const { authenticate } = require('../auth')
 const { authorizeRoles } = require('../authorizesRole')
 const authMiddleware = require('../middlewareAuth')
@@ -30,6 +30,7 @@ router.post('/flashsales', authenticate, authorizeRoles, createFlashSale)
 
 // Generic product route
 router.get('/product/:id', getProductById)
+router.put('/product/:id/stock', authenticate, authorizeRoles, toggleProductStock)
 router.put('/user/:id/ban', authenticate, authorizeRoles, toggleUserBan)
 
 module.exports = router

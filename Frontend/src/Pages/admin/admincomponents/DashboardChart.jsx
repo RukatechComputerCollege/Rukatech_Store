@@ -13,12 +13,19 @@ const DashboardChart = () => {
   const [loading, setLoading] = useState(true);
   const API_URL = import.meta.env.VITE_API_URL;
 
+  const token = localStorage.getItem('adminToken');
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setLoading(true);
+        if (!token) {
+          throw new Error('Admin token missing');
+        }
         // Fetch all orders to calculate stats
-        const ordersRes = await axios.get(`${API_URL}/${ADMIN_ROUTE}/orders`);
+        const ordersRes = await axios.get(`${API_URL}/${ADMIN_ROUTE}/orders`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         
         if (ordersRes.status === 200 && ordersRes.data?.data) {
           const orders = ordersRes.data.data;
@@ -57,7 +64,7 @@ const DashboardChart = () => {
     };
 
     fetchStats();
-  }, []);
+  }, [API_URL, token]);
 
   const StatCard = ({ icon: Icon, label, value, prefix = '', suffix = '' }) => (
     <div className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm hover:shadow-md transition-all duration-300 hover:border-[#0F766E]'>
@@ -101,7 +108,7 @@ const DashboardChart = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-2xl'>
         <StatCard
           icon={MdTrendingUp}
           label='Total Revenue'
