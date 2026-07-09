@@ -348,7 +348,7 @@ const AddProduct = () => {
               </div>
             </section>
 
-            <section className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm'>
+            {/* <section className='rounded-[24px] border border-[#E2E8F0] bg-white p-6 shadow-sm'>
               <div className='flex flex-col gap-3 border-b border-[#E5E7EB] pb-5'>
                 <span className='text-sm font-semibold uppercase tracking-[0.2em] text-[#0F766E]'>Product story</span>
               </div>
@@ -376,7 +376,7 @@ const AddProduct = () => {
                   />
                 </div>
               </div>
-            </section>
+            </section> */}
           </div>
 
           <aside className='space-y-6 w-full'>
