@@ -87,8 +87,9 @@ router.post('/order-whatsapp', async (req, res) => {
       });
     }
 
-    // Calculate subtotal
+    // Calculate subtotal and total
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = subtotal;
     const transactionId = generateOrderId();
 
     // Save to AdminOrder collection (for admin tracking)
@@ -158,8 +159,8 @@ router.post('/order-whatsapp', async (req, res) => {
       whatsappLink,
       orderSummary: {
         itemCount: cart.reduce((sum, item) => sum + item.quantity, 0),
-        subtotal: subtotal,
-        total: subtotal + (subtotal * 0.1), // including 10% tax
+        subtotal,
+        total,
         orderId: transactionId
       }
     });
@@ -193,9 +194,9 @@ function buildOrderMessage(cart, customerInfo, orderId, subtotal) {
     const itemTotal = item.price * item.quantity;
     
     message += `*Item ${index + 1}:* ${item.name}\n`;
-    message += `├─ 💰 Price: ₦${item.price.toFixed(2)}\n`;
+    message += `├─ 💰 Price: ₦${item.price.toLocaleString()}\n`;
     message += `├─ 📊 Quantity: ${item.quantity}\n`;
-    message += `├─ 💳 Subtotal: ₦${itemTotal.toFixed(2)}\n`;
+    message += `├─ 💳 Subtotal: ₦${itemTotal.toLocaleString()}\n`;
     
     // Product link for admin to view - ensure product name is properly encoded
     let productUrl;
@@ -233,14 +234,10 @@ function buildOrderMessage(cart, customerInfo, orderId, subtotal) {
   message += '💰 *ORDER SUMMARY*\n';
   message += '━━━━━━━━━━━━━━━━━━\n';
   
-  const tax = subtotal * 0.1;
-  const shipping = subtotal > 100 ? 0 : 10;
-  const total = subtotal + tax + shipping;
+  const total = subtotal;
   
-  message += `Subtotal: ₦${subtotal.toFixed(2)}\n`;
-  message += `Tax (10%): ₦${tax.toFixed(2)}\n`;
-  message += `Shipping: ${shipping === 0 ? 'FREE 🚚' : '₦' + shipping.toFixed(2)}\n`;
-  message += `*TOTAL: ₦${total.toFixed(2)}*\n\n`;
+  message += `Subtotal: ₦${subtotal.toLocaleString()}\n`;
+  message += `*TOTAL: ₦${total.toLocaleString()}*\n\n`;
 
   // Customer Details (from user's billing/shipping info)
   message += '━━━━━━━━━━━━━━━━━━\n';
