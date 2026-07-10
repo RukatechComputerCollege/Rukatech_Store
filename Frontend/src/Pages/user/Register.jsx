@@ -33,7 +33,7 @@ const Register = () => {
       .then((res) =>{
         setisLogging(false)
         console.log(res);
-        toast.success('User Account has Successfully Registered!');
+        toast.success('User Account has Successfully Registered! Redirecting...');
         setTimeout(() => {
           navigate('/account/login')
         }, 3000);

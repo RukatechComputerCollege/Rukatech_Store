@@ -653,18 +653,20 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ status: false, message: "Order not found" });
     }
     
-    if (order.userId && order.flutterwaveResponse?.transaction_id) {
-      const txnId = String(order.flutterwaveResponse.transaction_id);
+    if (order.userId) {
+      const txnId = String(order.flutterwaveResponse?.transaction_id || order.transactionId || '');
 
-      await userModel.updateOne(
-        { _id: order.userId },
-        { $set: { "productOrder.$[elem].orderStatus": newStatus } },
-        {
-          arrayFilters: [
-            { "elem.flutterwaveResponse.transaction_id": txnId }
-          ]
-        }
-      );
+      if (txnId) {
+        await userModel.updateOne(
+          { _id: order.userId },
+          { $set: { "productOrder.$[elem].orderStatus": newStatus } },
+          {
+            arrayFilters: [
+              { "elem.flutterwaveResponse.transaction_id": txnId }
+            ]
+          }
+        );
+      }
     }
 
     res.status(200).json({ status: true, message: "Order status updated", data: order });
