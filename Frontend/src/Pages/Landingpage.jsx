@@ -308,7 +308,7 @@ const Landingpage = () => {
               <div>
                 <p className="text-xs font-bold uppercase">Call to order</p>
                 <p className="text-[10px] text-gray-500">
-                 09032520353
+                 09032520353,07040073284
                 </p>
               </div>
             </div>
@@ -319,7 +319,7 @@ const Landingpage = () => {
               <div>
                 <p className="text-xs font-bold">CHAT US</p>
                 <p className="text-[10px] text-gray-500">
-                  You can also chat with us on WhatsApp
+                  0803 252 0353,0803 697 3111
                 </p>
               </div>
             </div>
@@ -337,13 +337,15 @@ const Landingpage = () => {
               </div>
             </div>
           </div>
-          <div className="bg-primary-light rounded-lg p-2 text-white overflow-hidden shadow-[12px]">
-            <img
-              className="w-full h-32 object-cover rounded mb-2"
-              alt="rukatech_store_location"
-              src="./src/assets/debash.webp"
+          <div className="bg-primary-light rounded-lg p-0 text-white overflow-hidden shadow-[12px]">
+            <iframe
+              title="Rukatech Store Location"
+              src="https://www.google.com/maps?q=Rukatech%20Store&output=embed"
+              className="w-full h-32 rounded mb-0"
+              style={{ border: 0 }}
+              loading="lazy"
             />
-            <p className="text-[10px] font-bold text-center">
+            <p className="text-[10px] font-bold text-center p-2">
               VISIT OUR STORE FOR THE BEST DEALS AND DISCOUNTS
             </p>
           </div>
@@ -450,15 +452,15 @@ const Landingpage = () => {
               </div>
             </div>
           </div>
-          <a
+          <button
+            onClick={() => navigate('/flash-sales')}
             className="text-[12px] font-bold flex items-center gap-1 hover:underline"
-            href="#"
           >
             SEE ALL
             <span className="material-symbols-outlined text-[12px]">
               chevron_right
             </span>
-          </a>
+          </button>
         </div>
         <div className="p-4">
           {flashSalesLoading ? (

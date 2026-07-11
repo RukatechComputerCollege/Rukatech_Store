@@ -15,6 +15,7 @@ import CustomerDetails from './Pages/admin/adminPages/CustomerDetails'
 import CategoryProvider from './CategoryContext';
 import ProductPage from './Pages/admin/adminPages/ProductPage';
 import FlashSales from './Pages/admin/adminPages/FlashSales';
+import PublicFlashSales from './Pages/FlashSales';
 import AddProduct from './Pages/admin/adminPages/AddProduct';
 import ShopPage from './Pages/ShopPage';
 import Landingpage from './Pages/Landingpage';
@@ -77,6 +78,7 @@ const App = () => {
             <Route path='/account/forgot-password' element={<ForgotPassword />} />
             <Route path='/reset-password/:token' element={<ResetPassword />} />
             <Route path='/store/:categoryName' element={<ShopPage />} />
+            <Route path='/flash-sales' element={<PublicFlashSales />} />
             <Route path='/order-tracking' element={<OrderTrack />} />
             <Route path='/order-tracking/:id' element={<OrderTrackDetails />} />
             <Route path='/shopping-cart' element={<ShoppingCart />} />
