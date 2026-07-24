@@ -350,11 +350,11 @@ const Productdetails = () => {
                   </span>
                   <div className="flex-1">
                     <p className="text-sm font-semibold">
-                      Debash, Awokoya, Ijebu Ode
+                     No 189, Ibadan road, Ijebu-ode, Ogun State
                     </p>
-                    <button className="text-xs text-primary font-bold hover:underline">
+                    {/* <button className="text-xs text-primary font-bold hover:underline">
                       Change Location
-                    </button>
+                    </button> */}
                   </div>
                 </div>
                 <hr className="border-surface-container" />
