@@ -381,6 +381,7 @@ const Checkout = () => {
                       onChange={() => setPaymentMethod("mobilemoney")}
                       checked={paymentMethod === "mobilemoney"}
                       name="paymentmethod"
+                      disabled
                     />
                   </div>
                   {/* Debit/Credit Card */}
@@ -397,6 +398,7 @@ const Checkout = () => {
                       className="cursor-pointer"
                       onChange={() => setPaymentMethod("card")}
                       checked={paymentMethod === "card"}
+                      disabled
                       name="paymentmethod"
                     />
                   </div>

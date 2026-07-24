@@ -9,7 +9,7 @@ const Tagnav = () => {
       <div className='w-full flex items-center justify-between'>
         {/* for black friday */}
         <div>
-          <p className='text-[14px]'>Welcome to Fastcart Online Store</p>
+          <p className='text-[14px]'>Welcome to Rukatech Online Store</p>
         </div>
 
         <div className='flex gap-4 items-center'>

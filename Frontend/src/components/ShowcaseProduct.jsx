@@ -55,7 +55,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                 </h1>
                 <p className="text-[18px] text-[#475156]">
                   Save up to 50% on select Xbox games. Get 3 months of PC Game
-                  Pass for $2 USD.
+                  Pass for ₦2 NGN.
                 </p>
                 <div>
                   <button
@@ -72,7 +72,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                   <img src={Xbox} alt="" />
                 </div>
                 <div className="w-[100px] h-[100px] flex flex-col items-center justify-center font-bold absolute top-0 right-0 rounded-[50%] bg-[#2DA5F3] text-black">
-                  <h1 className="text-[22px]">$299</h1>
+                  <h1 className="text-[22px]">₦299</h1>
                 </div>
               </div>
               {/* xbox image end */}
@@ -129,7 +129,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                 </h1>
                 <p className="text-[18px] text-[#475156]">
                   Save up to 50% on select Xbox games. Get 3 months of PC Game
-                  Pass for $2 USD.
+                  Pass for ₦2 NGN.
                 </p>
                 <div>
                   <button
@@ -146,7 +146,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                   <img src={Xbox} alt="" />
                 </div>
                 <div className="w-[100px] h-[100px] flex flex-col items-center justify-center font-bold absolute top-0 right-0 rounded-[50%] bg-[#2DA5F3] text-black">
-                  <h1 className="text-[22px]">$299</h1>
+                  <h1 className="text-[22px]">₦299</h1>
                 </div>
               </div>
               {/* xbox image end */}
@@ -203,7 +203,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                 </h1>
                 <p className="text-[18px] text-[#475156]">
                   Save up to 50% on select Xbox games. Get 3 months of PC Game
-                  Pass for $2 USD.
+                  Pass for ₦2 NGN.
                 </p>
                 <div>
                   <button
@@ -220,7 +220,7 @@ const ShowcaseProduct = ({ promoProduct1, promoProduct2, promoProduct3 }) => {
                   <img src={Xbox} alt="" />
                 </div>
                 <div className="w-[100px] h-[100px] flex flex-col items-center justify-center font-bold absolute top-0 right-0 rounded-[50%] bg-[#2DA5F3] text-black">
-                  <h1 className="text-[22px]">$299</h1>
+                  <h1 className="text-[22px]">₦299</h1>
                 </div>
               </div>
               {/* xbox image end */}
